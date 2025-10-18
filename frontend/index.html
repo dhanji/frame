@@ -253,8 +253,8 @@
         .conversation {
             background: white;
             border-radius: 8px;
-            margin-bottom: 12px;
-            padding: 16px;
+            margin-bottom: 4px;
+            padding: 12px 16px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: box-shadow 0.2s;
@@ -264,89 +264,212 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .conversation-header {
+        .conversation-line {
             display: flex;
+            gap: 12px;
             justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .participants {
-            font-weight: 600;
-            color: #050505;
+            align-items: flex-start;
         }
 
         .timestamp {
             color: #65676b;
             font-size: 13px;
+            white-space: nowrap;
         }
 
-        .subject {
-            font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .message-preview {
-            background: #f0f2f5;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-        }
-
-        .message-text {
-            color: #050505;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .quick-reply {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .quick-reply input {
+        .conversation-info {
             flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #dadde1;
-            border-radius: 20px;
-            outline: none;
+            min-width: 0;
         }
 
-        .quick-reply button {
-            background: #1877f2;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
+        .subject-line {
+            font-size: 14px;
+            font-weight: 600;
+            color: #050505;
+            margin-bottom: 4px;
         }
 
-        .quick-reply button:hover {
-            background: #166fe5;
+        .content-snippet {
+            color: #65676b;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .conversation-actions {
+        .conversation-actions-hover {
+            display: none;
+            gap: 8px;
+            margin-left: 12px;
+        }
+
+        .conversation:hover .conversation-actions-hover {
             display: flex;
-            gap: 12px;
-            margin-top: 8px;
-            padding-top: 8px;
+        }
+
+        .icon-btn {
+            background: #f0f2f5;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #e4e6eb;
+        }
+
+        /* Slideover Panel */
+        .slideover-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .slideover-overlay.active {
+            display: block;
+        }
+
+        .slideover-panel {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 600px;
+            height: 100%;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+            transition: right 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slideover-overlay.active .slideover-panel {
+            right: 0;
+        }
+
+        .slideover-header {
+            padding: 20px;
+            border-bottom: 1px solid #e4e6eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slideover-header h2 {
+            font-size: 18px;
+            color: #1c1e21;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #65676b;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .slideover-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .chat-message {
+            margin-bottom: 20px;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: #050505;
+        }
+
+        .message-time {
+            color: #65676b;
+            font-size: 13px;
+        }
+
+        .message-body {
+            background: #f0f2f5;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            color: #1c1e21;
+        }
+
+        .slideover-footer {
+            padding: 20px;
             border-top: 1px solid #e4e6eb;
         }
 
-        .action-btn {
-            background: none;
-            border: none;
-            color: #65676b;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 14px;
+        .reply-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
-        .action-btn:hover {
-            background: #f0f2f5;
-            color: #1877f2;
+        .reply-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .reply-box textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #dadde1;
+            border-radius: 20px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .reply-box textarea:focus {
+            outline: none;
+            border-color: #1877f2;
+        }
+
+        .send-btn {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .send-btn:hover {
+            background: #166fe5;
         }
 
         .unread {
@@ -548,12 +671,37 @@
         </div>
     </div>
 
+    <!-- Slideover Panel -->
+    <div class="slideover-overlay" id="slideoverOverlay">
+        <div class="slideover-panel">
+            <div class="slideover-header">
+                <h2 id="slideoverSubject">Conversation</h2>
+                <button class="close-btn" onclick="closeSlideover()">×</button>
+            </div>
+            <div class="slideover-content" id="slideoverContent">
+                <!-- Messages will be loaded here -->
+            </div>
+            <div class="slideover-footer">
+                <div class="reply-actions">
+                    <button class="btn-secondary" onclick="replyTo()">Reply</button>
+                    <button class="btn-secondary" onclick="replyAll()">Reply All</button>
+                    <button class="btn-secondary" onclick="forward()">Forward</button>
+                </div>
+                <div class="reply-box">
+                    <textarea id="quickReplyText" placeholder="Write a reply..."></textarea>
+                    <button class="send-btn" onclick="sendQuickReply()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global state
         let authToken = null;
         let currentFolder = 'inbox';
         let conversations = [];
         let folders = [];
+        let currentConversation = null;
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
@@ -740,26 +888,22 @@
             div.className = `conversation ${conv.unread_count > 0 ? 'unread' : ''}`;
             
             div.innerHTML = `
-                <div class="conversation-header">
-                    <div class="participants">${conv.participants.join(', ')}</div>
+                <div class="conversation-line">
+                    <div class="conversation-info">
+                        <div class="subject-line">${escapeHtml(conv.subject)}</div>
+                        <div class="content-snippet">${escapeHtml(conv.preview)}</div>
+                    </div>
+                    <div class="conversation-actions-hover">
+                        <button class="icon-btn" onclick="event.stopPropagation(); replyAllDirect('${conv.id}')" title="Reply All">↩️</button>
+                        <button class="icon-btn" onclick="event.stopPropagation(); toggleStar('${conv.id}')" title="Star">⭐</button>
+                        <button class="icon-btn" onclick="event.stopPropagation(); moveConversation('${conv.id}')" title="Move">📁</button>
+                        <button class="icon-btn" onclick="event.stopPropagation(); deleteConv('${conv.id}')" title="Delete">🗑️</button>
+                    </div>
                     <div class="timestamp">${formatDate(conv.last_message_date)}</div>
                 </div>
-                <div class="subject">${escapeHtml(conv.subject)}</div>
-                <div class="message-preview">
-                    <div class="message-text">${escapeHtml(conv.preview)}</div>
-                </div>
-                <div class="quick-reply">
-                    <input type="text" placeholder="Write a reply..." data-conv-id="${conv.id}">
-                    <button onclick="sendQuickReply('${conv.id}')">Send</button>
-                </div>
-                <div class="conversation-actions">
-                    <button class="action-btn" onclick="replyTo('${conv.id}')">Reply</button>
-                    <button class="action-btn" onclick="replyAll('${conv.id}')">Reply All</button>
-                    <button class="action-btn" onclick="forward('${conv.id}')">Forward</button>
-                    <button class="action-btn" onclick="deleteConv('${conv.id}')">Delete</button>
-                    <button class="action-btn" onclick="toggleStar('${conv.id}')">Star</button>
-                </div>
             `;
+            
+            div.addEventListener('click', () => openSlideover(conv));
             
             return div;
         }
@@ -893,12 +1037,75 @@
             document.querySelector('.modal-overlay')?.remove();
         }
 
-        async function sendQuickReply(convId) {
-            const input = document.querySelector(`input[data-conv-id="${convId}"]`);
-            if (!input || !input.value.trim()) return;
+        // Slideover functions
+        function openSlideover(conv) {
+            currentConversation = conv;
+            const overlay = document.getElementById('slideoverOverlay');
+            const subject = document.getElementById('slideoverSubject');
+            const content = document.getElementById('slideoverContent');
             
-            const conv = conversations.find(c => c.id === convId);
-            if (!conv) return;
+            subject.textContent = conv.subject;
+            
+            // Load conversation messages
+            loadConversationMessages(conv.id);
+            
+            overlay.classList.add('active');
+        }
+
+        function closeSlideover() {
+            const overlay = document.getElementById('slideoverOverlay');
+            overlay.classList.remove('active');
+            currentConversation = null;
+        }
+
+        async function loadConversationMessages(convId) {
+            const content = document.getElementById('slideoverContent');
+            content.innerHTML = '<div class="loading">Loading messages...</div>';
+            
+            try {
+                const response = await fetch(`/api/conversations/${convId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const messages = await response.json();
+                    renderChatMessages(messages);
+                } else {
+                    renderChatMessages(getMockMessages(convId));
+                }
+            } catch (error) {
+                renderChatMessages(getMockMessages(convId));
+            }
+        }
+
+        function renderChatMessages(messages) {
+            const content = document.getElementById('slideoverContent');
+            
+            if (!messages || messages.length === 0) {
+                content.innerHTML = '<div class="empty-state"><h3>No messages found</h3></div>';
+                return;
+            }
+            
+            content.innerHTML = '';
+            messages.forEach(msg => {
+                const msgEl = document.createElement('div');
+                msgEl.className = 'chat-message';
+                msgEl.innerHTML = `
+                    <div class="message-header">
+                        <div class="message-sender">${escapeHtml(msg.from || msg.sender)}</div>
+                        <div class="message-time">${formatDate(msg.date || msg.timestamp)}</div>
+                    </div>
+                    <div class="message-body">${escapeHtml(msg.body || msg.text)}</div>
+                `;
+                content.appendChild(msgEl);
+            });
+        }
+
+        async function sendQuickReply() {
+            const textarea = document.getElementById('quickReplyText');
+            const text = textarea.value.trim();
+            
+            if (!text || !currentConversation) return;
             
             try {
                 await fetch('/api/emails/send', {
@@ -908,23 +1115,64 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        to: conv.participants,
-                        subject: 'Re: ' + conv.subject,
-                        body_text: input.value
+                        to: currentConversation.participants,
+                        subject: 'Re: ' + currentConversation.subject,
+                        body_text: text
                     })
                 });
                 
-                input.value = '';
+                textarea.value = '';
                 showNotification('Reply sent!', 'success');
-                loadConversations();
+                loadConversationMessages(currentConversation.id);
             } catch (error) {
-                console.log('Quick reply (demo mode):', input.value);
-                input.value = '';
+                console.log('Quick reply (demo mode):', text);
+                textarea.value = '';
                 showNotification('Reply sent (demo mode)!', 'success');
+                
+                // Add message to chat in demo mode
+                const content = document.getElementById('slideoverContent');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'chat-message';
+                msgEl.innerHTML = `
+                    <div class="message-header">
+                        <div class="message-sender">You</div>
+                        <div class="message-time">Just now</div>
+                    </div>
+                    <div class="message-body">${escapeHtml(text)}</div>
+                `;
+                content.appendChild(msgEl);
             }
         }
 
-        function replyTo(convId) {
+        function replyTo() {
+            if (!currentConversation) return;
+            closeSlideover();
+            openComposeModal({
+                to: currentConversation.participants[0],
+                subject: 'Re: ' + currentConversation.subject
+            });
+        }
+
+        function replyAll() {
+            if (!currentConversation) return;
+            closeSlideover();
+            openComposeModal({
+                to: currentConversation.participants.join(', '),
+                subject: 'Re: ' + currentConversation.subject
+            });
+        }
+
+        function forward() {
+            if (!currentConversation) return;
+            closeSlideover();
+            openComposeModal({
+                subject: 'Fwd: ' + currentConversation.subject,
+                body: `\n\n---------- Forwarded message ---------\nSubject: ${currentConversation.subject}\n\n${currentConversation.preview}`
+            });
+        }
+
+        // Hover action functions
+        function replyAllDirect(convId) {
             const conv = conversations.find(c => c.id === convId);
             if (!conv) return;
             
@@ -934,24 +1182,21 @@
             });
         }
 
-        function replyAll(convId) {
-            const conv = conversations.find(c => c.id === convId);
-            if (!conv) return;
-            
-            openComposeModal({
-                to: conv.participants.join(', '),
-                subject: 'Re: ' + conv.subject
-            });
+        function toggleStar(convId) {
+            console.log('Toggle star:', convId);
+            showNotification('Star toggled!', 'success');
+            // In real implementation, update the conversation's starred status
         }
 
-        function forward(convId) {
-            const conv = conversations.find(c => c.id === convId);
-            if (!conv) return;
+        function moveConversation(convId) {
+            const folders = ['inbox', 'sent', 'drafts', 'starred', 'trash'];
+            const folderName = prompt('Move to folder:\n' + folders.join('\n'));
             
-            openComposeModal({
-                subject: 'Fwd: ' + conv.subject,
-                body: `\n\n---------- Forwarded message ---------\nSubject: ${conv.subject}\n\n${conv.preview}`
-            });
+            if (folderName && folders.includes(folderName.toLowerCase())) {
+                console.log('Move conversation', convId, 'to', folderName);
+                showNotification(`Moved to ${folderName}`, 'success');
+                // In real implementation, call API to move conversation
+            }
         }
 
         async function deleteConv(convId) {
@@ -973,10 +1218,12 @@
             }
         }
 
-        function toggleStar(convId) {
-            console.log('Toggle star:', convId);
-            showNotification('Star toggled!', 'success');
-        }
+        // Close slideover when clicking overlay
+        document.getElementById('slideoverOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'slideoverOverlay') {
+                closeSlideover();
+            }
+        });
 
         // Mock data
         function getMockFolders() {
@@ -1019,6 +1266,50 @@
                     preview: 'The Q4 project is progressing well. We have completed 75% of the planned features and are on track for the December release.'
                 }
             ];
+        }
+
+        function getMockMessages(convId) {
+            const conv = conversations.find(c => c.id === convId);
+            if (!conv) return [];
+            
+            // Generate mock messages based on conversation
+            if (convId === '1') {
+                return [
+                    {
+                        from: 'Frame Support',
+                        date: new Date().toISOString(),
+                        body: 'Thank you for trying Frame Email Client! This is a demo conversation to show how the interface works. Click Reply to compose a response, or use Reply All to include all participants.'
+                    }
+                ];
+            } else if (convId === '2') {
+                return [
+                    {
+                        from: 'Frame Team',
+                        date: new Date(Date.now() - 3600000).toISOString(),
+                        body: 'Here are some tips to get you started:\n\n1. Use keyboard shortcuts for faster navigation\n2. Try the search feature\n3. Organize emails with folders\n4. Use quick reply for fast responses'
+                    }
+                ];
+            } else if (convId === '3') {
+                return [
+                    {
+                        from: 'John Doe',
+                        date: new Date(Date.now() - 7200000).toISOString(),
+                        body: 'The Q4 project is progressing well. We have completed 75% of the planned features and are on track for the December release.'
+                    },
+                    {
+                        from: 'Jane Smith',
+                        date: new Date(Date.now() - 3600000).toISOString(),
+                        body: 'Great update! I\'ve reviewed the latest milestone and everything looks good. Should we schedule a meeting to discuss the remaining 25%?'
+                    },
+                    {
+                        from: 'John Doe',
+                        date: new Date(Date.now() - 1800000).toISOString(),
+                        body: 'Yes, let\'s meet tomorrow at 2 PM. I\'ll send out a calendar invite.'
+                    }
+                ];
+            }
+            
+            return [{ from: conv.participants[0], date: conv.last_message_date, body: conv.preview }];
         }
     </script>
 </body>
