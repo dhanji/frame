@@ -72,8 +72,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ws_manager.clone()))
             .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
-            // Serve static files from frontend directory (using standalone HTML app)
-            .service(fs::Files::new("/", "../frontend").index_file("app-working.html"))
             .service(
                 web::scope("/api")
                     // Public endpoints (no authentication required)
@@ -122,6 +120,8 @@ async fn main() -> std::io::Result<()> {
                     )
             )
             .route("/ws", web::get().to(websocket::ws_handler))
+            // Serve static files from frontend directory (index.html is now the working version)
+            .service(fs::Files::new("/", "../frontend").index_file("index.html"))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
