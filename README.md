@@ -1,6 +1,14 @@
 # Frame Email Client
 
-A modern email client with a conversation-based interface, similar to Facebook's feed design. Built with Rust (backend) and TypeScript/HTML (frontend).
+A modern email client with a conversation-based interface, similar to Facebook's feed design. 
+
+**Built with:**
+- **Backend:** Rust (Actix-web, SQLite, IMAP/SMTP)
+- **Frontend:** Standalone HTML/JavaScript (no build tools required!)
+
+**Key Feature:** The entire frontend is a single HTML file - no npm, no webpack, no build step. Just start the Rust backend and go!
+
+📚 **[Quick Start Guide](QUICKSTART.md)** | 🎨 **[Frontend Architecture](FRONTEND.md)**
 
 ## Features
 
@@ -29,19 +37,17 @@ A modern email client with a conversation-based interface, similar to Facebook's
 - **Authentication**: JWT tokens
 - **WebSocket**: Real-time updates
 
-### Frontend (TypeScript/HTML)
-- **Build Tool**: Vite
-- **Type Safety**: Full TypeScript implementation
-- **API Client**: Axios for HTTP requests
-- **Date Handling**: date-fns
-- **HTML Sanitization**: DOMPurify
+### Frontend (Standalone HTML)
+- **Standalone HTML**: Single-file application with vanilla JavaScript
+- **No Build Required**: Works directly without npm, webpack, or any build tools
+- **Modern UI**: Clean, responsive design inspired by social media feeds
+- **Full Features**: Reply, Forward, Search, Keyboard shortcuts, and more
 
 ## Installation & Setup
 
 ### Prerequisites
 - Rust (latest stable version)
-- Node.js (v16 or higher)
-- npm or yarn
+- **That's it!** No Node.js, npm, or any other tools required.
 
 ### Backend Setup
 
@@ -76,28 +82,23 @@ cargo run --release
 
 The backend server will start on `http://localhost:8080`
 
-### Frontend Setup
+### Frontend (No Setup Required!)
 
-1. Navigate to the frontend directory:
+The frontend is a standalone HTML file that's automatically served by the Rust backend.
+No installation or build steps required!
+
+Simply start the backend and access the app at `http://localhost:8080`
+
+### Production Deployment
+
+**Quick Deploy:**
 ```bash
-cd email-client/frontend
+cd backend
+cargo build --release
+./target/release/email-server
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-The frontend will be available at `http://localhost:3000`
-
-### Production Build
-
-#### Backend
+#### Build and Run Backend
 ```bash
 cd email-client/backend
 cargo build --release
@@ -105,11 +106,10 @@ cargo build --release
 ```
 
 #### Frontend
-```bash
-cd email-client/frontend
-npm run build
-# Serve the dist folder with any static file server
-```
+The frontend is already production-ready! The `app-working.html` file is a fully optimized
+standalone application that requires no build step. Just ensure the backend serves it correctly.
+
+The backend automatically serves `frontend/app-working.html` as the index page.
 
 ## Configuration
 
@@ -198,25 +198,40 @@ Content-Type: application/json
 
 ## Development
 
-### Running Tests
+### Frontend Development
 
-#### Backend Tests
-```bash
-cd email-client/backend
-cargo test
-```
+The frontend is `frontend/app-working.html` - a single HTML file with embedded CSS and JavaScript.
 
-#### Frontend Tests
-```bash
-cd email-client/frontend
-npm test
-```
+**To modify:**
+1. Edit `frontend/app-working.html`
+2. Save the file
+3. Refresh your browser
+4. Done!
+
+See **[FRONTEND.md](FRONTEND.md)** for detailed architecture documentation.
+
 
 ### Database Migrations
 
 Create a new migration:
 ```bash
 sqlx migrate add <migration_name>
+```
+
+### Backend Development
+
+```bash
+cd backend
+cargo watch -x run  # Auto-reload on changes
+cargo test          # Run tests
+```
+
+### Running Tests
+
+#### Backend Tests
+```bash
+cd email-client/backend
+cargo test
 ```
 
 ### Code Structure
@@ -233,14 +248,9 @@ email-client/
 │   ├── migrations/       # Database migrations
 │   └── Cargo.toml       # Rust dependencies
 ├── frontend/
-│   ├── src/
-│   │   ├── api/         # API client
-│   │   ├── models/      # TypeScript types
-│   │   ├── utils/       # Helper functions
-│   │   ├── styles/      # CSS files
-│   │   └── main.ts      # Application entry point
-│   ├── index.html       # Main HTML file
-│   └── package.json     # Node dependencies
+│   ├── app-working.html # Main application (standalone, no build required)
+│   ├── src/             # TypeScript version (optional, not used by default)
+│   └── package.json     # Optional dependencies for TypeScript development
 └── README.md
 ```
 
@@ -281,6 +291,37 @@ email-client/
 
 ## Contributing
 
+### Frontend Development
+
+The primary frontend is `frontend/app-working.html` - a standalone HTML file with embedded CSS and JavaScript.
+
+**To modify the frontend:**
+1. Edit `frontend/app-working.html` directly
+2. Refresh your browser to see changes
+3. No build step required!
+
+**Optional TypeScript Development:**
+If you prefer TypeScript for development, there's an alternative implementation in `frontend/src/`:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+However, the standalone HTML version is the primary and recommended approach.
+
+### Why Standalone HTML?
+
+**Advantages:**
+- ✅ Zero build time - edit and refresh
+- ✅ No npm dependencies to manage
+- ✅ No version conflicts or security vulnerabilities
+- ✅ Instant startup
+- ✅ Easy to understand and modify
+- ✅ Works offline
+- ✅ Tiny file size (~32KB)
+- ✅ Deploy anywhere
+
 1. Fork the repository
 2. Create a feature branch
 3. Commit your changes
@@ -293,17 +334,27 @@ MIT License - See LICENSE file for details
 
 ## Roadmap
 
-- [ ] Add OAuth2 authentication
-- [ ] Implement push notifications
-- [ ] Add email templates
-- [ ] Support for multiple accounts
-- [ ] Calendar integration
-- [ ] Contact management
-- [ ] Email encryption (PGP)
-- [ ] Advanced filtering rules
-- [ ] Keyboard shortcuts
+- [x] Conversation-based email interface
+- [x] Reply, Reply All, Forward functionality
+- [x] Quick reply from conversation view
+- [x] Search and filtering
+- [x] Keyboard shortcuts
+- [ ] OAuth2 authentication (Gmail, Outlook)
+- [ ] Email templates
+- [ ] Multiple account support
 - [ ] Dark mode theme
+- [ ] Email encryption (PGP)
+- [ ] Calendar integration
 
 ## Support
 
-For issues and questions, please create an issue in the GitHub repository.
+For issues and questions:
+- 📖 Read the **[Quick Start Guide](QUICKSTART.md)**
+- 🎨 Check the **[Frontend Architecture](FRONTEND.md)**
+- 🐛 Create an issue on GitHub
+
+## Philosophy
+
+Frame Email Client embraces simplicity. We believe that modern web applications don't need complex build tools, hundreds of dependencies, or megabytes of JavaScript to be powerful and user-friendly.
+
+**Simple. Fast. Effective.**

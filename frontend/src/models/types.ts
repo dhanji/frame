@@ -58,6 +58,9 @@ export interface Conversation {
     message_count: number;
     unread_count: number;
     has_attachments: boolean;
+    is_starred: boolean;
+    id: string;
+    preview: string;
     preview_messages: EmailPreview[];
 }
 

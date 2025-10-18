@@ -72,8 +72,8 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ws_manager.clone()))
             .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
-            // Serve static files from frontend directory
-            .service(fs::Files::new("/", "../frontend").index_file("index.html"))
+            // Serve static files from frontend directory (using standalone HTML app)
+            .service(fs::Files::new("/", "../frontend").index_file("app-working.html"))
             .service(
                 web::scope("/api")
                     // Public endpoints (no authentication required)
