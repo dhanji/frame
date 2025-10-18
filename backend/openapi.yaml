@@ -1,0 +1,527 @@
+openapi: 3.0.0
+info:
+  title: Frame Email Client API
+  description: REST API for Frame Email Client with conversation-based interface
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@frameemail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api
+    description: Development server
+  - url: https://api.frameemail.com
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - imap_host
+        - imap_port
+        - smtp_host
+        - smtp_port
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        imap_host:
+          type: string
+        imap_port:
+          type: integer
+        smtp_host:
+          type: string
+        smtp_port:
+          type: integer
+          
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+          
+    Email:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        from_address:
+          type: string
+        from_name:
+          type: string
+        to_addresses:
+          type: array
+          items:
+            type: string
+        body_text:
+          type: string
+        body_html:
+          type: string
+        is_read:
+          type: boolean
+        is_starred:
+          type: boolean
+        has_attachments:
+          type: boolean
+        date:
+          type: string
+          format: date-time
+          
+    Conversation:
+      type: object
+      properties:
+        thread_id:
+          type: string
+        subject:
+          type: string
+        participants:
+          type: array
+          items:
+            type: string
+        last_message_date:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+        unread_count:
+          type: integer
+        has_attachments:
+          type: boolean
+        preview_messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailPreview'
+            
+    EmailPreview:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        from_address:
+          type: string
+        subject:
+          type: string
+        preview_text:
+          type: string
+        date:
+          type: string
+          format: date-time
+        is_read:
+          type: boolean
+          
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        folder_type:
+          type: string
+          enum: [inbox, sent, drafts, trash, spam, custom]
+        unread_count:
+          type: integer
+        total_count:
+          type: integer
+          
+    SendEmailRequest:
+      type: object
+      required:
+        - to
+        - subject
+      properties:
+        to:
+          type: array
+          items:
+            type: string
+        cc:
+          type: array
+          items:
+            type: string
+        bcc:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+        body_text:
+          type: string
+        body_html:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttachmentUpload'
+            
+    AttachmentUpload:
+      type: object
+      properties:
+        filename:
+          type: string
+        content_type:
+          type: string
+        content:
+          type: string
+          format: base64
+          
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        status:
+          type: integer
+          
+paths:
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  /auth/logout:
+    post:
+      summary: Logout user
+      tags: [Authentication]
+      responses:
+        '200':
+          description: Logout successful
+          
+  /conversations:
+    get:
+      summary: Get conversations list
+      tags: [Conversations]
+      parameters:
+        - name: folder_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+                  
+  /conversations/{thread_id}:
+    get:
+      summary: Get full conversation thread
+      tags: [Conversations]
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of emails in thread
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Email'
+                  
+  /emails/send:
+    post:
+      summary: Send new email
+      tags: [Emails]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailRequest'
+      responses:
+        '200':
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  email_id:
+                    type: string
+                    format: uuid
+                    
+  /emails/{id}/reply:
+    post:
+      summary: Reply to email
+      tags: [Emails]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reply_all:
+                  type: boolean
+                body_text:
+                  type: string
+                body_html:
+                  type: string
+      responses:
+        '200':
+          description: Reply sent successfully
+          
+  /emails/{id}/read:
+    put:
+      summary: Mark email as read/unread
+      tags: [Emails]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_read:
+                  type: boolean
+      responses:
+        '200':
+          description: Email marked successfully
+          
+  /emails/{id}:
+    delete:
+      summary: Delete email (move to trash)
+      tags: [Emails]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Email moved to trash
+          
+  /emails/move:
+    post:
+      summary: Move emails to folder
+      tags: [Emails]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                folder_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Emails moved successfully
+          
+  /folders:
+    get:
+      summary: Get all folders
+      tags: [Folders]
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Folder'
+    post:
+      summary: Create new folder
+      tags: [Folders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                parent_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Folder created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+                
+  /search:
+    get:
+      summary: Search emails
+      tags: [Search]
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: has_attachments
+          in: query
+          schema:
+            type: boolean
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Email'
+                  count:
+                    type: integer
+                    
+  /drafts:
+    get:
+      summary: Get all drafts
+      tags: [Drafts]
+      responses:
+        '200':
+          description: List of drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  
+  /drafts/auto-save:
+    post:
+      summary: Auto-save draft
+      tags: [Drafts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Draft saved
+          
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Conversations
+    description: Email conversation management
+  - name: Emails
+    description: Email operations
+  - name: Folders
+    description: Folder management
+  - name: Search
+    description: Email search functionality
+  - name: Drafts
+    description: Draft email management

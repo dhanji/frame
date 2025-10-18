@@ -1,0 +1,48 @@
+[package]
+name = "email-client-backend"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "email-server"
+path = "src/main.rs"
+
+[[bin]]
+name = "server"
+path = "src/bin/server.rs"
+
+[dependencies]
+actix-web = "4.4"
+actix-cors = "0.6"
+tokio = { version = "1.35", features = ["macros", "rt-multi-thread"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+log = "0.4"
+env_logger = "0.11"
+dotenv = "0.15"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
+actix-files = "0.6"
+actix-web-httpauth = "0.8"
+bcrypt = "0.15"
+jsonwebtoken = "9.2"
+lettre = { version = "0.11", features = ["smtp-transport", "tokio1-native-tls"] }
+async-imap = "0.9"
+async-native-tls = "0.5"
+aes-gcm = "0.10"
+base64 = "0.22"
+rand = "0.8"
+regex = "1.10"
+html5ever = "0.26"
+markup5ever_rcdom = "0.2"
+tendril = "0.4"
+actix-web-actors = "4.2"
+actix = "0.13"
+thiserror = "1.0"
+ammonia = "3.3"
+actix-multipart = "0.6"
+futures = "0.3"
+async-std = "1.12"
+mail-parser = "0.9"
+image = "0.24"

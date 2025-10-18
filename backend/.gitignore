@@ -1,0 +1,43 @@
+# Rust Backend .gitignore
+
+# Cargo build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+server.log
+backend.log
+server_test.log
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# SQLx offline query data (optional - uncomment if not using offline mode)
+# .sqlx/
+
+# Test artifacts
+test-results/
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~

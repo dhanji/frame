@@ -1,0 +1,22 @@
+pub mod email;
+pub mod email_manager;
+pub mod email_sync;
+pub mod imap;
+pub mod smtp;
+pub mod background;
+pub mod conversation;
+pub mod search;
+pub mod imap_idle;
+pub mod threading;
+pub mod background_services;
+
+pub use email::EmailService;
+pub use email_manager::EmailManager;
+pub use email_sync::EmailSyncService;
+pub use imap::ImapService;
+pub use smtp::SmtpService;
+pub use conversation::ConversationService;
+pub use search::SearchService;
+pub use imap_idle::ImapIdleService;
+pub use threading::{JwzThreading, ThreadableEmail, ThreadNode};
+pub use background_services::BackgroundServiceManager;

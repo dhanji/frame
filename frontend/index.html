@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Email Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        /* Login Screen Styles */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #1877f2;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #65676b;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #1c1e21;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dadde1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1877f2;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .login-btn:hover {
+            background: #166fe5;
+        }
+
+        .login-btn:disabled {
+            background: #dadde1;
+            cursor: not-allowed;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dadde1;
+        }
+
+        .register-link a {
+            color: #1877f2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .demo-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            font-size: 14px;
+        }
+
+        /* Main App Styles */
+        .main-app {
+            display: none;
+        }
+
+        .main-app.active {
+            display: block;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #dadde1;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1877f2;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dadde1;
+            border-radius: 20px;
+            background: #f0f2f5;
+            outline: none;
+        }
+
+        .compose-btn {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background: #e4e6ea;
+            color: #1c1e21;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 20px auto;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+
+        .folder-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .folder-item:hover {
+            background: #f0f2f5;
+        }
+
+        .folder-item.active {
+            background: #e7f3ff;
+            color: #1877f2;
+            font-weight: 500;
+        }
+
+        .unread-count {
+            background: #1877f2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        .conversation {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .participants {
+            font-weight: 600;
+            color: #050505;
+        }
+
+        .timestamp {
+            color: #65676b;
+            font-size: 13px;
+        }
+
+        .subject {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .message-preview {
+            background: #f0f2f5;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .message-from {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .message-text {
+            color: #050505;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .quick-reply {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-reply input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #dadde1;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .quick-reply button {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .conversation-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e4e6eb;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #65676b;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .unread {
+            border-left: 3px solid #1877f2;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #65676b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #65676b;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #1c1e21;
+        }
+
+        /* Keyboard shortcuts modal */
+        .shortcuts-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .shortcuts-modal.active {
+            display: block;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .shortcut-key {
+            background: #f0f2f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>📧 Frame</h1>
+                <p>Modern Email Client</p>
+            </div>
+            
+            <div class="demo-notice">
+                <strong>Demo Mode:</strong> You can use any username/password to login and explore the features.
+            </div>
+            
+            <div id="loginError" class="error-message" style="display: none;"></div>
+            <div id="loginSuccess" class="success-message" style="display: none;"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username or Email</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+            </form>
+            
+            <div class="register-link">
+                <p>Don't have an account? <a href="#" onclick="showRegister()">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="main-app" id="mainApp">
+        <div class="header">
+            <div class="logo">📧 Frame</div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search emails..." id="searchInput">
+            </div>
+            <div class="header-actions">
+                <button class="compose-btn" onclick="composeEmail()">Compose</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="sidebar">
+                <div class="folder-item active" data-folder="inbox">
+                    <span>Inbox</span>
+                    <span class="unread-count">2</span>
+                </div>
+                <div class="folder-item" data-folder="sent">
+                    <span>Sent</span>
+                </div>
+                <div class="folder-item" data-folder="drafts">
+                    <span>Drafts</span>
+                </div>
+                <div class="folder-item" data-folder="starred">
+                    <span>Starred</span>
+                </div>
+                <div class="folder-item" data-folder="trash">
+                    <span>Trash</span>
+                </div>
+            </div>
+
+            <div class="main-content" id="conversationList">
+                <div class="loading">Loading conversations...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeModals()"></div>
+    <div class="shortcuts-modal" id="shortcutsModal">
+        <h3>Keyboard Shortcuts</h3>
+        <div class="shortcut-item">
+            <span>Compose new email</span>
+            <span class="shortcut-key">C</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Search</span>
+            <span class="shortcut-key">/</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Reply</span>
+            <span class="shortcut-key">R</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Reply all</span>
+            <span class="shortcut-key">A</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Forward</span>
+            <span class="shortcut-key">F</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Delete</span>
+            <span class="shortcut-key">D</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Star/Unstar</span>
+            <span class="shortcut-key">S</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Mark as read/unread</span>
+            <span class="shortcut-key">U</span>
+        </div>
+        <div class="shortcut-item">
+            <span>Show shortcuts</span>
+            <span class="shortcut-key">?</span>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let authToken = null;
+        let currentFolder = 'inbox';
+        let selectedConversation = null;
+        let conversations = [];
+        let wsConnection = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Check if user is logged in
+            authToken = localStorage.getItem('auth_token');
+            if (authToken) {
+                showMainApp();
+                loadConversations();
+                initializeWebSocket();
+            } else {
+                showLoginScreen();
+            }
+            
+            setupEventListeners();
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').classList.remove('active');
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').classList.add('active');
+        }
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Folder navigation
+            document.querySelectorAll('.folder-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
+                    item.classList.add('active');
+                    currentFolder = item.dataset.folder;
+                    loadConversations();
+                });
+            });
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('loginError');
+            const successDiv = document.getElementById('loginSuccess');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            const formData = new FormData(e.target);
+            const username = formData.get('username');
+            const password = formData.get('password');
+            
+            try {
+                // In demo mode, accept any credentials
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token || 'demo-token';
+                    localStorage.setItem('auth_token', authToken);
+                    localStorage.setItem('user', JSON.stringify(data.user || { username, email: username }));
+                    
+                    successDiv.textContent = 'Login successful! Redirecting...';
+                    successDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        showMainApp();
+                        loadConversations();
+                        initializeWebSocket();
+                    }, 1000);
+                } else {
+                    throw new Error('Login failed');
+                }
+            } catch (error) {
+                // In demo mode, always allow login
+                console.log('API login failed, using demo mode');
+                authToken = 'demo-token';
+                localStorage.setItem('auth_token', authToken);
+                localStorage.setItem('user', JSON.stringify({ username, email: username }));
+                
+                successDiv.textContent = 'Demo login successful!';
+                successDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    showMainApp();
+                    loadConversations();
+                    initializeWebSocket();
+                }, 1000);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            authToken = null;
+            
+            if (wsConnection) {
+                wsConnection.close();
+                wsConnection = null;
+            }
+            
+            showLoginScreen();
+        }
+
+        function showRegister() {
+            alert('Registration feature coming soon! For now, use any username/password to login in demo mode.');
+        }
+
+        async function loadConversations() {
+            const container = document.getElementById('conversationList');
+            container.innerHTML = '<div class="loading">Loading conversations...</div>';
+            
+            try {
+                const response = await fetch(`/api/conversations?folder=${currentFolder}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    conversations = await response.json();
+                } else {
+                    // Fallback to mock data
+                    conversations = getMockConversations();
+                }
+            } catch (error) {
+                console.log('API failed, using mock data');
+                conversations = getMockConversations();
+            }
+            
+            renderConversations();
+        }
+        
+        function getMockConversations() {
+            return [
+                {
+                    id: '1',
+                    subject: 'Welcome to Frame Email Client',
+                    participants: ['Frame Support'],
+                    last_message_date: new Date().toISOString(),
+                    unread_count: 1,
+                    message_count: 1,
+                    preview: 'Thank you for trying Frame Email Client! This is a demo conversation to show how the interface works.',
+                    messages: [
+                        { 
+                            from_name: 'Frame Support', 
+                            from_address: 'support@framemail.com',
+                            body_text: 'Welcome to Frame Email Client! This is a demo email to show how conversations work. You can reply using the quick reply box below.',
+                            date: new Date().toISOString(),
+                            is_read: false
+                        }
+                    ]
+                },
+                {
+                    id: '2',
+                    subject: 'Getting Started Guide',
+                    participants: ['Frame Team'],
+                    last_message_date: new Date(Date.now() - 3600000).toISOString(),
+                    unread_count: 0,
+                    message_count: 1,
+                    preview: 'Here\'s everything you need to know to get started with Frame Email Client.',
+                    messages: [
+                        { 
+                            from_name: 'Frame Team', 
+                            from_address: 'team@framemail.com',
+                            body_text: 'Here are some tips to get you started:\n\n1. Use keyboard shortcuts for faster navigation\n2. Try the search feature\n3. Organize emails with folders\n4. Use quick reply for fast responses',
+                            date: new Date(Date.now() - 3600000).toISOString(),
+                            is_read: true
+                        }
+                    ]
+                }
+            ];
+        }
+
+        function renderConversations() {
+            const container = document.getElementById('conversationList');
+            
+            if (conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No conversations found</h3>
+                        <p>Your ${currentFolder} folder is empty.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            conversations.forEach(conv => {
+                const convEl = createConversationElement(conv);
+                container.appendChild(convEl);
+            });
+        }
+
+        function createConversationElement(conv) {
+            const div = document.createElement('div');
+            div.className = `conversation ${conv.unread_count > 0 ? 'unread' : ''}`;
+            
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                
+                if (diffHours < 1) return 'Just now';
+                if (diffHours < 24) return `${diffHours}h ago`;
+                if (diffHours < 48) return 'Yesterday';
+                return date.toLocaleDateString();
+            };
+            
+            div.innerHTML = `
+                <div class="conversation-header">
+                    <div class="participants">${conv.participants.join(', ')}</div>
+                    <div class="timestamp">${formatDate(conv.last_message_date)}</div>
+                </div>
+                <div class="subject">${conv.subject}</div>
+                <div class="message-preview">
+                    <div class="message-text">${conv.preview}</div>
+                </div>
+                <div class="quick-reply">
+                    <input type="text" placeholder="Write a reply..." id="reply-${conv.id}">
+                    <button onclick="sendReply('${conv.id}')">Send</button>
+                </div>
+                <div class="conversation-actions">
+                    <button class="action-btn" onclick="replyTo('${conv.id}')">Reply</button>
+                    <button class="action-btn" onclick="replyAll('${conv.id}')">Reply All</button>
+                    <button class="action-btn" onclick="forward('${conv.id}')">Forward</button>
+                    <button class="action-btn" onclick="deleteEmail('${conv.id}')">Delete</button>
+                    <button class="action-btn" onclick="toggleStar('${conv.id}')">Star</button>
+                </div>
+            `;
+            return div;
+        }
+        
+        function initializeWebSocket() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                wsConnection = new WebSocket(`${protocol}//${window.location.host}/ws`);
+                
+                wsConnection.onopen = () => {
+                    console.log('WebSocket connected');
+                };
+                
+                wsConnection.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                };
+                
+                wsConnection.onerror = (error) => {
+                    console.log('WebSocket error:', error);
+                };
+                
+                wsConnection.onclose = () => {
+                    console.log('WebSocket disconnected');
+                    // Reconnect after 5 seconds
+                    setTimeout(initializeWebSocket, 5000);
+                };
+            } catch (error) {
+                console.log('WebSocket not available:', error);
+            }
+        }
+        
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'new_email':
+                    loadConversations(); // Refresh conversations
+                    break;
+                case 'email_read':
+                    // Update UI to reflect read status
+                    break;
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Don't trigger shortcuts when typing in input fields
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            switch(e.key) {
+                case 'c':
+                case 'C':
+                    composeEmail();
+                    break;
+                case '/':
+                    e.preventDefault();
+                    document.getElementById('searchInput')?.focus();
+                    break;
+                case 'r':
+                case 'R':
+                    if (selectedConversation) replyTo(selectedConversation);
+                    break;
+                case 'a':
+                case 'A':
+                    if (selectedConversation) replyAll(selectedConversation);
+                    break;
+                case 'f':
+                case 'F':
+                    if (selectedConversation) forward(selectedConversation);
+                    break;
+                case 'd':
+                case 'D':
+                    if (selectedConversation) deleteEmail(selectedConversation);
+                    break;
+                case 's':
+                case 'S':
+                    if (selectedConversation) toggleStar(selectedConversation);
+                    break;
+                case 'u':
+                case 'U':
+                    if (selectedConversation) toggleRead(selectedConversation);
+                    break;
+                case '?':
+                    showShortcuts();
+                    break;
+            }
+        });
+
+        // Action functions
+        function composeEmail() {
+            alert('Opening compose window...');
+        }
+
+        function sendReply(convId) {
+            const input = document.getElementById(`reply-${convId}`);
+            if (input.value.trim()) {
+                alert(`Sending reply: ${input.value}`);
+                input.value = '';
+            }
+        }
+
+        function replyTo(convId) {
+            selectedConversation = convId;
+            document.getElementById(`reply-${convId}`)?.focus();
+        }
+
+        function replyAll(convId) {
+            selectedConversation = convId;
+            alert(`Reply all to conversation ${convId}`);
+        }
+
+        function forward(convId) {
+            selectedConversation = convId;
+            alert(`Forward conversation ${convId}`);
+        }
+
+        function deleteEmail(convId) {
+            if (confirm('Move this conversation to trash?')) {
+                alert(`Deleted conversation ${convId}`);
+                loadConversations(); // Refresh after delete
+            }
+        }
+
+        function toggleStar(convId) {
+            alert(`Toggled star for conversation ${convId}`);
+        }
+
+        function toggleRead(convId) {
+            const conv = conversations.find(c => c.id === convId);
+            if (conv) {
+                conv.unread_count = conv.unread_count > 0 ? 0 : 1;
+                renderConversations();
+            }
+        }
+
+        function showShortcuts() {
+            document.getElementById('shortcutsModal').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closeModals() {
+            document.getElementById('shortcutsModal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

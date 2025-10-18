@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Email Client - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #dadde1;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1877f2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+
+        .folder-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .folder-item:hover {
+            background: #f0f2f5;
+        }
+
+        .folder-item.active {
+            background: #e7f3ff;
+            color: #1877f2;
+        }
+
+        .conversation-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .conversation {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .conversation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .conversation-meta {
+            flex: 1;
+        }
+
+        .sender {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .subject {
+            color: #65676b;
+            font-size: 14px;
+        }
+
+        .timestamp {
+            color: #65676b;
+            font-size: 12px;
+        }
+
+        .message-preview {
+            padding: 12px;
+            background: #f0f2f5;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .inline-reply {
+            border-top: 1px solid #dadde1;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .reply-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dadde1;
+            border-radius: 20px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .reply-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #1877f2;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e4e6eb;
+            color: #050505;
+        }
+
+        .compose-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #1877f2;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge {
+            background: #f02849;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            background: #4caf50;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar" id="status">
+        Demo Mode - Not connected to backend
+    </div>
+    
+    <header class="header">
+        <div class="logo">📧 Frame Mail</div>
+        <div>
+            <input type="search" placeholder="Search emails..." style="padding: 8px 12px; border-radius: 20px; border: 1px solid #dadde1; width: 300px;">
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="folder-item active">
+                <span>📥 Inbox</span>
+                <span class="badge">3</span>
+            </div>
+            <div class="folder-item">
+                <span>📤 Sent</span>
+            </div>
+            <div class="folder-item">
+                <span>📝 Drafts</span>
+                <span class="badge">1</span>
+            </div>
+            <div class="folder-item">
+                <span>⭐ Starred</span>
+            </div>
+            <div class="folder-item">
+                <span>🗑️ Trash</span>
+            </div>
+        </aside>
+
+        <main class="conversation-feed" id="feed">
+            <!-- Conversations will be loaded here -->
+        </main>
+    </div>
+
+    <button class="compose-btn">✉️</button>
+
+    <script>
+        // Demo data
+        const demoConversations = [
+            {
+                id: 1,
+                sender: 'John Doe',
+                subject: 'Project Update',
+                preview: 'Hey team, just wanted to give you a quick update on the project status...',
+                timestamp: '2 hours ago',
+                unread: true,
+                messages: [
+                    { sender: 'John Doe', text: 'Hey team, just wanted to give you a quick update on the project status. We\'re making good progress!', time: '2 hours ago' },
+                    { sender: 'You', text: 'Thanks for the update John! When do you think we\'ll have the first milestone completed?', time: '1 hour ago' },
+                    { sender: 'John Doe', text: 'I think we should be able to deliver by end of next week.', time: '30 minutes ago' }
+                ]
+            },
+            {
+                id: 2,
+                sender: 'Sarah Smith',
+                subject: 'Meeting Tomorrow',
+                preview: 'Don\'t forget about our meeting tomorrow at 10 AM...',
+                timestamp: '5 hours ago',
+                unread: false,
+                messages: [
+                    { sender: 'Sarah Smith', text: 'Don\'t forget about our meeting tomorrow at 10 AM. I\'ve sent the agenda.', time: '5 hours ago' },
+                    { sender: 'You', text: 'Got it, see you then!', time: '4 hours ago' }
+                ]
+            },
+            {
+                id: 3,
+                sender: 'Marketing Team',
+                subject: 'New Campaign Launch',
+                preview: 'We\'re excited to announce the launch of our new marketing campaign...',
+                timestamp: 'Yesterday',
+                unread: true,
+                messages: [
+                    { sender: 'Marketing Team', text: 'We\'re excited to announce the launch of our new marketing campaign! Check out the materials attached.', time: 'Yesterday' }
+                ]
+            }
+        ];
+
+        // Render conversations
+        function renderConversations() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = demoConversations.map(conv => `
+                <div class="conversation ${conv.unread ? 'unread' : ''}">
+                    <div class="conversation-header">
+                        <div class="avatar">${conv.sender.charAt(0)}</div>
+                        <div class="conversation-meta">
+                            <div class="sender">${conv.sender}</div>
+                            <div class="subject">${conv.subject}</div>
+                        </div>
+                        <div class="timestamp">${conv.timestamp}</div>
+                    </div>
+                    
+                    ${conv.messages.slice(-2).map(msg => `
+                        <div class="message-preview">
+                            <strong>${msg.sender}:</strong> ${msg.text}
+                        </div>
+                    `).join('')}
+                    
+                    <div class="inline-reply">
+                        <textarea class="reply-box" placeholder="Write a reply..." rows="2"></textarea>
+                        <div class="reply-actions">
+                            <button class="btn btn-secondary">Attach</button>
+                            <button class="btn btn-primary" onclick="sendReply(${conv.id})">Send</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function sendReply(convId) {
+            alert('Reply sent! (Demo mode - no actual email sent)');
+        }
+
+        // Check backend connection
+        async function checkBackend() {
+            try {
+                const response = await fetch('http://localhost:8080/health');
+                if (response.ok) {
+                    document.getElementById('status').textContent = '✓ Connected to backend';
+                    document.getElementById('status').style.background = '#4caf50';
+                }
+            } catch (e) {
+                console.log('Backend not available, running in demo mode');
+            }
+        }
+
+        // Initialize
+        renderConversations();
+        checkBackend();
+    </script>
+</body>
+</html>

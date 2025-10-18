@@ -1,0 +1,119 @@
+{
+  "emails": [
+    {
+      "id": 1,
+      "from": "alice@example.com",
+      "to": "test@example.com",
+      "subject": "Welcome to Frame Email Client",
+      "date": "Mon, 15 Jan 2024 10:30:00 +0000",
+      "body": "Hello! This is a test email to help you get started with Frame Email Client. Feel free to reply and test the conversation threading feature.",
+      "thread_id": "thread-1"
+    },
+    {
+      "id": 2,
+      "from": "bob@example.com",
+      "to": "test@example.com",
+      "subject": "Re: Welcome to Frame Email Client",
+      "date": "Mon, 15 Jan 2024 11:00:00 +0000",
+      "body": "Thanks for the welcome! This looks great. I'm excited to try out all the features.",
+      "thread_id": "thread-1"
+    },
+    {
+      "id": 3,
+      "from": "charlie@example.com",
+      "to": "test@example.com",
+      "subject": "Meeting Tomorrow",
+      "date": "Mon, 15 Jan 2024 14:00:00 +0000",
+      "body": "Don't forget about our meeting tomorrow at 2 PM. We'll discuss the project roadmap.",
+      "thread_id": "thread-2"
+    },
+    {
+      "id": 4,
+      "from": "alice@example.com",
+      "to": "test@example.com",
+      "subject": "Re: Meeting Tomorrow",
+      "date": "Mon, 15 Jan 2024 15:30:00 +0000",
+      "body": "I'll be there! Should I prepare anything specific?",
+      "thread_id": "thread-2"
+    },
+    {
+      "id": 5,
+      "from": "dave@example.com",
+      "to": "test@example.com",
+      "subject": "Project Update",
+      "date": "Tue, 16 Jan 2024 09:00:00 +0000",
+      "body": "Here's the latest update on the project. Everything is on track and we're meeting all our milestones.",
+      "thread_id": "thread-3"
+    },
+    {
+      "id": 6,
+      "from": "eve@example.com",
+      "to": "test@example.com",
+      "subject": "Question about API",
+      "date": "Tue, 16 Jan 2024 11:30:00 +0000",
+      "body": "I have a question about the API endpoints. Can you help me understand the authentication flow?",
+      "thread_id": "thread-4"
+    },
+    {
+      "id": 7,
+      "from": "test@example.com",
+      "to": "eve@example.com",
+      "subject": "Re: Question about API",
+      "date": "Tue, 16 Jan 2024 13:00:00 +0000",
+      "body": "Sure! The authentication uses JWT tokens. Let me send you the documentation.",
+      "thread_id": "thread-4"
+    },
+    {
+      "id": 8,
+      "from": "frank@example.com",
+      "to": "test@example.com",
+      "subject": "Lunch Plans",
+      "date": "Wed, 17 Jan 2024 10:00:00 +0000",
+      "body": "Want to grab lunch today? There's a new place that opened downtown.",
+      "thread_id": "thread-5"
+    },
+    {
+      "id": 9,
+      "from": "alice@example.com",
+      "to": "test@example.com",
+      "subject": "Re: Re: Welcome to Frame Email Client",
+      "date": "Wed, 17 Jan 2024 14:00:00 +0000",
+      "body": "Just wanted to follow up - have you had a chance to test the search feature yet?",
+      "thread_id": "thread-1"
+    },
+    {
+      "id": 10,
+      "from": "grace@example.com",
+      "to": "test@example.com",
+      "subject": "Bug Report",
+      "date": "Thu, 18 Jan 2024 09:30:00 +0000",
+      "body": "I found a small issue with the dark mode toggle. It doesn't persist after refresh.",
+      "thread_id": "thread-6"
+    }
+  ],
+  "folders": [
+    {
+      "name": "INBOX",
+      "path": "INBOX"
+    },
+    {
+      "name": "Sent",
+      "path": "Sent"
+    },
+    {
+      "name": "Drafts",
+      "path": "Drafts"
+    },
+    {
+      "name": "Trash",
+      "path": "Trash"
+    }
+  ],
+  "users": [
+    {
+      "email": "test@example.com",
+      "password": "password123",
+      "name": "Test User"
+    }
+  ]
+}
