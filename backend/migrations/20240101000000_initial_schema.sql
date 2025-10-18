@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS emails (
     folder TEXT NOT NULL DEFAULT 'INBOX',
     size INTEGER DEFAULT 0,
     in_reply_to TEXT,
-    references TEXT,
+    email_references TEXT,
     deleted_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

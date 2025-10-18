@@ -10,24 +10,13 @@ CREATE TABLE IF NOT EXISTS drafts (
     body_html TEXT,
     attachments TEXT,
     in_reply_to TEXT,
-    references TEXT,
+    email_references TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_drafts_user_id ON drafts(user_id);
-
--- Fix attachments table to use storage_path instead of path
--- First, check if we need to rename the column
--- SQLite doesn't support ALTER COLUMN, so we'll add the new column if it doesn't exist
--- and keep the old one for backward compatibility
-
--- Add storage_path column if it doesn't exist
-ALTER TABLE attachments ADD COLUMN storage_path TEXT;
-
--- Add thumbnail_path column if it doesn't exist
-ALTER TABLE attachments ADD COLUMN thumbnail_path TEXT;
 
 -- Create FTS5 virtual table for full-text search
 CREATE VIRTUAL TABLE IF NOT EXISTS emails_fts USING fts5(
@@ -75,7 +64,7 @@ CREATE TABLE IF NOT EXISTS send_queue (
     body_html TEXT,
     attachments TEXT,
     in_reply_to TEXT,
-    references TEXT,
+    email_references TEXT,
     retry_count INTEGER NOT NULL DEFAULT 0,
     max_retries INTEGER NOT NULL DEFAULT 3,
     last_error TEXT,

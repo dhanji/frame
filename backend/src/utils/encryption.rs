@@ -14,7 +14,17 @@ impl Encryption {
         let key_string = env::var("ENCRYPTION_KEY")
             .unwrap_or_else(|_| "0123456789abcdef0123456789abcdef".to_string());
         
-        let key = Key::<Aes256Gcm>::from_slice(key_string.as_bytes());
+        // Try to decode as base64 first, fall back to raw bytes if that fails
+        let key_bytes = general_purpose::STANDARD
+            .decode(&key_string)
+            .unwrap_or_else(|_| key_string.as_bytes().to_vec());
+        
+        // Ensure key is exactly 32 bytes
+        let mut key_array = [0u8; 32];
+        let len = key_bytes.len().min(32);
+        key_array[..len].copy_from_slice(&key_bytes[..len]);
+        
+        let key = Key::<Aes256Gcm>::from_slice(&key_array);
         let cipher = Aes256Gcm::new(key);
         
         Self { cipher }
