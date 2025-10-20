@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test - Frame Email Client</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1877f2;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1c1e21;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        .code {
+            background: #1c1e21;
+            color: #e8eaed;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .fix-details {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #1877f2;
+            margin: 15px 0;
+        }
+        .fix-details h3 {
+            color: #1877f2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>✅ Navigation Fix Applied</h1>
+        
+        <div class="test-section">
+            <h2>🐛 Issue Identified</h2>
+            <div class="status fail">
+                <strong>Problem:</strong> When clicking the Attachments tab, users could not navigate back to other tabs (Inbox, Sent, etc.)
+            </div>
+            <p style="margin-top: 15px;">
+                The <code>showAttachmentGallery()</code> function was hiding the conversation list, but the 
+                <code>selectFolder()</code> function (used by other tabs) wasn't reversing this action.
+            </p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Fix Applied</h2>
+            <div class="status pass">
+                <strong>Solution:</strong> Modified the <code>selectFolder()</code> function to call <code>hideAttachmentGallery()</code> before loading conversations
+            </div>
+            
+            <div class="fix-details">
+                <h3>Changes Made:</h3>
+                <ul>
+                    <li><strong>Updated selectFolder() function:</strong> Now calls <code>hideAttachmentGallery()</code> to ensure the gallery is hidden and conversation list is shown when switching to any folder</li>
+                    <li><strong>Enhanced hideAttachmentGallery() function:</strong> Added explicit show/hide logic for both gallery and conversation list containers</li>
+                </ul>
+            </div>
+
+            <div class="code">function selectFolder(folderId) {
+    currentFolder = folderId;
+    
+    // Hide gallery and show conversation list
+    hideAttachmentGallery();
+    
+    // Update active state
+    document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
+    event.target.closest('.folder-item').classList.add('active');
+    loadConversations();
+}</div>
+
+            <div class="code">function hideAttachmentGallery() {
+    // Hide gallery
+    document.getElementById('galleryContainer').classList.remove('active');
+    document.getElementById('galleryContainer').style.display = 'none';
+    
+    // Show conversation list
+    document.getElementById('conversationList').style.display = 'block';
+}</div>
+        </div>
+
+        <div class="test-section">
+            <h2>✨ How It Works Now</h2>
+            <ol style="padding-left: 25px; margin: 15px 0;">
+                <li><strong>Click Attachments:</strong> Shows the attachment gallery, hides conversation list</li>
+                <li><strong>Click Inbox (or any folder):</strong> Hides the gallery, shows conversation list</li>
+                <li><strong>Switch between folders:</strong> Gallery stays hidden, only conversation list is visible</li>
+                <li><strong>Return to Attachments:</strong> Gallery shows again, conversation list hides</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Testing Instructions</h2>
+            <div style="background: white; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                <ol style="padding-left: 25px;">
+                    <li>Open <code>index.html</code> in your browser</li>
+                    <li>Login with any credentials (demo mode)</li>
+                    <li>Click on "📎 Attachments" in the sidebar</li>
+                    <li>Verify the attachment gallery appears</li>
+                    <li>Click on "Inbox" or any other folder</li>
+                    <li>✅ <strong>Expected:</strong> You should now see the conversation list again</li>
+                    <li>Click "📎 Attachments" again</li>
+                    <li>✅ <strong>Expected:</strong> Gallery appears again</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Summary</h2>
+            <div class="status pass">
+                <strong>✅ Fix Complete:</strong> Navigation between Attachments and other tabs now works correctly
+            </div>
+            <p style="margin-top: 15px;">
+                The issue was a simple oversight where the folder selection logic didn't account for the 
+                attachment gallery state. By adding a call to <code>hideAttachmentGallery()</code> in the 
+                <code>selectFolder()</code> function, we ensure that switching to any folder properly 
+                resets the view state.
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 8px;">
+            <h3 style="color: #1877f2; margin-bottom: 10px;">🎉 Ready to Test!</h3>
+            <p>Open <strong>index.html</strong> and try navigating between tabs</p>
+            <a href="index.html" style="display: inline-block; margin-top: 15px; padding: 12px 24px; background: #1877f2; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">Open Frame Email Client</a>
+        </div>
+    </div>
+</body>
+</html>

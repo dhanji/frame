@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT DISTINCT subject\n            FROM emails\n            WHERE user_id = ? AND subject LIKE ? AND deleted_at IS NULL\n            ORDER BY date DESC\n            LIMIT ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "subject",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e842b5ce262db560e0ece0fe1434ba95ef06e4199a7e86e30c5de314861a43a1"
+}

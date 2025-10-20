@@ -14,6 +14,11 @@ pub struct UserSettings {
     pub keyboard_shortcuts_enabled: bool,
     pub conversation_view: bool,
     pub preview_pane: bool,
+    // AI Agent settings
+    pub ai_provider: String,
+    pub ai_api_key: Option<String>,
+    pub ai_model: String,
+    pub ai_context_window: i32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -28,6 +33,11 @@ pub struct UpdateSettingsRequest {
     pub keyboard_shortcuts_enabled: Option<bool>,
     pub conversation_view: Option<bool>,
     pub preview_pane: Option<bool>,
+    // AI Agent settings
+    pub ai_provider: Option<String>,
+    pub ai_api_key: Option<String>,
+    pub ai_model: Option<String>,
+    pub ai_context_window: Option<i32>,
 }
 
 pub async fn get_settings(
@@ -104,6 +114,18 @@ pub async fn update_settings(
     if let Some(v) = body.preview_pane {
         settings.preview_pane = v;
     }
+    if let Some(ref v) = body.ai_provider {
+        settings.ai_provider = v.clone();
+    }
+    if let Some(ref v) = body.ai_api_key {
+        settings.ai_api_key = Some(v.clone());
+    }
+    if let Some(ref v) = body.ai_model {
+        settings.ai_model = v.clone();
+    }
+    if let Some(v) = body.ai_context_window {
+        settings.ai_context_window = v;
+    }
     
     // Save updated settings
     let settings_json = serde_json::to_string(&settings)
@@ -136,5 +158,10 @@ fn default_settings() -> UserSettings {
         keyboard_shortcuts_enabled: true,
         conversation_view: true,
         preview_pane: true,
+        // AI Agent defaults
+        ai_provider: "anthropic".to_string(),
+        ai_api_key: None,
+        ai_model: "claude-3-5-sonnet-20241022".to_string(),
+        ai_context_window: 200000,
     }
 }

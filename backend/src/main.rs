@@ -8,7 +8,7 @@ use tokio::sync::RwLock;
 use sqlx::SqlitePool;
 use email_client_backend::{handlers, services, websocket, db};
 
-use services::{EmailManager, EmailSyncService, BackgroundServiceManager};
+use services::{EmailManager, EmailSyncService, BackgroundServiceManager, AgentEngine, ProviderConfig, AutomationScheduler};
 use websocket::ConnectionManager;
 
 #[actix_web::main]
@@ -56,6 +56,27 @@ async fn main() -> std::io::Result<()> {
     // Start attachment cleanup job
     bg_service_manager.start_attachment_cleanup_job().await;
     
+    // Create AI Agent Engine
+    let provider_config = ProviderConfig::Anthropic {
+        api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| "dummy-key".to_string()),
+        model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|_| "claude-3-5-sonnet-20241022".to_string()),
+    };
+    let provider = services::agent::provider::create_provider(provider_config);
+    // Note: Tool registry will be created per-user in handlers
+    let tool_registry = Arc::new(services::agent::tools::create_tool_registry(pool.clone(), 1));
+    let agent_engine = Arc::new(AgentEngine::new(provider, tool_registry));
+    
+    // Start automation scheduler
+    let mut automation_scheduler = AutomationScheduler::new(pool.clone(), agent_engine.clone())
+        .await
+        .expect("Failed to create automation scheduler");
+    
+    tokio::spawn(async move {
+        if let Err(e) = automation_scheduler.start().await {
+            log::error!("Failed to start automation scheduler: {}", e);
+        }
+    });
+    
     // Start HTTP server
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -70,6 +91,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(email_manager.clone()))
             .app_data(web::Data::new(ws_manager.clone()))
+            .app_data(web::Data::new(agent_engine.clone()))
             .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
             .service(
@@ -113,10 +135,44 @@ async fn main() -> std::io::Result<()> {
                             .route("/attachments/{id}", web::get().to(handlers::attachments::download_attachment))
                             .route("/attachments/{id}", web::delete().to(handlers::attachments::delete_attachment))
                             .route("/attachments/{id}/thumbnail", web::get().to(handlers::attachments::download_thumbnail))
-                            .route("/maintenance/cleanup-attachments", web::post().to(handlers::attachments::cleanup_orphaned_attachments))
+                            .route("/attachments/gallery", web::get().to(handlers::attachments::get_gallery))
+                            .route("/attachments/gallery/recents", web::get().to(handlers::attachments::get_gallery_recents))
+                            .route("/attachments/gallery/by-sender", web::get().to(handlers::attachments::get_gallery_by_sender))                            .route("/maintenance/cleanup-attachments", web::post().to(handlers::attachments::cleanup_orphaned_attachments))
                             // Settings endpoints
                             .route("/settings", web::get().to(handlers::settings::get_settings))
                             .route("/settings", web::put().to(handlers::settings::update_settings))
+                            // Chat/Agent endpoints
+                            .route("/chat/conversations", web::post().to(handlers::chat::create_conversation))
+                            .route("/chat/conversations", web::get().to(handlers::chat::list_conversations))
+                            .route("/chat/conversations/{id}", web::get().to(handlers::chat::get_conversation))
+                            .route("/chat/conversations/{id}/messages", web::post().to(handlers::chat::send_message))
+                            .route("/chat/conversations/{id}", web::delete().to(handlers::chat::delete_conversation))
+                            .route("/chat/conversations/{id}/stream", web::post().to(handlers::chat::send_message_stream))
+                            // Automation endpoints
+                            .route("/automations", web::post().to(handlers::automations::create_automation))
+                            .route("/automations", web::get().to(handlers::automations::list_automations))
+                            .route("/automations/{id}", web::get().to(handlers::automations::get_automation))
+                            .route("/automations/{id}", web::put().to(handlers::automations::update_automation))
+                            .route("/automations/{id}", web::delete().to(handlers::automations::delete_automation))
+                            .route("/automations/{id}/trigger", web::post().to(handlers::automations::trigger_automation))
+                            .route("/automations/{id}/runs", web::get().to(handlers::automations::get_runs))
+                            // Reminder endpoints
+                            .route("/reminders", web::post().to(handlers::reminders::create_reminder))
+                            .route("/reminders", web::get().to(handlers::reminders::list_reminders))
+                            .route("/reminders/{id}", web::put().to(handlers::reminders::update_reminder))
+                            .route("/reminders/{id}", web::delete().to(handlers::reminders::delete_reminder))
+                            .route("/reminders/{id}/complete", web::put().to(handlers::reminders::toggle_complete))
+                            // Calendar endpoints
+                            .route("/calendar/events", web::get().to(handlers::calendar::list_events))
+                            .route("/calendar/events", web::post().to(handlers::calendar::create_event))
+                            .route("/calendar/events/{id}", web::put().to(handlers::calendar::update_event))
+                            .route("/calendar/events/{id}", web::delete().to(handlers::calendar::delete_event))
+                            // Money endpoints
+                            .route("/money/accounts", web::get().to(handlers::money::list_accounts))
+                            .route("/money/accounts", web::post().to(handlers::money::create_account))
+                            .route("/money/transactions", web::get().to(handlers::money::list_transactions))
+                            .route("/money/transactions", web::post().to(handlers::money::add_transaction))
+                            .route("/money/sync", web::post().to(handlers::money::sync_accounts))
                     )
             )
             .route("/ws", web::get().to(websocket::ws_handler))
@@ -271,6 +327,139 @@ async fn create_tables(pool: &sqlx::SqlitePool) {
         "CREATE INDEX IF NOT EXISTS idx_filters_user_id ON filters(user_id)",
         "CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)",
         "CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)",
+        // Chat conversations
+        r#"
+        CREATE TABLE IF NOT EXISTS chat_conversations (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_chat_conversations_user_id ON chat_conversations(user_id)",
+        // Chat messages
+        r#"
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id TEXT PRIMARY KEY,
+            conversation_id TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+            content TEXT NOT NULL,
+            tool_calls TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation_id ON chat_messages(conversation_id)",
+        // Automations
+        r#"
+        CREATE TABLE IF NOT EXISTS automations (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            schedule TEXT NOT NULL,
+            prompt TEXT NOT NULL,
+            enabled BOOLEAN NOT NULL DEFAULT TRUE,
+            last_run DATETIME,
+            next_run DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_automations_user_id ON automations(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_automations_enabled ON automations(enabled)",
+        // Automation runs
+        r#"
+        CREATE TABLE IF NOT EXISTS automation_runs (
+            id TEXT PRIMARY KEY,
+            automation_id TEXT NOT NULL,
+            status TEXT NOT NULL CHECK(status IN ('running', 'success', 'failed')),
+            result TEXT,
+            error TEXT,
+            started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            completed_at DATETIME,
+            FOREIGN KEY (automation_id) REFERENCES automations(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_automation_runs_automation_id ON automation_runs(automation_id)",
+        // Reminders
+        r#"
+        CREATE TABLE IF NOT EXISTS reminders (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            notes TEXT,
+            due_date DATETIME,
+            completed BOOLEAN NOT NULL DEFAULT FALSE,
+            completed_at DATETIME,
+            email_conversation_id TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_reminders_completed ON reminders(completed)",
+        "CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date)",
+        // Calendar events
+        r#"
+        CREATE TABLE IF NOT EXISTS calendar_events (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            calendar_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            location TEXT,
+            start_time DATETIME NOT NULL,
+            end_time DATETIME NOT NULL,
+            all_day BOOLEAN NOT NULL DEFAULT FALSE,
+            recurrence_rule TEXT,
+            attendees TEXT,
+            status TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_calendar_events_user_id ON calendar_events(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_calendar_events_start_time ON calendar_events(start_time)",
+        "CREATE INDEX IF NOT EXISTS idx_calendar_events_calendar_id ON calendar_events(calendar_id)",
+        // Money accounts
+        r#"
+        CREATE TABLE IF NOT EXISTS money_accounts (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            account_type TEXT NOT NULL CHECK(account_type IN ('bank', 'cash_app', 'other')),
+            account_name TEXT NOT NULL,
+            balance REAL NOT NULL DEFAULT 0.0,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            credentials TEXT,
+            last_sync DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_money_accounts_user_id ON money_accounts(user_id)",
+        // Money transactions
+        r#"
+        CREATE TABLE IF NOT EXISTS money_transactions (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            transaction_date DATETIME NOT NULL,
+            description TEXT NOT NULL,
+            amount REAL NOT NULL,
+            category TEXT,
+            transaction_type TEXT NOT NULL CHECK(transaction_type IN ('income', 'expense', 'transfer')),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (account_id) REFERENCES money_accounts(id) ON DELETE CASCADE
+        )
+        "#,
+        "CREATE INDEX IF NOT EXISTS idx_money_transactions_account_id ON money_transactions(account_id)",
+        "CREATE INDEX IF NOT EXISTS idx_money_transactions_date ON money_transactions(transaction_date)",
     ];
     
     for query in queries {

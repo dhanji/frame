@@ -7,3 +7,8 @@ pub mod filters;
 pub mod search;
 pub mod attachments;
 pub mod settings;
+pub mod chat;
+pub mod automations;
+pub mod reminders;
+pub mod calendar;
+pub mod money;

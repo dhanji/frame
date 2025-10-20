@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT id, path, storage_path\n                    FROM attachments\n                    WHERE email_id IS NULL \n                    AND draft_id IS NULL\n                    AND created_at < datetime('now', '-1 day')\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "path",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "storage_path",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "4baf4f7a5145a405ae08ac4f43c4d30205dfd1371fbc7ddc4bdecfe8b1561b06"
+}

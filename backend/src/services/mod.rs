@@ -9,6 +9,8 @@ pub mod search;
 pub mod imap_idle;
 pub mod threading;
 pub mod background_services;
+pub mod agent;
+pub mod automation_scheduler;
 
 pub use email::EmailService;
 pub use email_manager::EmailManager;
@@ -20,3 +22,7 @@ pub use search::SearchService;
 pub use imap_idle::ImapIdleService;
 pub use threading::{JwzThreading, ThreadableEmail, ThreadNode};
 pub use background_services::BackgroundServiceManager;
+pub mod attachment_enrichment;
+pub use attachment_enrichment::AttachmentEnrichmentService;
+pub use agent::{AgentEngine, LLMProvider, ProviderConfig, ToolRegistry};
+pub use automation_scheduler::AutomationScheduler;
