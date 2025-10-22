@@ -5,6 +5,9 @@ use sqlx::FromRow;
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
     pub id: i64,
+    pub oauth_provider: Option<String>,
+    pub oauth_access_token: Option<String>,
+    pub oauth_refresh_token: Option<String>,
     pub email: String,
     pub username: String,
     pub password_hash: String,

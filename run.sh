@@ -139,19 +139,16 @@ start_server() {
         return 1
     fi
     
-    print_info "Starting backend server..."
-    cd "$BACKEND_DIR"
-    
-    # Check if binary exists
-    if [ ! -f "target/release/server" ]; then
-        print_warning "Backend binary not found, building..."
-        if ! build_backend; then
-            return 1
-        fi
+    # Always rebuild to ensure latest code
+    print_info "Building backend with latest code..."
+    if ! build_backend; then
+        return 1
     fi
     
+    print_info "Starting backend server..."
+    cd "$BACKEND_DIR"
     # Start the server in background
-    RUST_LOG=info ./target/release/server >> "$LOG_FILE" 2>&1 &
+    RUST_LOG=info ./target/release/email-server >> "$LOG_FILE" 2>&1 &
     local PID=$!
     
     # Save PID

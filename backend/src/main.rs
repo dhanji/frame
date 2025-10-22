@@ -94,13 +94,16 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(agent_engine.clone()))
             .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
+            // Public auth endpoints (BEFORE the protected scope)
+            .route("/api/register", web::post().to(handlers::auth::register))
+            .route("/api/login", web::post().to(handlers::auth::login))
+            .route("/api/auth/google", web::get().to(handlers::auth::google_auth_url))
+            .route("/api/auth/google/callback", web::get().to(handlers::auth::google_callback))
             .service(
                 web::scope("/api")
-                    // Public endpoints (no authentication required)
-                    .route("/register", web::post().to(handlers::auth::register))
-                    .route("/login", web::post().to(handlers::auth::login))
-                    // Protected endpoints with authentication
                     .wrap(HttpAuthentication::bearer(email_client_backend::middleware::auth::validator))
+                    // All routes in this scope require authentication
+                            .route("/logout", web::post().to(handlers::auth::logout))
                             .route("/conversations", web::get().to(handlers::conversations::get_conversations))
                             .route("/conversations/{id}", web::get().to(handlers::conversations::get_conversation))
                             .route("/emails/send", web::post().to(handlers::emails::send_email))

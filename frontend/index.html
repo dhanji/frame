@@ -98,6 +98,11 @@
             cursor: not-allowed;
         }
 
+        .settings-link {
+            text-align: center;
+            margin-top: 16px;
+        }
+
         .demo-notice {
             background: #fff3cd;
             color: #856404;
@@ -1103,6 +1108,156 @@
             from { transform: translateX(400px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* Settings Modal Styles */
+        .settings-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-modal-overlay.active {
+            display: flex;
+        }
+
+        .settings-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .settings-modal h2 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            color: #1c1e21;
+        }
+
+        .settings-modal .subtitle {
+            color: #65676b;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e4e6eb;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .settings-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1c1e21;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-group-small {
+            margin-bottom: 12px;
+        }
+
+        .form-group-small label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #1c1e21;
+        }
+
+        .form-group-small input,
+        .form-group-small select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #dadde1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group-small input:focus,
+        .form-group-small select:focus {
+            outline: none;
+            border-color: #1877f2;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #65676b;
+            margin-top: 4px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e4e6eb;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: #1877f2;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            padding: 0;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .settings-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f0f2f5;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .settings-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .settings-toggle label {
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .collapsible-section {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -1137,6 +1292,19 @@
                 
                 <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
             </form>
+            
+            <div style="text-align: center; margin: 20px 0; color: #65676b; font-size: 14px;">
+                <span>or</span>
+            </div>
+            
+            <button type="button" class="login-btn" id="googleSignInBtn" style="background: white; color: #1c1e21; border: 2px solid #dadde1; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                Sign in with Google
+            </button>
+            
+            <div class="settings-link">
+                <button class="btn-link" onclick="openAccountSettingsModal()">⚙️ Create Account with Settings</button>
+            </div>
         </div>
     </div>
 
@@ -1261,6 +1429,122 @@
         </div>
     </div>
 
+    <!-- Account Settings Modal -->
+    <div class="settings-modal-overlay" id="accountSettingsModal">
+        <div class="settings-modal">
+            <h2>Create New Account</h2>
+            <p class="subtitle">Configure your email and AI settings to create a new account</p>
+            
+            <form id="accountSettingsForm">
+                <!-- Account Credentials -->
+                <div class="settings-section">
+                    <h3>Account Credentials</h3>
+                    <div class="form-group-small">
+                        <label>Email Address *</label>
+                        <input type="email" id="new-email" name="email" required placeholder="your.email@example.com">
+                    </div>
+                    <div class="form-group-small">
+                        <label>Password *</label>
+                        <input type="password" id="new-password" name="password" required placeholder="Enter password">
+                    </div>
+                </div>
+
+                <!-- Email Server Settings -->
+                <div class="settings-section">
+                    <h3>Email Server Settings</h3>
+                    <div class="form-row">
+                        <div class="form-group-small">
+                            <label>IMAP Host *</label>
+                            <input type="text" id="new-imap-host" name="imap_host" required placeholder="imap.gmail.com">
+                        </div>
+                        <div class="form-group-small">
+                            <label>IMAP Port *</label>
+                            <input type="number" id="new-imap-port" name="imap_port" required placeholder="993" value="993">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-small">
+                            <label>SMTP Host *</label>
+                            <input type="text" id="new-smtp-host" name="smtp_host" required placeholder="smtp.gmail.com">
+                        </div>
+                        <div class="form-group-small">
+                            <label>SMTP Port *</label>
+                            <input type="number" id="new-smtp-port" name="smtp_port" required placeholder="587" value="587">
+                        </div>
+                    </div>
+                    <p class="help-text">
+                        For Gmail: IMAP: imap.gmail.com:993, SMTP: smtp.gmail.com:587<br>
+                        For Outlook: IMAP: outlook.office365.com:993, SMTP: smtp.office365.com:587
+                    </p>
+                </div>
+
+                <!-- AI/LLM Settings -->
+                <div class="settings-section">
+                    <h3>AI Agent Settings</h3>
+                    <div class="settings-toggle">
+                        <input type="checkbox" id="enable-ai" onchange="toggleAISettings(this.checked)">
+                        <label for="enable-ai">Enable AI features (Goose Chat, Automations)</label>
+                    </div>
+                    
+                    <div id="ai-settings-section" class="collapsible-section">
+                        <div class="form-group-small">
+                            <label>LLM Provider *</label>
+                            <select id="new-llm-provider" name="llm_provider" onchange="updateModelPlaceholder()">
+                                <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="openai">OpenAI (GPT)</option>
+                                <option value="databricks">Databricks</option>
+                                <option value="local">Local GGUF</option>
+                            </select>
+                        </div>
+                        <div class="form-group-small">
+                            <label>API Key *</label>
+                            <input type="password" id="new-api-key" name="api_key" placeholder="sk-ant-...">
+                            <p class="help-text">Your API key will be stored securely and encrypted</p>
+                        </div>
+                        <div class="form-group-small">
+                            <label>Model ID *</label>
+                            <input type="text" id="new-model-id" name="model_id" placeholder="claude-3-5-sonnet-20241022">
+                            <p class="help-text" id="model-help-text">
+                                Recommended: claude-3-5-sonnet-20241022 for best performance
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optional: Calendar Settings -->
+                <div class="settings-section">
+                    <h3>Calendar Integration (Optional)</h3>
+                    <div class="settings-toggle">
+                        <input type="checkbox" id="enable-calendar" onchange="toggleCalendarSettings(this.checked)">
+                        <label for="enable-calendar">Enable calendar sync</label>
+                    </div>
+                    
+                    <div id="calendar-settings-section" class="collapsible-section">
+                        <div class="form-group-small">
+                            <label>CalDAV Server URL</label>
+                            <input type="text" id="new-caldav-url" name="caldav_url" placeholder="https://caldav.example.com">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group-small">
+                                <label>Username</label>
+                                <input type="text" id="new-caldav-username" name="caldav_username" placeholder="username">
+                            </div>
+                            <div class="form-group-small">
+                                <label>Password</label>
+                                <input type="password" id="new-caldav-password" name="caldav_password" placeholder="password">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeAccountSettingsModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="createAccountBtn">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Global state
         let authToken = null;
@@ -1306,9 +1590,204 @@
             setupEventListeners();
         }
 
+        // ===== ACCOUNT SETTINGS MODAL =====
+        function openAccountSettingsModal() {
+            document.getElementById('accountSettingsModal').classList.add('active');
+        }
+
+        function closeAccountSettingsModal() {
+            document.getElementById('accountSettingsModal').classList.remove('active');
+        }
+
+        function toggleAISettings(enabled) {
+            const section = document.getElementById('ai-settings-section');
+            if (enabled) {
+                section.style.display = 'block';
+                section.querySelectorAll('input, select').forEach(el => el.required = true);
+            } else {
+                section.style.display = 'none';
+                section.querySelectorAll('input, select').forEach(el => el.required = false);
+            }
+        }
+
+        function toggleCalendarSettings(enabled) {
+            const section = document.getElementById('calendar-settings-section');
+            section.style.display = enabled ? 'block' : 'none';
+        }
+
+        function updateModelPlaceholder() {
+            const provider = document.getElementById('new-llm-provider').value;
+            const modelInput = document.getElementById('new-model-id');
+            const helpText = document.getElementById('model-help-text');
+            
+            const placeholders = {
+                'anthropic': {
+                    placeholder: 'claude-3-5-sonnet-20241022',
+                    help: 'Recommended: claude-3-5-sonnet-20241022 for best performance'
+                },
+                'openai': {
+                    placeholder: 'gpt-4-turbo-preview',
+                    help: 'Recommended: gpt-4-turbo-preview or gpt-3.5-turbo'
+                },
+                'databricks': {
+                    placeholder: 'databricks-meta-llama-3-1-70b-instruct',
+                    help: 'Enter your Databricks model endpoint'
+                },
+                'local': {
+                    placeholder: 'path/to/model.gguf',
+                    help: 'Path to your local GGUF model file'
+                }
+            };
+            
+            const config = placeholders[provider] || placeholders['anthropic'];
+            modelInput.placeholder = config.placeholder;
+            helpText.textContent = config.help;
+        }
+
+        // Handle account creation form submission
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('accountSettingsForm');
+            if (form) {
+                form.addEventListener('submit', handleAccountCreation);
+            }
+        });
+
+        async function handleAccountCreation(e) {
+            e.preventDefault();
+            
+            const createBtn = document.getElementById('createAccountBtn');
+            const originalText = createBtn.textContent;
+            createBtn.disabled = true;
+            createBtn.textContent = 'Creating Account...';
+            
+            const formData = new FormData(e.target);
+            const aiEnabled = document.getElementById('enable-ai').checked;
+            const calendarEnabled = document.getElementById('enable-calendar').checked;
+            
+            // Build account data
+            const accountData = {
+                email: formData.get('email'),
+                password: formData.get('password'),
+                imap_host: formData.get('imap_host'),
+                imap_port: parseInt(formData.get('imap_port')),
+                smtp_host: formData.get('smtp_host'),
+                smtp_port: parseInt(formData.get('smtp_port'))
+            };
+            
+            // Add AI settings if enabled
+            if (aiEnabled) {
+                accountData.llm_provider = formData.get('llm_provider');
+                accountData.api_key = formData.get('api_key');
+                accountData.model_id = formData.get('model_id');
+            }
+            
+            // Add calendar settings if enabled
+            if (calendarEnabled) {
+                accountData.caldav_url = formData.get('caldav_url');
+                accountData.caldav_username = formData.get('caldav_username');
+                accountData.caldav_password = formData.get('caldav_password');
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(accountData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    localStorage.setItem('auth_token', authToken);
+                    localStorage.setItem('user', JSON.stringify(data.user || { email: accountData.email }));
+                    
+                    showNotification('Account created successfully!', 'success');
+                    closeAccountSettingsModal();
+                    
+                    setTimeout(() => {
+                        showMainApp();
+                        loadFolders();
+                        loadConversations();
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Failed to create account', 'error');
+                }
+            } catch (error) {
+                console.error('Account creation error:', error);
+                showNotification('Failed to create account. Please check your settings and try again.', 'error');
+            } finally {
+                createBtn.disabled = false;
+                createBtn.textContent = originalText;
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('accountSettingsModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'accountSettingsModal') {
+                closeAccountSettingsModal();
+            }
+        });
+
+        // Keyboard shortcut to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('accountSettingsModal');
+                if (modal && modal.classList.contains('active')) {
+                    closeAccountSettingsModal();
+                }
+            }
+        });
+
+        // ===== END ACCOUNT SETTINGS MODAL =====
+
         function showLoginScreen() {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').classList.remove('active');
+            
+            // Check if we have a token from OAuth redirect
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const email = urlParams.get('email');
+            
+            if (token && email) {
+                // Store token and redirect to main app
+                authToken = token;
+                localStorage.setItem('auth_token', authToken);
+                localStorage.setItem('user', JSON.stringify({ email }));
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, '/');
+                
+                showNotification('Successfully signed in with Google!', 'success');
+                showMainApp();
+                loadFolders();
+                loadConversations();
+            }
+        }
+
+        // Google Sign In Handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const googleSignInBtn = document.getElementById('googleSignInBtn');
+            if (googleSignInBtn) {
+                googleSignInBtn.addEventListener('click', handleGoogleSignIn);
+            }
+        });
+
+        async function handleGoogleSignIn() {
+            try {
+                console.log('Fetching Google auth URL...');
+                const response = await fetch('/api/auth/google');
+                console.log('Response status:', response.status);
+                const text = await response.text();
+                console.log('Response text:', text);
+                const data = JSON.parse(text);
+                console.log('Parsed data:', data);
+                window.location.href = data.auth_url;
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                showNotification('Failed to initiate Google sign in', 'error');
+            }
         }
 
         function showMainApp() {
@@ -1681,23 +2160,7 @@
                 error: '✗',
                 info: 'ℹ',
                 warning: '⚠'
-            }
-
-        // Handle API errors gracefully  
-        function handleApiError(error, context, response = null) {
-            console.error(`${context} error:`, error);
-            if (response) {
-                if (response.status === 401) {
-                    showNotification('Please login to access this feature', 'error');
-                } else if (response.status === 404) {
-                    showNotification('This feature is not available yet', 'info');
-                } else {
-                    showNotification(`${context} is currently unavailable`, 'error');
-                }
-            } else {
-                showNotification(`${context} is currently unavailable`, 'error');
-            }
-        }
+            };
             
             notification.innerHTML = `
                 <div style="font-size: 20px;">${icons[type] || icons.info}</div>
@@ -1716,6 +2179,22 @@
                     }
                 }, 300);
             }, 3000);
+        }
+
+        // Handle API errors gracefully  
+        function handleApiError(error, context, response = null) {
+            console.error(`${context} error:`, error);
+            if (response) {
+                if (response.status === 401) {
+                    showNotification('Please login to access this feature', 'error');
+                } else if (response.status === 404) {
+                    showNotification('This feature is not available yet', 'info');
+                } else {
+                    showNotification(`${context} is currently unavailable`, 'error');
+                }
+            } else {
+                showNotification(`${context} is currently unavailable`, 'error');
+            }
         }
 
         function debounce(func, wait) {
