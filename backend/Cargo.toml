@@ -49,3 +49,5 @@ image = "0.24"
 async-trait = "0.1.89"
 reqwest = { version = "0.12.24", features = ["json"] }
 tokio-cron-scheduler = "0.15.0"
+icalendar = "0.16"
+http = "1.0"

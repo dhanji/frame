@@ -1276,18 +1276,6 @@
         let currentPage = 1;
         let pageSize = 20;
 
-        // ===== ERROR HANDLING HELPERS (MUST BE DEFINED EARLY) =====
-        
-        // Check if user is authenticated with real account
-        function isRealAccount() {
-            return authToken && authToken !== 'demo-token';
-        }
-
-        // Show feature unavailable message
-        function showFeatureUnavailable(featureName) {
-            showNotification(`${featureName} requires a real email account. Please register or login with valid credentials.`, 'info');
-        }
-
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
             initializeApp();
@@ -1432,7 +1420,7 @@
             attachmentsTab.innerHTML = `
                 <span>📎 Attachments</span>
             `;
-            attachmentsTab.addEventListener('click', (e) => showAttachmentGallery(e));
+            attachmentsTab.addEventListener('click', () => showAttachmentGallery());
             sidebar.appendChild(attachmentsTab);
 
             // Add separator
@@ -1445,42 +1433,42 @@
             const chatTab = document.createElement('div');
             chatTab.className = 'folder-item';
             chatTab.innerHTML = `<span>🤖 Goose Chat</span>`;
-            chatTab.addEventListener('click', (e) => showChatView(e));
+            chatTab.addEventListener('click', () => showChatView());
             sidebar.appendChild(chatTab);
 
             // Add Automations tab
             const automationsTab = document.createElement('div');
             automationsTab.className = 'folder-item';
             automationsTab.innerHTML = `<span>⚙️ Automations</span>`;
-            automationsTab.addEventListener('click', (e) => showAutomationsView(e));
+            automationsTab.addEventListener('click', () => showAutomationsView());
             sidebar.appendChild(automationsTab);
 
             // Add Reminders tab
             const remindersTab = document.createElement('div');
             remindersTab.className = 'folder-item';
             remindersTab.innerHTML = `<span>✓ Reminders</span>`;
-            remindersTab.addEventListener('click', (e) => showRemindersView(e));
+            remindersTab.addEventListener('click', () => showRemindersView());
             sidebar.appendChild(remindersTab);
 
             // Add Calendar tab
             const calendarTab = document.createElement('div');
             calendarTab.className = 'folder-item';
             calendarTab.innerHTML = `<span>📅 Calendar</span>`;
-            calendarTab.addEventListener('click', (e) => showCalendarView(e));
+            calendarTab.addEventListener('click', () => showCalendarView());
             sidebar.appendChild(calendarTab);
 
             // Add Money tab
             const moneyTab = document.createElement('div');
             moneyTab.className = 'folder-item';
             moneyTab.innerHTML = `<span>💰 Money</span>`;
-            moneyTab.addEventListener('click', (e) => showMoneyView(e));
+            moneyTab.addEventListener('click', () => showMoneyView());
             sidebar.appendChild(moneyTab);
 
             // Add Settings tab
             const settingsTab = document.createElement('div');
             settingsTab.className = 'folder-item';
             settingsTab.innerHTML = `<span>⚙️ Settings</span>`;
-            settingsTab.addEventListener('click', (e) => showSettingsView(e));
+            settingsTab.addEventListener('click', () => showSettingsView());
             sidebar.appendChild(settingsTab);
         }
 
@@ -1564,8 +1552,7 @@
             div.addEventListener('contextmenu', (e) => showContextMenu(e, conv));
             div.addEventListener('click', () => {
                 if (conv.conversation_type === 'chat' || conv.conversation_type === 'automation') {
-                    // Open the chat interface directly with the conversation ID
-                    openChatConversation(conv.id);
+                    showChatView(conv.id);
                 } else {
                     openSlideover(conv);
                 }
@@ -1681,23 +1668,7 @@
                 error: '✗',
                 info: 'ℹ',
                 warning: '⚠'
-            }
-
-        // Handle API errors gracefully  
-        function handleApiError(error, context, response = null) {
-            console.error(`${context} error:`, error);
-            if (response) {
-                if (response.status === 401) {
-                    showNotification('Please login to access this feature', 'error');
-                } else if (response.status === 404) {
-                    showNotification('This feature is not available yet', 'info');
-                } else {
-                    showNotification(`${context} is currently unavailable`, 'error');
-                }
-            } else {
-                showNotification(`${context} is currently unavailable`, 'error');
-            }
-        }
+            };
             
             notification.innerHTML = `
                 <div style="font-size: 20px;">${icons[type] || icons.info}</div>
@@ -1763,29 +1734,18 @@
 
         // Action functions - NOW FULLY IMPLEMENTED
         async function openGooseChat() {
-            try {
-                const response = await fetch('/api/chat/conversations', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title: 'New Chat' })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.id) {
-                        showChatView(data.id);
-                    }
-                } else if (response.status === 401) {
-                    showNotification('Please login to use Goose Chat', 'error');
-                } else {
-                    showNotification('Unable to start chat. Please try again later.', 'error');
-                }
-            } catch (error) {
-                console.error('Goose Chat error:', error);
-                showNotification('Chat service is currently unavailable', 'error');
+            // Create a new chat conversation and navigate to it
+            const response = await fetch('/api/chat/conversations', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: 'New Chat' })
+            });
+            const data = await response.json();
+            if (data.id) {
+                showChatView(data.id);
             }
         }
 
@@ -1882,13 +1842,6 @@
             const content = document.getElementById('slideoverContent');
             content.innerHTML = '<div class="loading">Loading messages...</div>';
             
-            let loadingTimeout = setTimeout(() => {
-                if (content.innerHTML.includes('Loading messages')) {
-                    content.innerHTML = '<div class="empty-state"><h3>Unable to load messages</h3><p>This conversation may not be available in demo mode.</p></div>';
-                }
-            }, 5000); // 5 second timeout
-
-            
             try {
                 const response = await fetch(`/api/conversations/${convId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1896,30 +1849,17 @@
                 
                 if (response.ok) {
                     const messages = await response.json();
-                    console.log('Loaded messages:', messages);
                     renderChatMessages(messages);
                 } else {
-                    console.error('API failed with status:', response.status);
-                    const mockMessages = getMockMessages(convId);
-                    console.log('Using mock messages:', mockMessages);
-                    renderChatMessages(mockMessages);
+                    renderChatMessages(getMockMessages(convId));
                 }
             } catch (error) {
-                console.error('Error loading messages:', error);
-                const mockMessages = getMockMessages(convId);
-                console.log('Using mock messages:', mockMessages);
-                renderChatMessages(mockMessages);
+                renderChatMessages(getMockMessages(convId));
             }
         }
 
         function renderChatMessages(messages) {
             const content = document.getElementById('slideoverContent');
-            
-            // Clear any loading timeouts
-            if (window.loadingTimeout) {
-                clearTimeout(window.loadingTimeout);
-            }
-
             
             if (!messages || messages.length === 0) {
                 content.innerHTML = '<div class="empty-state"><h3>No messages found</h3></div>';
@@ -2156,7 +2096,7 @@
         // ATTACHMENT GALLERY FUNCTIONS
         // ============================================
 
-        function showAttachmentGallery(event) {
+        function showAttachmentGallery() {
             // Hide conversation list
             document.getElementById('conversationList').style.display = 'none';
             
@@ -2183,7 +2123,7 @@
         }
 
         // ===== CHAT VIEW =====
-        function showChatView(eventOrId) {
+        function showChatView() {
             hideAllViews();
             let chatView = document.getElementById('chatView');
             if (!chatView) {
@@ -2191,14 +2131,7 @@
                 document.querySelector('.main-content').appendChild(chatView);
             }
             chatView.style.display = 'block';
-            
-            // Handle both event object and conversation ID
-            if (typeof eventOrId === 'string') {
-                // It's a conversation ID, open it directly
-                openChatConversation(eventOrId);
-            } else if (eventOrId) {
-                updateSidebarActive(eventOrId);
-            }
+            updateSidebarActive(event);
             loadChatConversations();
         }
 
@@ -2251,7 +2184,7 @@
                 <div class="conversation" onclick="openChatConversation('${conv.id}')" style="cursor: pointer;">
                     <div class="conversation-line">
                         <div class="conversation-info">
-                            <div class="subject-line">🤖 ${escapeHtml(conv.title || 'New Chat')}</div>
+                            <div class="subject-line">🤖 ${escapeHtml(conv.title)}</div>
                             <div class="content-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</div>
                         </div>
                         <div class="timestamp">${formatDate(conv.updated_at)}</div>
@@ -2456,7 +2389,7 @@
         }
 
         // ===== AUTOMATIONS VIEW =====
-        function showAutomationsView(event) {
+        function showAutomationsView() {
             hideAllViews();
             let automationsView = document.getElementById('automationsView');
             if (!automationsView) {
@@ -2464,7 +2397,7 @@
                 document.querySelector('.main-content').appendChild(automationsView);
             }
             automationsView.style.display = 'block';
-            if (event) updateSidebarActive(event);
+            updateSidebarActive(event);
             loadAutomations();
         }
 
@@ -2686,7 +2619,7 @@
         }
 
         // ===== REMINDERS VIEW =====
-        function showRemindersView(event) {
+        function showRemindersView() {
             hideAllViews();
             let remindersView = document.getElementById('remindersView');
             if (!remindersView) {
@@ -2694,7 +2627,7 @@
                 document.querySelector('.main-content').appendChild(remindersView);
             }
             remindersView.style.display = 'block';
-            if (event) updateSidebarActive(event);
+            updateSidebarActive(event);
             loadReminders();
         }
 
@@ -2891,7 +2824,7 @@
         }
 
         // ===== SETTINGS VIEW =====
-        function showSettingsView(event) {
+        function showSettingsView() {
             hideAllViews();
             let settingsView = document.getElementById('settingsView');
             if (!settingsView) {
@@ -2899,7 +2832,7 @@
                 document.querySelector('.main-content').appendChild(settingsView);
             }
             settingsView.style.display = 'block';
-            if (event) updateSidebarActive(event);
+            updateSidebarActive(event);
         }
 
         function createSettingsView() {
@@ -3057,7 +2990,7 @@
         }
 
         // ===== CALENDAR VIEW =====
-        function showCalendarView(event) {
+        function showCalendarView() {
             hideAllViews();
             let calendarView = document.getElementById('calendarView');
             if (!calendarView) {
@@ -3065,7 +2998,7 @@
                 document.querySelector('.main-content').appendChild(calendarView);
             }
             calendarView.style.display = 'block';
-            if (event) updateSidebarActive(event);
+            updateSidebarActive(event);
             loadCalendarEvents();
         }
 
@@ -3249,7 +3182,7 @@
         }
 
         // ===== MONEY VIEW =====
-        function showMoneyView(event) {
+        function showMoneyView() {
             hideAllViews();
             let moneyView = document.getElementById('moneyView');
             if (!moneyView) {
@@ -3257,7 +3190,7 @@
                 document.querySelector('.main-content').appendChild(moneyView);
             }
             moneyView.style.display = 'block';
-            if (event) updateSidebarActive(event);
+            updateSidebarActive(event);
             loadMoneyAccounts();
         }
 

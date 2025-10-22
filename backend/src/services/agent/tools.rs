@@ -978,6 +978,176 @@ impl Tool for ReminderSearchTool {
     }
 }
 
+// Money Account List Tool
+pub struct MoneyAccountListTool {
+    pool: SqlitePool,
+    user_id: i64,
+}
+
+impl MoneyAccountListTool {
+    pub fn new(pool: SqlitePool, user_id: i64) -> Self {
+        Self { pool, user_id }
+    }
+}
+
+#[async_trait]
+impl Tool for MoneyAccountListTool {
+    fn name(&self) -> &str {
+        "list_money_accounts"
+    }
+
+    fn description(&self) -> &str {
+        "List all money accounts with their current balances and account types."
+    }
+
+    fn parameters(&self) -> Value {
+        serde_json::json!({
+            "type": "object",
+            "properties": {}
+        })
+    }
+
+    async fn execute(
+        &self,
+        _arguments: Value,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let results = sqlx::query_as::<_, (String, String, String, f64, String)>(
+            "SELECT id, account_name, account_type, balance, currency FROM money_accounts WHERE user_id = ?"
+        )
+        .bind(self.user_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let accounts: Vec<Value> = results
+            .iter()
+            .map(|(id, name, account_type, balance, currency)| {
+                serde_json::json!({
+                    "id": id,
+                    "name": name,
+                    "type": account_type,
+                    "balance": balance,
+                    "currency": currency
+                })
+            })
+            .collect();
+
+        let total_balance: f64 = results.iter().map(|(_, _, _, balance, _)| balance).sum();
+
+        Ok(serde_json::json!({
+            "accounts": accounts,
+            "total_balance": total_balance,
+            "count": accounts.len()
+        }))
+    }
+}
+
+// Money Transaction Search Tool
+pub struct MoneyTransactionSearchTool {
+    pool: SqlitePool,
+    user_id: i64,
+}
+
+impl MoneyTransactionSearchTool {
+    pub fn new(pool: SqlitePool, user_id: i64) -> Self {
+        Self { pool, user_id }
+    }
+}
+
+#[async_trait]
+impl Tool for MoneyTransactionSearchTool {
+    fn name(&self) -> &str {
+        "search_transactions"
+    }
+
+    fn description(&self) -> &str {
+        "Search money transactions by date range, category, or type (income/expense)."
+    }
+
+    fn parameters(&self) -> Value {
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "start_date": {
+                    "type": "string",
+                    "description": "Start date in ISO format (optional)"
+                },
+                "end_date": {
+                    "type": "string",
+                    "description": "End date in ISO format (optional)"
+                },
+                "transaction_type": {
+                    "type": "string",
+                    "enum": ["income", "expense", "transfer"],
+                    "description": "Filter by transaction type (optional)"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results (default 50)"
+                }
+            }
+        })
+    }
+
+    async fn execute(
+        &self,
+        arguments: Value,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let limit = arguments["limit"].as_i64().unwrap_or(50);
+
+        let mut sql = String::from(
+            r#"SELECT t.id, t.transaction_date, t.description, t.amount, t.category, t.transaction_type, a.account_name
+               FROM money_transactions t
+               JOIN money_accounts a ON t.account_id = a.id
+               WHERE a.user_id = ?"#
+        );
+
+        let mut conditions = vec![];
+
+        if let Some(start_date) = arguments["start_date"].as_str() {
+            conditions.push(format!("t.transaction_date >= '{}'", start_date));
+        }
+        if let Some(end_date) = arguments["end_date"].as_str() {
+            conditions.push(format!("t.transaction_date <= '{}'", end_date));
+        }
+        if let Some(tx_type) = arguments["transaction_type"].as_str() {
+            conditions.push(format!("t.transaction_type = '{}'", tx_type));
+        }
+
+        if !conditions.is_empty() {
+            sql.push_str(" AND ");
+            sql.push_str(&conditions.join(" AND "));
+        }
+
+        sql.push_str(" ORDER BY t.transaction_date DESC LIMIT ?");
+
+        let results = sqlx::query_as::<_, (String, String, String, f64, Option<String>, String, String)>(&sql)
+            .bind(self.user_id)
+            .bind(limit)
+            .fetch_all(&self.pool)
+            .await?;
+
+        let transactions: Vec<Value> = results
+            .iter()
+            .map(|(id, date, description, amount, category, tx_type, account_name)| {
+                serde_json::json!({
+                    "id": id,
+                    "date": date,
+                    "description": description,
+                    "amount": amount,
+                    "category": category,
+                    "type": tx_type,
+                    "account": account_name
+                })
+            })
+            .collect();
+
+        Ok(serde_json::json!({
+            "transactions": transactions,
+            "count": transactions.len()
+        }))
+    }
+}
+
 pub fn create_tool_registry(pool: SqlitePool, user_id: i64) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
 
@@ -996,6 +1166,10 @@ pub fn create_tool_registry(pool: SqlitePool, user_id: i64) -> ToolRegistry {
     // Reminder tools
     registry.register(Arc::new(ReminderCreateTool::new(pool.clone(), user_id)));
     registry.register(Arc::new(ReminderSearchTool::new(pool.clone(), user_id)));
+    
+    // Money tools
+    registry.register(Arc::new(MoneyAccountListTool::new(pool.clone(), user_id)));
+    registry.register(Arc::new(MoneyTransactionSearchTool::new(pool.clone(), user_id)));
 
     registry
 }

@@ -3,6 +3,7 @@ use crate::services::{ImapService, SmtpService};
 use crate::utils::encryption::Encryption;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 
 /// Manages IMAP and SMTP services for all users
@@ -22,7 +23,7 @@ impl EmailManager {
     }
 
     /// Initialize email services for a user
-    pub async fn initialize_user(
+    pub async fn initialize_user_blocking(
         &self,
         user: &User,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -80,6 +81,39 @@ impl EmailManager {
             .await
             .insert(user.id, Arc::new(smtp_service));
 
+        Ok(())
+    }
+
+    /// Initialize email services for a user (non-blocking with timeout)
+    pub async fn initialize_user(
+        &self,
+        user: &User,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let user_clone = user.clone();
+        let manager_clone = Self {
+            imap_services: self.imap_services.clone(),
+            smtp_services: self.smtp_services.clone(),
+            encryption: self.encryption.clone(),
+        };
+
+        // Spawn initialization in background with timeout
+        tokio::spawn(async move {
+            let timeout_duration = Duration::from_secs(5);
+            match tokio::time::timeout(
+                timeout_duration,
+                manager_clone.initialize_user_blocking(&user_clone)
+            ).await {
+                Ok(Ok(())) => {
+                    log::info!("Email services initialized successfully for user {}", user_clone.id);
+                }
+                Ok(Err(e)) => {
+                    log::warn!("Failed to initialize email services for user {}: {}", user_clone.id, e);
+                }
+                Err(_) => {
+                    log::warn!("Email service initialization timed out for user {}", user_clone.id);
+                }
+            }
+        });
         Ok(())
     }
 

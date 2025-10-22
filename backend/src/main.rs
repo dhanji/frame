@@ -99,10 +99,8 @@ async fn main() -> std::io::Result<()> {
                     // Public endpoints (no authentication required)
                     .route("/register", web::post().to(handlers::auth::register))
                     .route("/login", web::post().to(handlers::auth::login))
-                    // Protected endpoints (authentication required)
-                    .service(
-                        web::scope("")
-                            .wrap(HttpAuthentication::bearer(email_client_backend::middleware::auth::validator))
+                    // Protected endpoints with authentication
+                    .wrap(HttpAuthentication::bearer(email_client_backend::middleware::auth::validator))
                             .route("/conversations", web::get().to(handlers::conversations::get_conversations))
                             .route("/conversations/{id}", web::get().to(handlers::conversations::get_conversation))
                             .route("/emails/send", web::post().to(handlers::emails::send_email))
@@ -167,13 +165,13 @@ async fn main() -> std::io::Result<()> {
                             .route("/calendar/events", web::post().to(handlers::calendar::create_event))
                             .route("/calendar/events/{id}", web::put().to(handlers::calendar::update_event))
                             .route("/calendar/events/{id}", web::delete().to(handlers::calendar::delete_event))
+                            .route("/calendar/sync", web::post().to(handlers::calendar::sync_calendar))
                             // Money endpoints
                             .route("/money/accounts", web::get().to(handlers::money::list_accounts))
                             .route("/money/accounts", web::post().to(handlers::money::create_account))
                             .route("/money/transactions", web::get().to(handlers::money::list_transactions))
                             .route("/money/transactions", web::post().to(handlers::money::add_transaction))
                             .route("/money/sync", web::post().to(handlers::money::sync_accounts))
-                    )
             )
             .route("/ws", web::get().to(websocket::ws_handler))
             // Serve static files from frontend directory (index.html is now the working version)

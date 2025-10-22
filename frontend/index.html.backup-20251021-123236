@@ -1276,18 +1276,6 @@
         let currentPage = 1;
         let pageSize = 20;
 
-        // ===== ERROR HANDLING HELPERS (MUST BE DEFINED EARLY) =====
-        
-        // Check if user is authenticated with real account
-        function isRealAccount() {
-            return authToken && authToken !== 'demo-token';
-        }
-
-        // Show feature unavailable message
-        function showFeatureUnavailable(featureName) {
-            showNotification(`${featureName} requires a real email account. Please register or login with valid credentials.`, 'info');
-        }
-
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
             initializeApp();
@@ -1564,8 +1552,7 @@
             div.addEventListener('contextmenu', (e) => showContextMenu(e, conv));
             div.addEventListener('click', () => {
                 if (conv.conversation_type === 'chat' || conv.conversation_type === 'automation') {
-                    // Open the chat interface directly with the conversation ID
-                    openChatConversation(conv.id);
+                    showChatView(conv.id);
                 } else {
                     openSlideover(conv);
                 }
@@ -1681,23 +1668,7 @@
                 error: '✗',
                 info: 'ℹ',
                 warning: '⚠'
-            }
-
-        // Handle API errors gracefully  
-        function handleApiError(error, context, response = null) {
-            console.error(`${context} error:`, error);
-            if (response) {
-                if (response.status === 401) {
-                    showNotification('Please login to access this feature', 'error');
-                } else if (response.status === 404) {
-                    showNotification('This feature is not available yet', 'info');
-                } else {
-                    showNotification(`${context} is currently unavailable`, 'error');
-                }
-            } else {
-                showNotification(`${context} is currently unavailable`, 'error');
-            }
-        }
+            };
             
             notification.innerHTML = `
                 <div style="font-size: 20px;">${icons[type] || icons.info}</div>
@@ -1763,6 +1734,12 @@
 
         // Action functions - NOW FULLY IMPLEMENTED
         async function openGooseChat() {
+            // Check if user is authenticated with real account
+            if (!authToken || authToken === 'demo-token') {
+                showNotification('Goose Chat requires a real email account. Please register or login with valid credentials.', 'info');
+                return;
+            }
+
             try {
                 const response = await fetch('/api/chat/conversations', {
                     method: 'POST',
@@ -1882,13 +1859,6 @@
             const content = document.getElementById('slideoverContent');
             content.innerHTML = '<div class="loading">Loading messages...</div>';
             
-            let loadingTimeout = setTimeout(() => {
-                if (content.innerHTML.includes('Loading messages')) {
-                    content.innerHTML = '<div class="empty-state"><h3>Unable to load messages</h3><p>This conversation may not be available in demo mode.</p></div>';
-                }
-            }, 5000); // 5 second timeout
-
-            
             try {
                 const response = await fetch(`/api/conversations/${convId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1914,12 +1884,6 @@
 
         function renderChatMessages(messages) {
             const content = document.getElementById('slideoverContent');
-            
-            // Clear any loading timeouts
-            if (window.loadingTimeout) {
-                clearTimeout(window.loadingTimeout);
-            }
-
             
             if (!messages || messages.length === 0) {
                 content.innerHTML = '<div class="empty-state"><h3>No messages found</h3></div>';
@@ -2183,7 +2147,7 @@
         }
 
         // ===== CHAT VIEW =====
-        function showChatView(eventOrId) {
+        function showChatView(event) {
             hideAllViews();
             let chatView = document.getElementById('chatView');
             if (!chatView) {
@@ -2191,14 +2155,7 @@
                 document.querySelector('.main-content').appendChild(chatView);
             }
             chatView.style.display = 'block';
-            
-            // Handle both event object and conversation ID
-            if (typeof eventOrId === 'string') {
-                // It's a conversation ID, open it directly
-                openChatConversation(eventOrId);
-            } else if (eventOrId) {
-                updateSidebarActive(eventOrId);
-            }
+            if (event) updateSidebarActive(event);
             loadChatConversations();
         }
 
@@ -2251,7 +2208,7 @@
                 <div class="conversation" onclick="openChatConversation('${conv.id}')" style="cursor: pointer;">
                     <div class="conversation-line">
                         <div class="conversation-info">
-                            <div class="subject-line">🤖 ${escapeHtml(conv.title || 'New Chat')}</div>
+                            <div class="subject-line">🤖 ${escapeHtml(conv.title)}</div>
                             <div class="content-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</div>
                         </div>
                         <div class="timestamp">${formatDate(conv.updated_at)}</div>

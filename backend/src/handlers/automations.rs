@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use crate::middleware::auth::AuthenticatedUser;
 use chrono::{DateTime, Utc};
-use crate::services::agent::{AgentEngine, ProviderConfig};
+use crate::services::agent::AgentEngine;
+use std::sync::Arc;
 use crate::services::agent::tools::create_tool_registry;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -282,7 +283,7 @@ pub async fn delete_automation(
 
 pub async fn trigger_automation(
     pool: web::Data<SqlitePool>,
-    agent_engine: web::Data<AgentEngine>,
+    agent_engine: web::Data<Arc<AgentEngine>>,
     user: AuthenticatedUser,
     path: web::Path<String>,
 ) -> HttpResponse {
@@ -334,6 +335,41 @@ pub async fn trigger_automation(
             .execute(pool.get_ref())
             .await;
 
+            // Create a chat conversation entry for the automation result
+            let conv_id = uuid::Uuid::new_v4().to_string();
+            let automation_name = sqlx::query_scalar::<_, String>(
+                "SELECT name FROM automations WHERE id = ?"
+            )
+            .bind(&id)
+            .fetch_one(pool.get_ref())
+            .await
+            .unwrap_or_else(|_| "Automation".to_string());
+
+            let title = format!("🤖 {} - Result", automation_name);
+            
+            // Create conversation
+            let _ = sqlx::query(
+                r#"INSERT INTO chat_conversations (id, user_id, title, created_at, updated_at)
+                   VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"#
+            )
+            .bind(&conv_id)
+            .bind(user_id)
+            .bind(&title)
+            .execute(pool.get_ref())
+            .await;
+
+            // Add result as assistant message
+            let msg_id = uuid::Uuid::new_v4().to_string();
+            let _ = sqlx::query(
+                r#"INSERT INTO chat_messages (id, conversation_id, role, content, created_at)
+                   VALUES (?, ?, 'assistant', ?, CURRENT_TIMESTAMP)"#
+            )
+            .bind(&msg_id)
+            .bind(&conv_id)
+            .bind(&result_text)
+            .execute(pool.get_ref())
+            .await;
+
             // Update last_run timestamp
             let _ = sqlx::query(
                 "UPDATE automations SET last_run = CURRENT_TIMESTAMP WHERE id = ?"
@@ -374,7 +410,7 @@ pub async fn get_runs(
 
     match owner_check {
         Ok(Some(owner_id)) if owner_id == user_id => {
-            let runs = sqlx::query_as::<_, (String, String, Option<String>, Option<String>, String, Option<String>)>(
+            let runs_result = sqlx::query_as::<_, (String, String, Option<String>, Option<String>, String, Option<String>)>(
                 r#"
                 SELECT id, status, result, error, started_at, completed_at
                 FROM automation_runs
@@ -387,7 +423,7 @@ pub async fn get_runs(
             .fetch_all(pool.get_ref())
             .await;
 
-            match runs {
+            match runs_result {
                 Ok(rows) => {
                     let runs: Vec<serde_json::Value> = rows.iter().map(|(id, status, result, error, started_at, completed_at)| {
                         serde_json::json!({

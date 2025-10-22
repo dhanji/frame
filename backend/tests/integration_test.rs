@@ -1,5 +1,13 @@
 use actix_web::{test, web, App};
-use email_client_backend::handlers::{auth::login, conversations::get_conversations, folders::get_folders};
+use email_client_backend::handlers::{
+    auth::login,
+    conversations::{get_conversations, get_conversation},
+    folders::{get_folders, create_folder},
+    emails::{send_email, reply_to_email, mark_as_read, delete_email},
+};
+
+// Note: These tests are stubs and won't pass without proper database setup
+// They are here to demonstrate the API structure
 
 #[actix_rt::test]
 async fn test_api_integration() {

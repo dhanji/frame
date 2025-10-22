@@ -1,9 +1,10 @@
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer, HttpResponse};
 use actix_files as fs;
+use actix_web_httpauth::middleware::HttpAuthentication;
 use std::sync::Arc;
 use sqlx::SqlitePool;
-use email_client_backend::{handlers, services, websocket, db};
+use email_client_backend::{handlers, services, websocket, db, utils::encryption::Encryption};
 
 use services::{EmailManager, EmailSyncService};
 // WebSocket support will be added when actix-web-actors is properly integrated
@@ -59,26 +60,33 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(email_manager.clone()))
+            .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
-            // Serve static files from frontend directory
-            .service(fs::Files::new("/", "../frontend").index_file("index.html"))
             .service(
                 web::scope("/api")
                     .route("/register", web::post().to(handlers::auth::register))
                     .route("/login", web::post().to(handlers::auth::login))
-                    .route("/conversations", web::get().to(handlers::conversations::get_conversations))
-                    .route("/conversations/{id}", web::get().to(handlers::conversations::get_conversation))
-                    .route("/emails/send", web::post().to(handlers::emails::send_email))
-                    .route("/emails/{id}/reply", web::post().to(handlers::emails::reply_to_email))
-                    .route("/emails/{id}/read", web::put().to(handlers::emails::mark_as_read))
-                    .route("/emails/{id}", web::delete().to(handlers::emails::delete_email))
-                    .route("/emails/{id}/move", web::post().to(handlers::emails::move_email))
-                    .route("/folders", web::get().to(handlers::folders::get_folders))
-                    .route("/folders", web::post().to(handlers::folders::create_folder))
-                    .route("/search", web::get().to(handlers::search::search_emails))
-                    .route("/emails/bulk", web::post().to(handlers::emails::bulk_action))
+                    // Protected endpoints (require authentication)
+                    .service(
+                        web::scope("")
+                            .wrap(HttpAuthentication::bearer(email_client_backend::middleware::auth::validator))
+                            .route("/conversations", web::get().to(handlers::conversations::get_conversations))
+                            .route("/conversations/{id}", web::get().to(handlers::conversations::get_conversation))
+                            .route("/emails/send", web::post().to(handlers::emails::send_email))
+                            .route("/emails/{id}/reply", web::post().to(handlers::emails::reply_to_email))
+                            .route("/emails/{id}/read", web::put().to(handlers::emails::mark_as_read))
+                            .route("/emails/{id}", web::delete().to(handlers::emails::delete_email))
+                            .route("/emails/{id}/move", web::post().to(handlers::emails::move_email))
+                            .route("/folders", web::get().to(handlers::folders::get_folders))
+                            .route("/folders", web::post().to(handlers::folders::create_folder))
+                            .route("/search", web::get().to(handlers::search::search_emails))
+                            .route("/emails/bulk", web::post().to(handlers::emails::bulk_action))
+                            .route("/logout", web::post().to(handlers::auth::logout))
+                    )
             )
             .route("/ws", web::get().to(websocket::websocket_handler))
+            // Serve static files from frontend directory (MUST be last to not catch API routes)
+            .service(fs::Files::new("/", "../frontend").index_file("index.html"))
     })
     .bind(("127.0.0.1", 8080))?
     .workers(1) // Use single worker to avoid port conflicts

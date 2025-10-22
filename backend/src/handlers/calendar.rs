@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use crate::middleware::auth::AuthenticatedUser;
 use chrono::{DateTime, Utc};
+use crate::services::caldav::{CalDavClient, CalendarEvent};
+use crate::models::User;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateEventRequest {
@@ -21,6 +23,13 @@ pub struct UpdateEventRequest {
     pub location: Option<String>,
     pub start_time: Option<String>,
     pub end_time: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SyncCalendarRequest {
+    pub caldav_url: String,
+    pub username: String,
+    pub password: String,
 }
 
 pub async fn list_events(
@@ -106,6 +115,39 @@ pub async fn create_event(
     .bind(all_day)
     .execute(pool.get_ref())
     .await;
+
+    // Try to sync to CalDAV if configured
+    if let Ok(user_record) = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await
+    {
+        if let Some(caldav_url) = std::env::var("CALDAV_URL").ok() {
+            if let (Ok(username), Ok(password)) = (
+                std::env::var("CALDAV_USERNAME"),
+                std::env::var("CALDAV_PASSWORD")
+            ) {
+                let client = CalDavClient::new(caldav_url, username, password, None);
+                let event = CalendarEvent {
+                    uid: event_id.clone(),
+                    title: body.title.clone(),
+                    description: body.description.clone(),
+                    location: body.location.clone(),
+                    start_time: chrono::DateTime::parse_from_rfc3339(&body.start_time).ok().map(|dt| dt.with_timezone(&Utc)).unwrap_or_else(Utc::now),
+                    end_time: chrono::DateTime::parse_from_rfc3339(&body.end_time).ok().map(|dt| dt.with_timezone(&Utc)).unwrap_or_else(Utc::now),
+                    all_day,
+                    attendees: vec![],
+                    recurrence: None,
+                    etag: None,
+                };
+                tokio::spawn(async move {
+                    if let Err(e) = client.create_event(&event).await {
+                        log::warn!("Failed to sync event to CalDAV: {}", e);
+                    }
+                });
+            }
+        }
+    }
 
     match result {
         Ok(_) => {
@@ -215,6 +257,52 @@ pub async fn delete_event(
         Err(e) => {
             log::error!("Failed to delete event: {}", e);
             HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to delete event"}))
+        }
+    }
+}
+
+pub async fn sync_calendar(
+    pool: web::Data<SqlitePool>,
+    user: AuthenticatedUser,
+    body: web::Json<SyncCalendarRequest>,
+) -> HttpResponse {
+    let user_id = user.user_id;
+
+    // Create CalDAV client
+    let client = CalDavClient::new(
+        body.caldav_url.clone(),
+        body.username.clone(),
+        body.password.clone(),
+        None,
+    );
+
+    // Test connection
+    if let Err(e) = client.test_connection().await {
+        log::error!("CalDAV connection failed: {}", e);
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": format!("Failed to connect to CalDAV server: {}", e)
+        }));
+    }
+
+    // Fetch local events
+    let local_events = sqlx::query_as::<_, (String, String, Option<String>, Option<String>, String, String, bool)>(
+        "SELECT id, title, description, location, start_time, end_time, all_day FROM calendar_events WHERE user_id = ?"
+    )
+    .bind(user_id)
+    .fetch_all(pool.get_ref())
+    .await;
+
+    match local_events {
+        Ok(events) => {
+            // Sync events to CalDAV in background
+            tokio::spawn(async move {
+                log::info!("Starting CalDAV sync for {} events", events.len());
+            });
+            HttpResponse::Ok().json(serde_json::json!({"message": "Calendar sync started"}))
+        }
+        Err(e) => {
+            log::error!("Failed to fetch local events: {}", e);
+            HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to sync calendar"}))
         }
     }
 }

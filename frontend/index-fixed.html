@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Email Client - Fixed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+        .error-banner {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            margin: 12px 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        .error-banner.show { display: block; }
+        .error-banner strong { color: #856404; }
+        .error-banner p { color: #856404; font-size: 14px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="error-banner" id="errorBanner">
+        <strong>⚠️ Important Notice</strong>
+        <p id="errorMessage">The backend server may not be running. Some features will use demo data.</p>
+    </div>
+    
+    <script>
+        // Redirect to the working index.html with error handling enabled
+        window.location.href = '/index.html?debug=true';
+    </script>
+</body>
+</html>

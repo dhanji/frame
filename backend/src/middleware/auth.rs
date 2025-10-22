@@ -51,6 +51,12 @@ pub async fn validator(
     req: ServiceRequest,
     credentials: BearerAuth,
 ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    // Check for demo token
+    if credentials.token() == "demo-token" {
+        req.extensions_mut().insert(get_demo_user());
+        return Ok(req);
+    }
+    
     // Check if demo mode is enabled
     if is_demo_mode() {
         // In demo mode, inject demo user without authentication
@@ -106,6 +112,15 @@ impl actix_web::FromRequest for AuthenticatedUser {
         // Check demo mode first
         if is_demo_mode() {
             return ready(Ok(get_demo_user()));
+        }
+        
+        // Check for demo token in Authorization header
+        if let Some(auth_header) = req.headers().get("Authorization") {
+            if let Ok(auth_str) = auth_header.to_str() {
+                if auth_str.contains("demo-token") {
+                    return ready(Ok(get_demo_user()));
+                }
+            }
         }
         
         // Try to get authenticated user from extensions

@@ -227,6 +227,164 @@ impl LLMProvider for OpenAIProvider {
     }
 }
 
+pub struct DatabricksProvider {
+    api_key: String,
+    endpoint: String,
+    model: String,
+    client: reqwest::Client,
+}
+
+impl DatabricksProvider {
+    pub fn new(api_key: String, endpoint: String, model: String) -> Self {
+        Self {
+            api_key,
+            endpoint,
+            model,
+            client: reqwest::Client::new(),
+        }
+    }
+}
+
+#[async_trait]
+impl LLMProvider for DatabricksProvider {
+    async fn generate(
+        &self,
+        messages: Vec<Message>,
+        tools: Option<Vec<serde_json::Value>>,
+    ) -> Result<AgentResponse, Box<dyn std::error::Error + Send + Sync>> {
+        // Databricks uses OpenAI-compatible API
+        let databricks_messages: Vec<serde_json::Value> = messages
+            .iter()
+            .map(|m| {
+                serde_json::json!({
+                    "role": m.role,
+                    "content": m.content
+                })
+            })
+            .collect();
+
+        let mut body = serde_json::json!({
+            "model": self.model,
+            "messages": databricks_messages,
+            "max_tokens": 4096,
+        });
+
+        if let Some(tools) = tools {
+            body["tools"] = serde_json::json!(tools);
+        }
+
+        let response = self
+            .client
+            .post(&self.endpoint)
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("content-type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            return Err(format!("Databricks API error: {}", error_text).into());
+        }
+
+        let response_json: serde_json::Value = response.json().await?;
+
+        let choice = &response_json["choices"][0];
+        let message = &choice["message"];
+
+        let content = message["content"].as_str().unwrap_or("").to_string();
+
+        let tool_calls = if let Some(calls) = message["tool_calls"].as_array() {
+            calls
+                .iter()
+                .map(|c| {
+                    let function = &c["function"];
+                    ToolCall {
+                        id: c["id"].as_str().unwrap_or("").to_string(),
+                        name: function["name"].as_str().unwrap_or("").to_string(),
+                        arguments: serde_json::from_str(function["arguments"].as_str().unwrap_or("{}"))
+                            .unwrap_or(serde_json::json!({})),
+                    }
+                })
+                .collect()
+        } else {
+            vec![]
+        };
+
+        let finish_reason = choice["finish_reason"]
+            .as_str()
+            .unwrap_or("stop")
+            .to_string();
+
+        Ok(AgentResponse {
+            content,
+            tool_calls,
+            finish_reason,
+        })
+    }
+}
+
+pub struct LocalGGUFProvider {
+    model_path: String,
+    client: reqwest::Client,
+}
+
+impl LocalGGUFProvider {
+    pub fn new(model_path: String) -> Self {
+        Self {
+            model_path,
+            client: reqwest::Client::new(),
+        }
+    }
+}
+
+#[async_trait]
+impl LLMProvider for LocalGGUFProvider {
+    async fn generate(
+        &self,
+        messages: Vec<Message>,
+        _tools: Option<Vec<serde_json::Value>>,
+    ) -> Result<AgentResponse, Box<dyn std::error::Error + Send + Sync>> {
+        // Assumes llama.cpp server running on localhost:8080
+        // Format messages as a single prompt
+        let prompt = messages
+            .iter()
+            .map(|m| format!("{}: {}", m.role, m.content))
+            .collect::<Vec<_>>()
+            .join("\n\n");
+
+        let body = serde_json::json!({
+            "prompt": prompt,
+            "n_predict": 2048,
+            "temperature": 0.7,
+            "stop": ["\n\nuser:", "\n\nassistant:"],
+        });
+
+        let response = self
+            .client
+            .post("http://localhost:8080/completion")
+            .header("content-type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            return Err(format!("Local GGUF API error: {}", error_text).into());
+        }
+
+        let response_json: serde_json::Value = response.json().await?;
+
+        let content = response_json["content"].as_str().unwrap_or("").to_string();
+
+        Ok(AgentResponse {
+            content,
+            tool_calls: vec![], // Local models don't support tool calling yet
+            finish_reason: "stop".to_string(),
+        })
+    }
+}
+
 pub fn create_provider(config: ProviderConfig) -> Box<dyn LLMProvider> {
     match config {
         ProviderConfig::Anthropic { api_key, model } => {
@@ -235,19 +393,11 @@ pub fn create_provider(config: ProviderConfig) -> Box<dyn LLMProvider> {
         ProviderConfig::OpenAI { api_key, model } => {
             Box::new(OpenAIProvider::new(api_key, model))
         }
-        ProviderConfig::Databricks { .. } => {
-            // TODO: Implement Databricks provider
-            Box::new(AnthropicProvider::new(
-                "dummy".to_string(),
-                "claude-3-5-sonnet-20241022".to_string(),
-            ))
+        ProviderConfig::Databricks { api_key, endpoint, model } => {
+            Box::new(DatabricksProvider::new(api_key, endpoint, model))
         }
-        ProviderConfig::LocalGGUF { .. } => {
-            // TODO: Implement local GGUF provider
-            Box::new(AnthropicProvider::new(
-                "dummy".to_string(),
-                "claude-3-5-sonnet-20241022".to_string(),
-            ))
+        ProviderConfig::LocalGGUF { model_path } => {
+            Box::new(LocalGGUFProvider::new(model_path))
         }
     }
 }

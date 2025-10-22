@@ -7,6 +7,7 @@ use crate::services::agent::AgentEngine;
 use futures::stream::StreamExt;
 use actix_web::rt::time::interval;
 use std::time::Duration;
+use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateConversationRequest {
@@ -202,7 +203,7 @@ pub async fn get_conversation(
 
 pub async fn send_message(
     pool: web::Data<SqlitePool>,
-    agent_engine: web::Data<AgentEngine>,
+    agent_engine: web::Data<Arc<AgentEngine>>,
     user: AuthenticatedUser,
     path: web::Path<String>,
     body: web::Json<SendMessageRequest>,
@@ -269,10 +270,24 @@ pub async fn send_message(
                         .collect();
 
                     // Call AI agent
-                    let assistant_response = agent_engine
+                    let assistant_response = match agent_engine
                         .process_message(body.content.clone(), messages)
-                        .await
-                        .unwrap_or_else(|e| format!("Error: {}", e));
+                        .await {
+                        Ok(response) => response,
+                        Err(e) => {
+                            let error_msg = e.to_string();
+                            log::error!("Agent error: {}", error_msg);
+                            
+                            // Provide helpful error message
+                            if error_msg.contains("API") || error_msg.contains("401") || error_msg.contains("authentication") {
+                                "I'm sorry, but I'm not properly configured yet. To use the AI assistant, please set a valid ANTHROPIC_API_KEY environment variable and restart the server. You can get an API key from https://console.anthropic.com/".to_string()
+                            } else if error_msg.contains("dummy-key") {
+                                "I'm sorry, but I'm running in demo mode without a valid API key. To use the AI assistant, please set the ANTHROPIC_API_KEY environment variable and restart the server.".to_string()
+                            } else {
+                                format!("I encountered an error while processing your request: {}. Please check the server logs for more details.", error_msg)
+                            }
+                        }
+                    };
                     
                     // Save assistant response
                     let assistant_message_id = uuid::Uuid::new_v4().to_string();
@@ -341,7 +356,7 @@ pub async fn delete_conversation(
 
 pub async fn send_message_stream(
     pool: web::Data<SqlitePool>,
-    agent_engine: web::Data<AgentEngine>,
+    agent_engine: web::Data<Arc<AgentEngine>>,
     user: AuthenticatedUser,
     path: web::Path<String>,
     body: web::Json<SendMessageRequest>,

@@ -11,6 +11,7 @@ pub mod threading;
 pub mod background_services;
 pub mod agent;
 pub mod automation_scheduler;
+pub mod caldav;
 
 pub use email::EmailService;
 pub use email_manager::EmailManager;
@@ -26,3 +27,4 @@ pub mod attachment_enrichment;
 pub use attachment_enrichment::AttachmentEnrichmentService;
 pub use agent::{AgentEngine, LLMProvider, ProviderConfig, ToolRegistry};
 pub use automation_scheduler::AutomationScheduler;
+pub use caldav::CalDavClient;

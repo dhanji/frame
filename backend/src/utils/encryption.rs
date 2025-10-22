@@ -5,6 +5,7 @@ use aes_gcm::{
 use base64::{Engine as _, engine::general_purpose};
 use std::env;
 
+#[derive(Clone)]
 pub struct Encryption {
     cipher: Aes256Gcm,
 }
