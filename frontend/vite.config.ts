@@ -1,10 +1,13 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
-  root: '.',
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   },
   server: {
     port: 3000,
@@ -13,10 +16,10 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/ws': {
-        target: 'ws://localhost:8080',
-        ws: true,
-      },
     },
   },
-});
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+})
