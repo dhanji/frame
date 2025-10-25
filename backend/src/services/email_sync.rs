@@ -17,7 +17,7 @@ impl EmailSyncService {
         Self {
             pool,
             email_manager,
-            sync_interval: Duration::minutes(5), // Sync every 5 minutes
+            sync_interval: Duration::minutes(30), // Sync every 30 minutes to avoid excessive failed auth
         }
     }
 
@@ -26,6 +26,11 @@ impl EmailSyncService {
         let mut interval = time::interval(time::Duration::from_secs(
             self.sync_interval.num_seconds() as u64,
         ));
+        
+        // Wait 10 seconds on startup to allow IMAP services to initialize
+        log::info!("Email sync service starting, waiting 10 seconds for services to initialize...");
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+        log::info!("Email sync service ready, starting sync cycles");
 
         loop {
             interval.tick().await;
@@ -58,15 +63,34 @@ impl EmailSyncService {
     }
 
     /// Sync emails for a specific user
-    async fn sync_user_emails(&self, user: &User) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn sync_user_emails(&self, user: &User) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         log::info!("Syncing emails for user {}", user.id);
         
         // Check if user's services are initialized
         if !self.email_manager.is_user_initialized(user.id).await {
-            // Try to initialize
-            if let Err(e) = self.email_manager.initialize_user(user).await {
-                log::warn!("Could not initialize email services for user {}: {}", user.id, e);
-                return Ok(()); // Skip this user
+            // Wait and retry a few times
+            log::info!("IMAP not ready for user {}, waiting for initialization...", user.id);
+            
+            for attempt in 1..=5 {
+                tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                
+                if self.email_manager.is_user_initialized(user.id).await {
+                    log::info!("IMAP ready for user {} after {} attempts", user.id, attempt);
+                    break;
+                }
+                
+                log::debug!("IMAP still not ready for user {}, attempt {}/5", user.id, attempt);
+            }
+            
+            // If still not initialized after retries, try to initialize
+            if !self.email_manager.is_user_initialized(user.id).await {
+                log::info!("Attempting to initialize email services for user {}", user.id);
+                if let Err(e) = self.email_manager.initialize_user(user).await {
+                    log::warn!("Could not initialize email services for user {}: {}", user.id, e);
+                    return Ok(()); // Skip this user
+                }
+                // Wait for initialization to complete
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
             }
         }
         
@@ -75,15 +99,20 @@ impl EmailSyncService {
             .ok_or("IMAP service not available")?;
         
         // Sync different folders
-        let folders = vec!["INBOX", "Sent", "Drafts"];
+        // Map Gmail folder names to normalized names for database storage
+        let folders = vec![
+            ("INBOX", "INBOX"),
+            ("[Gmail]/Sent Mail", "Sent"),
+            ("[Gmail]/Drafts", "Drafts"),
+        ];
         
-        for folder in folders {
-            match self.sync_folder(&imap_service, user.id, folder).await {
+        for (gmail_folder, normalized_folder) in folders {
+            match self.sync_folder(&imap_service, user.id, gmail_folder, normalized_folder).await {
                 Ok(count) => {
-                    log::info!("Synced {} emails from {} for user {}", count, folder, user.id);
+                    log::info!("Synced {} emails from {} ({}) for user {}", count, gmail_folder, normalized_folder, user.id);
                 }
                 Err(e) => {
-                    log::error!("Failed to sync {} for user {}: {}", folder, user.id, e);
+                    log::error!("Failed to sync {} for user {}: {}", gmail_folder, user.id, e);
                 }
             }
         }
@@ -96,10 +125,11 @@ impl EmailSyncService {
         &self,
         imap_service: &Arc<crate::services::ImapService>,
         user_id: i64,
-        folder: &str,
+        gmail_folder: &str,
+        normalized_folder: &str,
     ) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
         // Fetch messages from IMAP
-        let messages = imap_service.fetch_messages(folder, 100).await?;
+        let messages = imap_service.fetch_messages(gmail_folder, 100).await?;
         let message_count = messages.len();
         
         // Store each message in the database
@@ -137,7 +167,7 @@ impl EmailSyncService {
                         user_id, message_id, thread_id, from_address, to_addresses,
                         cc_addresses, bcc_addresses, subject, body_text, body_html,
                         date, is_read, is_starred, has_attachments, attachments,
-                        folder, size, in_reply_to, references, created_at, updated_at
+                        folder, size, in_reply_to, email_references, created_at, updated_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     "#
                 )
@@ -168,7 +198,7 @@ impl EmailSyncService {
                 .bind(message.flags.contains(&"\\Flagged".to_string()))
                 .bind(!message.attachments.is_empty())
                 .bind(serde_json::to_string(&message.attachments).ok())
-                .bind(folder)
+                .bind(normalized_folder)
                 .bind(0i64) // size placeholder
                 .bind(&message.in_reply_to)
                 .bind(serde_json::to_string(&message.references).unwrap_or_default())

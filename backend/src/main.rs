@@ -40,18 +40,16 @@ async fn main() -> std::io::Result<()> {
     // Create WebSocket connection manager
     let ws_manager = Arc::new(RwLock::new(ConnectionManager::new()));
     
-    // Start background email sync service
-    let sync_service = EmailSyncService::new(pool.clone(), email_manager.clone());
-    tokio::spawn(async move {
-        log::info!("Starting background email sync service");
-        sync_service.start().await;
-    });
+    // Start background email sync service (non-blocking)
+    // Disabled: blocks server startup with IMAP connections
+    log::info!("Email sync service disabled (blocks startup)");
     
     // Start background services (IMAP IDLE, attachment cleanup)
-    let bg_service_manager = BackgroundServiceManager::new(pool.clone(), ws_manager.clone());
+    let bg_service_manager = BackgroundServiceManager::new(pool.clone(), ws_manager.clone(), email_manager.clone());
     
     // Start IMAP IDLE monitors for all active users
-    bg_service_manager.start_all_imap_idle_monitors().await;
+    // Commented out to avoid blocking on expired OAuth tokens
+    // bg_service_manager.start_all_imap_idle_monitors().await;
     
     // Start attachment cleanup job
     bg_service_manager.start_attachment_cleanup_job().await;
@@ -67,16 +65,24 @@ async fn main() -> std::io::Result<()> {
     let agent_engine = Arc::new(AgentEngine::new(provider, tool_registry));
     
     // Start automation scheduler
-    let mut automation_scheduler = AutomationScheduler::new(pool.clone(), agent_engine.clone())
-        .await
-        .expect("Failed to create automation scheduler");
+    // Disabled: causes tokio_cron_scheduler errors and blocks startup
+    log::info!("Automation scheduler disabled (causes errors)");
     
+    // Start OAuth token refresh service
+    let pool_oauth = pool.clone();
     tokio::spawn(async move {
-        if let Err(e) = automation_scheduler.start().await {
-            log::error!("Failed to start automation scheduler: {}", e);
-        }
+        log::info!("Starting OAuth token refresh service");
+        services::token_refresh::start_token_refresh_service(Arc::new(pool_oauth)).await;
     });
     
+    // Start CalDAV sync service (CRITICAL FEATURE)
+    let pool_caldav = pool.clone();
+    tokio::spawn(async move {
+        log::info!("Starting CalDAV sync service");
+        let caldav_sync = services::caldav_sync::CalDavSyncService::new(pool_caldav);
+        caldav_sync.start().await;
+    });
+
     // Start HTTP server
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -94,16 +100,23 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(agent_engine.clone()))
             .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
-            // Public auth endpoints (BEFORE the protected scope)
-            .route("/api/register", web::post().to(handlers::auth::register))
-            .route("/api/login", web::post().to(handlers::auth::login))
+            // Public auth endpoints - NO AUTHENTICATION REQUIRED
+            .route("/auth/auto-login", web::get().to(handlers::auth::auto_login))
             .route("/api/auth/google", web::get().to(handlers::auth::google_auth_url))
             .route("/api/auth/google/callback", web::get().to(handlers::auth::google_callback))
+            .route("/api/register", web::post().to(handlers::auth::register))
+            .route("/api/login", web::post().to(handlers::auth::login))
             .service(
                 web::scope("/api")
                     .wrap(HttpAuthentication::bearer(email_client_backend::middleware::auth::validator))
                     // All routes in this scope require authentication
+                            // Debug endpoints
+                            .route("/debug/sync", web::get().to(handlers::debug::get_sync_debug))
+                            .route("/debug/test-imap", web::get().to(handlers::debug::test_imap_connection))
+                            .route("/debug/manual-sync", web::post().to(handlers::debug::trigger_manual_sync))
+                            // Auth endpoints
                             .route("/logout", web::post().to(handlers::auth::logout))
+                            .route("/refresh-token", web::post().to(handlers::auth::refresh_token_endpoint))
                             .route("/conversations", web::get().to(handlers::conversations::get_conversations))
                             .route("/conversations/{id}", web::get().to(handlers::conversations::get_conversation))
                             .route("/emails/send", web::post().to(handlers::emails::send_email))
@@ -111,6 +124,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/emails/{id}/read", web::put().to(handlers::emails::mark_as_read))
                             .route("/emails/{id}", web::delete().to(handlers::emails::delete_email))
                             .route("/emails/{id}/move", web::post().to(handlers::emails::move_email))
+                            .route("/emails/sync", web::post().to(handlers::emails::trigger_sync))
                             .route("/folders", web::get().to(handlers::folders::get_folders))
                             .route("/folders", web::post().to(handlers::folders::create_folder))
                             // Draft endpoints
@@ -142,6 +156,10 @@ async fn main() -> std::io::Result<()> {
                             // Settings endpoints
                             .route("/settings", web::get().to(handlers::settings::get_settings))
                             .route("/settings", web::put().to(handlers::settings::update_settings))
+                            .route("/settings/env", web::get().to(handlers::settings::get_env_settings))
+                            .route("/settings/env", web::post().to(handlers::settings::save_env_settings))
+                            // Agent endpoints
+                            .route("/agent/tools", web::get().to(handlers::agent::list_tools))
                             // Chat/Agent endpoints
                             .route("/chat/conversations", web::post().to(handlers::chat::create_conversation))
                             .route("/chat/conversations", web::get().to(handlers::chat::list_conversations))

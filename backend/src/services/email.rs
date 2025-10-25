@@ -1,5 +1,6 @@
 use crate::models::{Email, User};
 use crate::services::{ImapService, SmtpService};
+use crate::utils::encryption::Encryption;
 use chrono::Utc;
 use sqlx::SqlitePool;
 use std::sync::Arc;
@@ -9,6 +10,7 @@ pub struct EmailService {
     pool: SqlitePool,
     imap_services: Arc<RwLock<std::collections::HashMap<i64, ImapService>>>,
     smtp_services: Arc<RwLock<std::collections::HashMap<i64, SmtpService>>>,
+    encryption: Encryption,
 }
 
 impl EmailService {
@@ -17,16 +19,42 @@ impl EmailService {
             pool,
             imap_services: Arc::new(RwLock::new(std::collections::HashMap::new())),
             smtp_services: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            encryption: Encryption::new(),
         }
     }
 
     pub async fn initialize_user_services(&self, user: &User) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Determine authentication method
+        let (password, oauth_token) = if user.oauth_provider.is_some() {
+            // OAuth user - decrypt access token
+            let oauth_token = if let Some(encrypted_token) = &user.oauth_access_token {
+                match self.encryption.decrypt(encrypted_token) {
+                    Ok(token) => {
+                        log::info!("Successfully decrypted OAuth token for user {}", user.id);
+                        Some(token)
+                    }
+                    Err(e) => {
+                        log::error!("Failed to decrypt OAuth token for user {}: {}", user.id, e);
+                        None
+                    }
+                }
+            } else {
+                log::warn!("User {} has OAuth provider but no access token", user.id);
+                None
+            };
+            (None, oauth_token)
+        } else {
+            // Password user
+            (user.email_password.clone(), None)
+        };
+        
         // Create IMAP service for user
         let imap_service = ImapService::new(
             user.imap_host.clone(),
             user.imap_port as u16,
             user.email.clone(),
-            user.email_password.clone().unwrap_or_default(),
+            password.clone(),
+            oauth_token.clone(),
         );
         
         // Connect to IMAP
@@ -40,8 +68,9 @@ impl EmailService {
             user.smtp_host.clone(),
             user.smtp_port as u16,
             user.email.clone(),
-            user.email_password.clone().unwrap_or_default(),
+            password,
             user.smtp_use_tls,
+            oauth_token,
         );
         
         // Test SMTP connection

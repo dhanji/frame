@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Goose Button Diagnostic</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .pass { background: #d4edda; }
+        .fail { background: #f8d7da; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Goose Button Diagnostic</h1>
+    
+    <div id="tests"></div>
+    
+    <h2>Manual Test</h2>
+    <button id="testBtn" style="background: #10a37f; color: white; border: none;">🤖 Test Goose Button</button>
+    
+    <h2>Check Main App</h2>
+    <button onclick="checkMainApp()">Check Main App Goose Button</button>
+    <div id="mainAppCheck"></div>
+    
+    <script>
+        const testsDiv = document.getElementById('tests');
+        
+        function addTest(name, passed, details) {
+            const div = document.createElement('div');
+            div.className = 'test ' + (passed ? 'pass' : 'fail');
+            div.innerHTML = `<strong>${passed ? '✅' : '❌'} ${name}</strong><br>${details}`;
+            testsDiv.appendChild(div);
+        }
+        
+        // Test 1: Can we create a button?
+        const btn = document.getElementById('testBtn');
+        addTest('Button Element Exists', !!btn, btn ? 'Button found' : 'Button not found');
+        
+        // Test 2: Can we add event listener?
+        let listenerAdded = false;
+        try {
+            btn.addEventListener('click', function() {
+                alert('Test button clicked!');
+            });
+            listenerAdded = true;
+        } catch (e) {
+            addTest('Event Listener', false, 'Error: ' + e.message);
+        }
+        if (listenerAdded) {
+            addTest('Event Listener', true, 'Successfully added click listener');
+        }
+        
+        // Test 3: Check if openGooseChat function exists
+        addTest('openGooseChat Function', typeof openGooseChat !== 'undefined', 
+            typeof openGooseChat !== 'undefined' ? 'Function exists' : 'Function not defined');
+        
+        // Test 4: Check authToken
+        addTest('Auth Token', typeof authToken !== 'undefined', 
+            typeof authToken !== 'undefined' ? 'Token exists: ' + (authToken ? 'YES' : 'NO') : 'Token variable not defined');
+        
+        function checkMainApp() {
+            const output = document.getElementById('mainAppCheck');
+            output.innerHTML = '<h3>Checking Main App...</h3>';
+            
+            // Try to access the main app's goose button
+            const mainGooseBtn = window.parent.document.getElementById('gooseBtn');
+            if (mainGooseBtn) {
+                output.innerHTML += '<p>✅ Main app goose button found</p>';
+                output.innerHTML += '<p>Button HTML: ' + mainGooseBtn.outerHTML + '</p>';
+                
+                // Check if it has event listeners
+                const listeners = getEventListeners ? getEventListeners(mainGooseBtn) : null;
+                if (listeners) {
+                    output.innerHTML += '<p>Event listeners: ' + JSON.stringify(Object.keys(listeners)) + '</p>';
+                } else {
+                    output.innerHTML += '<p>Cannot check event listeners (getEventListeners not available)</p>';
+                }
+                
+                // Try to click it
+                output.innerHTML += '<button onclick="window.parent.document.getElementById(\'gooseBtn\').click()">Click Main Goose Button</button>';
+            } else {
+                output.innerHTML += '<p>❌ Main app goose button not found</p>';
+                output.innerHTML += '<p>This test page is not in an iframe of the main app</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 use actix_web::{web, HttpResponse};
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
+use std::fs;
+use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSettings {
@@ -164,4 +166,83 @@ fn default_settings() -> UserSettings {
         ai_model: "claude-3-5-sonnet-20241022".to_string(),
         ai_context_window: 200000,
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SaveEnvSettingsRequest {
+    pub anthropic_api_key: Option<String>,
+}
+
+pub async fn save_env_settings(
+    body: web::Json<SaveEnvSettingsRequest>,
+    _user: crate::middleware::auth::AuthenticatedUser,
+) -> Result<HttpResponse, actix_web::Error> {
+    let env_path = Path::new("backend/.env");
+    
+    // Read current .env file
+    let env_content = fs::read_to_string(env_path)
+        .map_err(|e| {
+            log::error!("Failed to read .env file: {}", e);
+            actix_web::error::ErrorInternalServerError("Failed to read configuration file")
+        })?;
+    
+    let mut lines: Vec<String> = env_content.lines().map(|s| s.to_string()).collect();
+    let mut updated = false;
+    
+    // Update ANTHROPIC_API_KEY if provided
+    if let Some(ref api_key) = body.anthropic_api_key {
+        let mut found = false;
+        for line in &mut lines {
+            if line.starts_with("ANTHROPIC_API_KEY=") {
+                *line = format!("ANTHROPIC_API_KEY={}", api_key);
+                found = true;
+                updated = true;
+                break;
+            }
+        }
+        
+        // If not found, add it
+        if !found {
+            lines.push(format!("ANTHROPIC_API_KEY={}", api_key));
+            updated = true;
+        }
+    }
+    
+    if updated {
+        // Write back to .env file
+        let new_content = lines.join("\n") + "\n";
+        fs::write(env_path, new_content)
+            .map_err(|e| {
+                log::error!("Failed to write .env file: {}", e);
+                actix_web::error::ErrorInternalServerError("Failed to save configuration")
+            })?;
+        
+        Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "Settings saved to .env file. Restart server to apply changes.",
+            "restart_required": true
+        })))
+    } else {
+        Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "No changes to save"
+        })))
+    }
+}
+
+pub async fn get_env_settings(
+    _user: crate::middleware::auth::AuthenticatedUser,
+) -> Result<HttpResponse, actix_web::Error> {
+    // For security, we don't return the actual API key, just whether it's set
+    let api_key = std::env::var("ANTHROPIC_API_KEY").ok();
+    
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "anthropic_api_key_set": api_key.is_some(),
+        "anthropic_api_key": api_key.map(|k| {
+            // Return masked version
+            if k.len() > 8 {
+                format!("{}...{}", &k[..4], &k[k.len()-4..])
+            } else {
+                "***".to_string()
+            }
+        })
+    })))
 }

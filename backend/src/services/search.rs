@@ -176,7 +176,7 @@ impl SearchService {
         let mut grouped_results = Vec::new();
         
         for result in results {
-            let refs: Vec<String> = serde_json::from_str(&result.email.references)
+            let refs: Vec<String> = result.email.references.as_ref().and_then(|s| serde_json::from_str(s).ok())
                 .unwrap_or_default();
             
             let thread_id = result.email.in_reply_to.clone()

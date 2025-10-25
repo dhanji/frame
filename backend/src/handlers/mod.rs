@@ -12,3 +12,5 @@ pub mod automations;
 pub mod reminders;
 pub mod calendar;
 pub mod money;
+pub mod debug;
+pub mod agent;

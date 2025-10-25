@@ -3,7 +3,7 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use oauth2::{
-    AuthorizationCode, AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge,
+    AuthorizationCode, AuthUrl, ClientId, ClientSecret, CsrfToken,
     RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
 use oauth2::basic::BasicClient;
@@ -14,6 +14,8 @@ use std::sync::Arc;
 use crate::middleware::auth::Claims;
 use crate::models::User;
 use crate::services::EmailManager;
+use crate::services::email_sync::EmailSyncService;
+use oauth2::RefreshToken;
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
@@ -285,21 +287,84 @@ pub async fn google_auth_url() -> Result<HttpResponse, actix_web::Error> {
             actix_web::error::ErrorInternalServerError(e)
         })?;
 
-    let (pkce_challenge, _pkce_verifier) = PkceCodeChallenge::new_random_sha256();
-
     let (auth_url, csrf_token) = client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new("https://www.googleapis.com/auth/gmail.readonly".to_string()))
         .add_scope(Scope::new("https://www.googleapis.com/auth/gmail.send".to_string()))
         .add_scope(Scope::new("https://www.googleapis.com/auth/gmail.modify".to_string()))
+        .add_scope(Scope::new("https://mail.google.com/".to_string()))
         .add_scope(Scope::new("https://www.googleapis.com/auth/userinfo.email".to_string()))
         .add_scope(Scope::new("https://www.googleapis.com/auth/userinfo.profile".to_string()))
-        .set_pkce_challenge(pkce_challenge)
         .url();
 
     Ok(HttpResponse::Ok().json(GoogleAuthUrlResponse {
         auth_url: auth_url.to_string(),
         state: csrf_token.secret().to_string(),
+    }))
+}
+
+/// Auto-login endpoint for single-user desktop app mode
+pub async fn auto_login(
+    pool: web::Data<SqlitePool>,
+) -> Result<HttpResponse, actix_web::Error> {
+    // Check if exactly one user exists
+    let user_count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users")
+        .fetch_one(pool.get_ref())
+        .await
+        .map_err(|e| {
+            log::error!("Database error checking user count: {}", e);
+            actix_web::error::ErrorInternalServerError("Database error")
+        })?;
+    
+    if user_count != 1 {
+        // Only auto-login if exactly one user exists
+        return Ok(HttpResponse::Unauthorized().json(serde_json::json!({
+            "error": "Auto-login not available"
+        })));
+    }
+    
+    // Get the single user
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users LIMIT 1")
+        .fetch_one(pool.get_ref())
+        .await
+        .map_err(|e| {
+            log::error!("Database error fetching user: {}", e);
+            actix_web::error::ErrorInternalServerError("Database error")
+        })?;
+    
+    // Generate JWT token
+    let expiration = Utc::now()
+        .checked_add_signed(Duration::days(7))
+        .expect("valid timestamp")
+        .timestamp() as usize;
+    
+    let claims = Claims {
+        sub: user.username.clone(),
+        user_id: user.id,
+        email: user.email.clone(),
+        exp: expiration,
+    };
+    
+    let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_ref()),
+    )
+    .map_err(|e| {
+        log::error!("Token generation error: {}", e);
+        actix_web::error::ErrorInternalServerError("Token generation failed")
+    })?;
+    
+    log::info!("Auto-login successful for user: {}", user.email);
+    
+    Ok(HttpResponse::Ok().json(AuthResponse {
+        token,
+        user: UserInfo {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+        },
     }))
 }
 
@@ -322,7 +387,7 @@ pub async fn google_callback(
         .request_async(async_http_client)
         .await
         .map_err(|e| {
-            log::error!("Token exchange error: {}", e);
+            log::error!("Token exchange error: {:?}", e);
             actix_web::error::ErrorInternalServerError("Failed to exchange authorization code")
         })?;
 
@@ -474,13 +539,35 @@ pub async fn google_callback(
         actix_web::error::ErrorInternalServerError("Token generation failed")
     })?;
 
-    // Initialize email services
+    // Initialize email services (non-blocking)
     if let Err(e) = email_manager.initialize_user(&user).await {
         log::error!("Failed to initialize email services for user {}: {}", user.id, e);
     }
 
     // Redirect to frontend with token
     Ok(HttpResponse::Found()
-        .append_header(("Location", format!("/?token={}&email={}", token, email)))
+        .append_header(("Location", format!("/?token={}&email={}&oauth_success=true", token, email)))
         .finish())
+}
+
+/// Manual OAuth token refresh endpoint
+pub async fn refresh_token_endpoint(
+    pool: web::Data<SqlitePool>,
+    user: crate::middleware::auth::AuthenticatedUser,
+) -> Result<HttpResponse, actix_web::Error> {
+    let refresh_service = crate::services::OAuthRefreshService::new();
+    
+    match refresh_service.refresh_token(pool.get_ref(), user.user_id).await {
+        Ok(_) => {
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "message": "Token refreshed successfully"
+            })))
+        }
+        Err(e) => {
+            log::error!("Failed to refresh token for user {}: {}", user.user_id, e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": format!("Failed to refresh token: {}", e)
+            })))
+        }
+    }
 }

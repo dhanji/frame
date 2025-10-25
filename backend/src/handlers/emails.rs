@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse};
 use crate::utils::sanitize::{sanitize_for_storage, sanitize_for_display};
+use crate::services::email_sync::EmailSyncService;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use std::sync::Arc;
@@ -534,5 +535,29 @@ pub async fn bulk_action(
     
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "message": format!("Bulk {} action completed for {} emails", body.action, body.email_ids.len())
+    })))
+}
+
+/// Trigger manual email sync for the authenticated user
+pub async fn trigger_sync(
+    pool: web::Data<SqlitePool>,
+    email_manager: web::Data<Arc<crate::services::EmailManager>>,
+    user: web::ReqData<crate::middleware::auth::Claims>,
+) -> Result<HttpResponse, actix_web::Error> {
+    // Get user from database
+    let user_record = sqlx::query_as::<_, crate::models::User>("SELECT * FROM users WHERE id = ?")
+        .bind(user.user_id)
+        .fetch_one(pool.get_ref())
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    
+    let sync_service = EmailSyncService::new(pool.get_ref().clone(), email_manager.get_ref().clone());
+    
+    tokio::spawn(async move {
+        let _ = sync_service.sync_user_emails(&user_record).await;
+    });
+    
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": "Email sync triggered successfully"
     })))
 }

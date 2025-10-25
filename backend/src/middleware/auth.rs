@@ -66,7 +66,7 @@ pub async fn validator(
     
     // Check if this is a public endpoint that doesn't require auth
     let path = req.path();
-    if path == "/health" || path == "/api/login" || path == "/api/register" {
+    if path == "/health" || path == "/api/login" || path == "/api/register" || path == "/api/auth/auto-login" || path == "/api/auth/google" || path == "/api/auth/google/callback" {
         return Ok(req);
     }
     

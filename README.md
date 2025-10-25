@@ -76,11 +76,24 @@ cp .env.example .env
 
 4. Build and run the backend server:
 ```bash
-cargo build --release
-cargo run --release
+./run.sh restart
 ```
 
 The backend server will start on `http://localhost:8080`
+
+Use the ./run.sh script rather than native cargo building, for logs, cleanup, restarts, it is very handy:
+```
+Commands:
+    start       Start the backend server
+    stop        Stop the backend server
+    restart     Restart the backend server
+    status      Show server status
+    logs        Show and follow server logs
+    build       Build the backend
+    kill        Kill any process using port 8080
+    clean       Stop server and clean up logs
+    help        Show this help message
+```
 
 ### Frontend (No Setup Required!)
 
@@ -88,51 +101,6 @@ The frontend is a standalone HTML file that's automatically served by the Rust b
 No installation or build steps required!
 
 Simply start the backend and access the app at `http://localhost:8080`
-
-### Production Deployment
-
-**Quick Deploy:**
-```bash
-cd backend
-cargo build --release
-./target/release/email-server
-```
-
-#### Build and Run Backend
-```bash
-cd email-client/backend
-cargo build --release
-./target/release/email-server
-```
-
-#### Frontend
-The frontend is already production-ready! The `app-working.html` file is a fully optimized
-standalone application that requires no build step. Just ensure the backend serves it correctly.
-
-The backend automatically serves `frontend/app-working.html` as the index page.
-
-## Configuration
-
-### Email Account Setup
-
-When logging in, you'll need to provide:
-- **Email Address**: Your email address
-- **Password**: Your email password
-- **IMAP Host**: e.g., `imap.gmail.com`
-- **IMAP Port**: Usually `993` for SSL/TLS
-- **SMTP Host**: e.g., `smtp.gmail.com`
-- **SMTP Port**: Usually `587` for STARTTLS
-
-### Gmail Configuration
-
-For Gmail accounts:
-1. Enable "Less secure app access" or use App Passwords
-2. Enable IMAP in Gmail settings
-3. Use these settings:
-   - IMAP Host: `imap.gmail.com`
-   - IMAP Port: `993`
-   - SMTP Host: `smtp.gmail.com`
-   - SMTP Port: `587`
 
 ## API Documentation
 
@@ -197,19 +165,6 @@ Content-Type: application/json
 ```
 
 ## Development
-
-### Frontend Development
-
-The frontend is `frontend/app-working.html` - a single HTML file with embedded CSS and JavaScript.
-
-**To modify:**
-1. Edit `frontend/app-working.html`
-2. Save the file
-3. Refresh your browser
-4. Done!
-
-See **[FRONTEND.md](FRONTEND.md)** for detailed architecture documentation.
-
 
 ### Database Migrations
 
@@ -300,16 +255,6 @@ The primary frontend is `frontend/app-working.html` - a standalone HTML file wit
 2. Refresh your browser to see changes
 3. No build step required!
 
-**Optional TypeScript Development:**
-If you prefer TypeScript for development, there's an alternative implementation in `frontend/src/`:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-However, the standalone HTML version is the primary and recommended approach.
-
 ### Why Standalone HTML?
 
 **Advantages:**
@@ -321,12 +266,6 @@ However, the standalone HTML version is the primary and recommended approach.
 - ✅ Works offline
 - ✅ Tiny file size (~32KB)
 - ✅ Deploy anywhere
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ## License
 
@@ -345,13 +284,6 @@ MIT License - See LICENSE file for details
 - [ ] Dark mode theme
 - [ ] Email encryption (PGP)
 - [ ] Calendar integration
-
-## Support
-
-For issues and questions:
-- 📖 Read the **[Quick Start Guide](QUICKSTART.md)**
-- 🎨 Check the **[Frontend Architecture](FRONTEND.md)**
-- 🐛 Create an issue on GitHub
 
 ## Philosophy
 

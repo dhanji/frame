@@ -18,6 +18,7 @@ pub struct User {
     pub smtp_port: i32,
     pub smtp_use_tls: bool,
     pub is_active: bool,
+    pub settings: String,  // JSON settings
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -43,7 +44,8 @@ pub struct Email {
     pub folder: String,
     pub size: i64,
     pub in_reply_to: Option<String>,
-    pub references: String,  // JSON
+    #[sqlx(rename = "email_references")]
+    pub references: Option<String>,  // JSON
     pub deleted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -67,7 +69,9 @@ impl Email {
         self.bcc_list = self.bcc_addresses.as_ref()
             .and_then(|s| serde_json::from_str(s).ok())
             .unwrap_or_default();
-        self.references_list = serde_json::from_str(&self.references).unwrap_or_default();
+        self.references_list = self.references.as_ref()
+            .and_then(|s| serde_json::from_str(s).ok())
+            .unwrap_or_default();
     }
 }
 

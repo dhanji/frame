@@ -3,16 +3,19 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::services::imap_idle::ImapIdleService;
 use crate::websocket_impl::ConnectionManager;
+use crate::utils::encryption::Encryption;
+use crate::services::EmailManager;
 
 /// Background service manager for IMAP IDLE monitoring
 pub struct BackgroundServiceManager {
     pool: SqlitePool,
     ws_manager: Arc<RwLock<ConnectionManager>>,
+    email_manager: Arc<EmailManager>,
 }
 
 impl BackgroundServiceManager {
-    pub fn new(pool: SqlitePool, ws_manager: Arc<RwLock<ConnectionManager>>) -> Self {
-        Self { pool, ws_manager }
+    pub fn new(pool: SqlitePool, ws_manager: Arc<RwLock<ConnectionManager>>, email_manager: Arc<EmailManager>) -> Self {
+        Self { pool, ws_manager, email_manager }
     }
 
     /// Start IMAP IDLE monitoring for a user
@@ -23,6 +26,8 @@ impl BackgroundServiceManager {
         imap_port: u16,
         username: String,
         password: String,
+        oauth_token: Option<String>,
+        email_manager: Arc<EmailManager>,
     ) {
         let pool = self.pool.clone();
         let ws_manager = self.ws_manager.clone();
@@ -35,9 +40,11 @@ impl BackgroundServiceManager {
                 imap_port,
                 username,
                 password,
+                oauth_token,
                 user_id,
                 pool,
                 ws_manager,
+                email_manager,
             );
 
             // Monitor INBOX folder
@@ -48,13 +55,15 @@ impl BackgroundServiceManager {
     /// Start IMAP IDLE monitoring for all active users
     pub async fn start_all_imap_idle_monitors(&self) {
         log::info!("Starting IMAP IDLE monitors for all active users");
+        
+        let encryption = Encryption::new();
 
         // Fetch all active users from database
         let users = match sqlx::query!(
             r#"
-            SELECT id, email, email_password, imap_host, imap_port
+            SELECT id, email, email_password, oauth_provider, oauth_access_token, imap_host, imap_port
             FROM users
-            WHERE is_active = TRUE AND email_password IS NOT NULL
+            WHERE is_active = TRUE
             "#
         )
         .fetch_all(&self.pool)
@@ -68,10 +77,37 @@ impl BackgroundServiceManager {
         };
 
         for user in users {
-            if let Some(email_password) = user.email_password {
-                // Decrypt password (assuming it's encrypted)
-                // For now, we'll use it as-is
-                let password = email_password;
+            // Determine authentication method
+            let (password, oauth_token) = if user.oauth_provider.is_some() {
+                // OAuth user - decrypt access token
+                log::info!("User {} is OAuth user for IDLE monitoring", user.id);
+                let oauth_token = user.oauth_access_token.as_ref()
+                    .and_then(|token| {
+                        match encryption.decrypt(token) {
+                            Ok(t) => {
+                                log::info!("Successfully decrypted OAuth token for IDLE user {}", user.id);
+                                Some(t)
+                            }
+                            Err(e) => {
+                                log::error!("Failed to decrypt OAuth token for IDLE user {}: {}", user.id, e);
+                                None
+                            }
+                        }
+                    });
+                (String::new(), oauth_token) // Empty password for OAuth users
+            } else {
+                // Password user - decrypt email password
+                log::info!("User {} is password user for IDLE monitoring", user.id);
+                let password = user.email_password.as_ref()
+                    .and_then(|p| encryption.decrypt(p).ok())
+                    .unwrap_or_default();
+                (password, None)
+            };
+            
+            // Only start IDLE if we have credentials
+            if !password.is_empty() || oauth_token.is_some() {
+                log::info!("Starting IDLE monitoring for user {} with {} auth", 
+                    user.id, if oauth_token.is_some() { "OAuth" } else { "password" });
 
                 self.start_imap_idle_for_user(
                     user.id,
@@ -79,8 +115,12 @@ impl BackgroundServiceManager {
                     user.imap_port as u16,
                     user.email.clone(),
                     password,
+                    oauth_token,
+                    self.email_manager.clone(),
                 )
                 .await;
+            } else {
+                log::warn!("Skipping IDLE monitoring for user {} - no credentials available", user.id);
             }
         }
     }

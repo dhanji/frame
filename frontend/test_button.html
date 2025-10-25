@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Goose Button Test</title>
+</head>
+<body>
+    <h1>Testing Goose Button</h1>
+    <button id="gooseBtn" style="background: #10a37f; padding: 10px 20px; color: white; border: none; cursor: pointer;">🤖 Goose</button>
+    
+    <div id="output" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(msg) {
+            output.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+        
+        log('Page loaded');
+        
+        const gooseBtn = document.getElementById('gooseBtn');
+        log('Button found: ' + (gooseBtn ? 'YES' : 'NO'));
+        
+        if (gooseBtn) {
+            log('Button element: ' + gooseBtn.outerHTML);
+            
+            gooseBtn.addEventListener('click', function() {
+                log('Button clicked!');
+                alert('Goose button clicked!');
+            });
+            
+            log('Event listener added');
+        }
+        
+        // Test if button is clickable
+        setTimeout(() => {
+            log('Testing programmatic click...');
+            gooseBtn.click();
+        }, 1000);
+    </script>
+</body>
+</html>

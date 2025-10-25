@@ -1,6 +1,7 @@
 use lettre::{
     message::{header::ContentType, Mailbox, Message, MultiPart},
-    transport::smtp::authentication::Credentials,
+    transport::smtp::authentication::{Credentials, Mechanism},
+    transport::smtp::client::Tls,
     AsyncSmtpTransport, AsyncTransport, Tokio1Executor,
 };
 use serde::{Deserialize, Serialize};
@@ -31,8 +32,9 @@ pub struct SmtpService {
     host: String,
     port: u16,
     username: String,
-    password: String,
+    password: Option<String>,
     use_tls: bool,
+    oauth_token: Option<String>,
 }
 
 impl SmtpService {
@@ -40,8 +42,9 @@ impl SmtpService {
         host: String,
         port: u16,
         username: String,
-        password: String,
+        password: Option<String>,
         use_tls: bool,
+        oauth_token: Option<String>,
     ) -> Self {
         Self {
             host,
@@ -49,6 +52,7 @@ impl SmtpService {
             username,
             password,
             use_tls,
+            oauth_token,
         }
     }
 
@@ -138,22 +142,29 @@ impl SmtpService {
         let message = message_builder.multipart(multipart)?;
         
         // Create SMTP transport
-        let mailer = if self.use_tls {
+        let mailer = if let Some(oauth_token) = &self.oauth_token {
+            // Use XOAUTH2 authentication for OAuth users
+            log::info!("Authenticating SMTP with XOAUTH2 for user: {}", self.username);
             AsyncSmtpTransport::<Tokio1Executor>::relay(&self.host)?
                 .port(self.port)
                 .credentials(Credentials::new(
                     self.username.clone(),
-                    self.password.clone(),
+                    oauth_token.clone(),
                 ))
+                .authentication(vec![Mechanism::Xoauth2])
                 .build()
-        } else {
-            AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&self.host)
+        } else if let Some(password) = &self.password {
+            // Use password authentication for traditional users
+            log::info!("Authenticating SMTP with password for user: {}", self.username);
+            AsyncSmtpTransport::<Tokio1Executor>::relay(&self.host)?
                 .port(self.port)
                 .credentials(Credentials::new(
                     self.username.clone(),
-                    self.password.clone(),
+                    password.clone(),
                 ))
                 .build()
+        } else {
+            return Err("No authentication method available (neither OAuth token nor password)".into());
         };
         
         // Send the email
@@ -207,22 +218,27 @@ impl SmtpService {
     }
 
     pub async fn test_connection(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let mailer: AsyncSmtpTransport<Tokio1Executor> = if self.use_tls {
+        let mailer: AsyncSmtpTransport<Tokio1Executor> = if let Some(oauth_token) = &self.oauth_token {
+            // Use XOAUTH2 authentication for OAuth users
             AsyncSmtpTransport::<Tokio1Executor>::relay(&self.host)?
                 .port(self.port)
                 .credentials(Credentials::new(
                     self.username.clone(),
-                    self.password.clone(),
+                    oauth_token.clone(),
                 ))
+                .authentication(vec![Mechanism::Xoauth2])
                 .build()
-        } else {
-            AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&self.host)
+        } else if let Some(password) = &self.password {
+            // Use password authentication for traditional users
+            AsyncSmtpTransport::<Tokio1Executor>::relay(&self.host)?
                 .port(self.port)
                 .credentials(Credentials::new(
                     self.username.clone(),
-                    self.password.clone(),
+                    password.clone(),
                 ))
                 .build()
+        } else {
+            return Err("No authentication method available (neither OAuth token nor password)".into());
         };
         
         mailer.test_connection().await?;

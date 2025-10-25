@@ -1,10 +1,13 @@
 use crate::models::User;
-use crate::services::{ImapService, SmtpService};
+use crate::services::{ImapService, SmtpService, OAuthRefreshService};
 use crate::utils::encryption::Encryption;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
+use sqlx::SqlitePool;
+use std::sync::Mutex;
+use std::collections::HashSet;
 
 /// Manages IMAP and SMTP services for all users
 pub struct EmailManager {
@@ -22,25 +25,48 @@ impl EmailManager {
         }
     }
 
+
     /// Initialize email services for a user
     pub async fn initialize_user_blocking(
         &self,
         user: &User,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // Decrypt email password
-        let email_password = user
-            .email_password
-            .as_ref()
-            .and_then(|p| self.encryption.decrypt(p).ok())
-            .ok_or("Failed to decrypt email password")?;
+        // Determine authentication method
+        let (password, oauth_token) = if user.oauth_provider.is_some() {
+            // OAuth user - decrypt access token
+            log::info!("User {} is OAuth user, decrypting access token", user.id);
+            let oauth_token = user.oauth_access_token.as_ref()
+                .and_then(|token| {
+                    match self.encryption.decrypt(token) {
+                        Ok(t) => {
+                            log::info!("Successfully decrypted OAuth token for user {} (length: {})", user.id, t.len());
+                            log::debug!("OAuth token starts with: {}...", &t.chars().take(20).collect::<String>());
+                            Some(t)
+                        }
+                        Err(e) => {
+                            log::error!("Failed to decrypt OAuth token for user {}: {}", user.id, e);
+                            None
+                        }
+                    }
+                });
+            (None, oauth_token)
+        } else {
+            // Password user - decrypt email password
+            log::info!("User {} is password user, decrypting password", user.id);
+            let password = user.email_password.as_ref()
+                .and_then(|p| self.encryption.decrypt(p).ok());
+            (password, None)
+        };
 
         // Create and connect IMAP service
         log::info!("Initializing IMAP service for user {}", user.id);
-        let imap_service = ImapService::new(
+        let imap_service = ImapService::new_with_user_id(
             user.imap_host.clone(),
             user.imap_port as u16,
             user.email.clone(),
-            email_password.clone(),
+            password.clone(),
+            oauth_token.clone(),
+            user.id,
         );
         
         // Try to connect to verify credentials
@@ -63,8 +89,9 @@ impl EmailManager {
             user.smtp_host.clone(),
             user.smtp_port as u16,
             user.email.clone(),
-            email_password,
+            password,
             user.smtp_use_tls,
+            oauth_token,
         );
         
         // Test SMTP connection
@@ -98,7 +125,7 @@ impl EmailManager {
 
         // Spawn initialization in background with timeout
         tokio::spawn(async move {
-            let timeout_duration = Duration::from_secs(5);
+            let timeout_duration = Duration::from_secs(10);
             match tokio::time::timeout(
                 timeout_duration,
                 manager_clone.initialize_user_blocking(&user_clone)

@@ -17,6 +17,7 @@ pub struct GetConversationsQuery {
 #[derive(Debug, Serialize)]
 pub struct ConversationResponse {
     pub id: String,
+    pub preview: String,  // Add preview field for frontend
     pub conversation_type: String,  // "email", "chat", or "automation"
     pub icon: String,  // Icon identifier for frontend
     pub subject: String,
@@ -88,7 +89,7 @@ pub async fn get_conversations(
     let response: Vec<ConversationResponse> = conversations
         .into_iter()
         .map(|conv| {
-            let preview_messages = conv.preview_messages
+            let preview_messages: Vec<MessagePreview> = conv.preview_messages
                 .into_iter()
                 .map(|msg| MessagePreview {
                     id: msg.message_id,
@@ -114,6 +115,9 @@ pub async fn get_conversations(
             
             ConversationResponse {
                 id: conv.id,
+                preview: preview_messages.first()
+                    .map(|m| m.preview.clone())
+                    .unwrap_or_else(|| "No preview available".to_string()),
                 conversation_type: "email".to_string(),
                 icon: "📧".to_string(),
                 subject: conv.subject,
@@ -131,86 +135,67 @@ pub async fn get_conversations(
     
     all_conversations.extend(response);
     
-    // Fetch chat conversations
-    let chat_convs = sqlx::query_as::<_, (String, String, String, String)>(
-        r#"SELECT c.id, c.title, c.created_at, c.updated_at
-           FROM chat_conversations c
-           WHERE c.user_id = ?
-           ORDER BY c.updated_at DESC
-           LIMIT ?"#
-    )
-    .bind(user.user_id)
-    .bind(limit)
-    .fetch_all(pool.get_ref())
-    .await
-    .map_err(|e| {
-        log::error!("Failed to fetch chat conversations: {}", e);
-        actix_web::error::ErrorInternalServerError("Failed to fetch chats")
-    })?;
-    
-    for (id, title, created_at, updated_at) in chat_convs {
-        // Get last message for preview
-        let last_msg = sqlx::query_as::<_, (String, String, String)>(
-            "SELECT id, role, content FROM chat_messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT 1"
+    // If viewing INBOX, also include chat conversations and automation results
+    if folder == "INBOX" {
+        // Fetch chat conversations
+        let chat_convs = sqlx::query_as::<_, (String, String, String, String, i32)>(
+            r#"
+            SELECT 
+                c.id,
+                c.title,
+                c.created_at,
+                c.updated_at,
+                COUNT(m.id) as message_count
+            FROM chat_conversations c
+            LEFT JOIN chat_messages m ON c.id = m.conversation_id
+            WHERE c.user_id = ?
+            GROUP BY c.id
+            ORDER BY c.updated_at DESC
+            LIMIT 20
+            "#
         )
-        .bind(&id)
-        .fetch_optional(pool.get_ref())
+        .bind(user.user_id)
+        .fetch_all(pool.get_ref())
         .await
-        .ok()
-        .flatten();
+        .unwrap_or_default();
         
-        let preview = if let Some((msg_id, role, content)) = last_msg {
-            let preview_text: String = content.chars().take(200).collect();
-            vec![MessagePreview {
-                id: msg_id,
-                from: if role == "user" { "You".to_string() } else { "Goose AI".to_string() },
-                subject: title.clone(),
-                preview: preview_text,
-                date: chrono::DateTime::parse_from_rfc3339(&updated_at)
-                    .ok()
-                    .map(|dt| dt.with_timezone(&chrono::Utc))
-                    .unwrap_or_else(chrono::Utc::now),
-                is_read: true,
-            }]
-        } else {
-            vec![]
-        };
+        for (id, title, _created_at, updated_at, msg_count) in chat_convs {
+            // Get last message preview
+            let last_msg = sqlx::query_scalar::<_, String>(
+                "SELECT content FROM chat_messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT 1"
+            )
+            .bind(&id)
+            .fetch_optional(pool.get_ref())
+            .await
+            .unwrap_or_default()
+            .unwrap_or_else(|| "No messages yet".to_string());
+            
+            let preview = last_msg.chars().take(200).collect::<String>();
+            
+            all_conversations.push(ConversationResponse {
+                id,
+                preview,
+                conversation_type: "chat".to_string(),
+                icon: "🤖".to_string(),
+                subject: title,
+                participants: vec!["Goose AI".to_string()],
+                last_message_date: chrono::DateTime::parse_from_rfc3339(&updated_at)
+                    .unwrap_or_else(|_| chrono::Utc::now().into())
+                    .with_timezone(&chrono::Utc),
+                message_count: msg_count as usize,
+                unread_count: 0,
+                preview_messages: vec![],
+                has_attachments: false,
+                is_starred: false,
+                folder: "INBOX".to_string(),
+            });
+        }
         
-        // Determine if this is an automation result
-        let is_automation = title.starts_with("🤖");
-        let icon = if is_automation { "⚙️".to_string() } else { "🤖".to_string() };
-        let conv_type = if is_automation { "automation".to_string() } else { "chat".to_string() };
-        
-        all_conversations.push(ConversationResponse {
-            id,
-            conversation_type: conv_type,
-            icon,
-            subject: title,
-            participants: vec!["Goose AI".to_string()],
-            last_message_date: chrono::DateTime::parse_from_rfc3339(&updated_at)
-                .ok()
-                .map(|dt| dt.with_timezone(&chrono::Utc))
-                .unwrap_or_else(chrono::Utc::now),
-            message_count: 1,
-            unread_count: 0,
-            preview_messages: preview,
-            has_attachments: false,
-            is_starred: false,
-            folder: "INBOX".to_string(),
-        });
+        // Sort all conversations by date (most recent first)
+        all_conversations.sort_by(|a, b| b.last_message_date.cmp(&a.last_message_date));
     }
     
-    // Sort all conversations by date (most recent first)
-    all_conversations.sort_by(|a, b| b.last_message_date.cmp(&a.last_message_date));
-    
-    // Apply pagination to combined results
-    let paginated: Vec<ConversationResponse> = all_conversations
-        .into_iter()
-        .skip(offset as usize)
-        .take(limit as usize)
-        .collect();
-    
-    Ok(HttpResponse::Ok().json(paginated))
+    Ok(HttpResponse::Ok().json(all_conversations))
 }
 
 pub async fn get_conversation(

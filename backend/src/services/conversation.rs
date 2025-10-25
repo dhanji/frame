@@ -29,6 +29,84 @@ impl ConversationService {
         Self { pool }
     }
 
+    /// Rebuild conversations table from existing emails
+    pub async fn rebuild_conversations_for_user(&self, user_id: i64) -> Result<usize, sqlx::Error> {
+        log::info!("Rebuilding conversations for user {}", user_id);
+        
+        // Fetch all emails for this user
+        let emails = sqlx::query_as::<_, Email>(
+            "SELECT * FROM emails WHERE user_id = ? ORDER BY date DESC"
+        )
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await?;
+        
+        log::info!("Found {} emails to process", emails.len());
+        
+        if emails.is_empty() {
+            return Ok(0);
+        }
+        
+        // Group emails into conversations
+        let conversations = self.group_emails_into_conversations(emails).await?;
+        
+        log::info!("Grouped into {} conversations", conversations.len());
+        
+        // Clear existing conversations for this user
+        sqlx::query("DELETE FROM conversations WHERE user_id = ?")
+            .bind(user_id)
+            .execute(&self.pool)
+            .await?;
+        
+        // Insert conversations into database
+        let mut inserted = 0;
+        for conv in &conversations {
+            let participants_json = serde_json::to_string(&conv.participants)
+                .unwrap_or_else(|_| "[]".to_string());
+            
+            let result = sqlx::query(
+                r#"
+                INSERT INTO conversations (
+                    id, user_id, subject, participants, last_message_date,
+                    message_count, unread_count, is_starred, folder
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                "#
+            )
+            .bind(&conv.id)
+            .bind(user_id)
+            .bind(&conv.subject)
+            .bind(&participants_json)
+            .bind(conv.last_message_date)
+            .bind(conv.message_count as i64)
+            .bind(conv.unread_count as i64)
+            .bind(conv.is_starred)
+            .bind(&conv.folder)
+            .execute(&self.pool)
+            .await;
+            
+            match result {
+                Ok(_) => inserted += 1,
+                Err(e) => log::error!("Failed to insert conversation {}: {}", conv.id, e),
+            }
+        }
+        
+        log::info!("Inserted {} conversations into database", inserted);
+        Ok(inserted)
+    }
+    
+    /// Rebuild conversations for all users
+    pub async fn rebuild_all_conversations(&self) -> Result<usize, sqlx::Error> {
+        let users: Vec<(i64,)> = sqlx::query_as("SELECT id FROM users")
+            .fetch_all(&self.pool)
+            .await?;
+        
+        let mut total = 0;
+        for (user_id,) in users {
+            total += self.rebuild_conversations_for_user(user_id).await?;
+        }
+        Ok(total)
+    }
+
     pub async fn group_emails_into_conversations(
         &self,
         emails: Vec<Email>,
@@ -50,7 +128,7 @@ impl ConversationService {
                 message_id: e.message_id.clone(),
                 subject: e.subject.clone(),
                 in_reply_to: e.in_reply_to.clone(),
-                references: serde_json::from_str(&e.references).unwrap_or_default(),
+                references: e.references.as_ref().and_then(|s| serde_json::from_str(s).ok()).unwrap_or_default(),
                 date: e.date,
             })
             .collect();
@@ -236,7 +314,7 @@ impl ConversationService {
         }
         
         // Parse references from JSON string
-        let references: Vec<String> = serde_json::from_str(&email.references)
+        let references: Vec<String> = email.references.as_ref().and_then(|s| serde_json::from_str(s).ok())
             .unwrap_or_default();
         
         if !references.is_empty() {
@@ -266,9 +344,9 @@ impl ConversationService {
         // Fetch all emails in this conversation
         let emails = sqlx::query_as::<_, Email>(
             r#"
-            SELECT * FROM emails 
+            SELECT id, user_id, message_id, thread_id, from_address, to_addresses, cc_addresses, bcc_addresses, subject, body_text, body_html, date, is_read, is_starred, has_attachments, attachments, folder, size, in_reply_to, email_references, deleted_at, created_at, updated_at FROM emails
             WHERE user_id = ? 
-            AND (message_id = ? OR in_reply_to = ? OR references LIKE ?)
+            AND (message_id = ? OR in_reply_to = ? OR email_references LIKE ?)
             ORDER BY date DESC
             "#,
         )
@@ -297,7 +375,7 @@ impl ConversationService {
             UPDATE emails 
             SET is_read = TRUE 
             WHERE user_id = ? 
-            AND (message_id = ? OR in_reply_to = ? OR references LIKE ?)
+            AND (message_id = ? OR in_reply_to = ? OR email_references LIKE ?)
             "#,
         )
         .bind(user_id)
@@ -321,7 +399,7 @@ impl ConversationService {
             UPDATE emails 
             SET folder = 'Trash', deleted_at = CURRENT_TIMESTAMP
             WHERE user_id = ? 
-            AND (message_id = ? OR in_reply_to = ? OR references LIKE ?)
+            AND (message_id = ? OR in_reply_to = ? OR email_references LIKE ?)
             "#,
         )
         .bind(user_id)
@@ -345,7 +423,7 @@ impl ConversationService {
             UPDATE emails 
             SET folder = ?
             WHERE user_id = ? 
-            AND (message_id = ? OR in_reply_to = ? OR references LIKE ?)
+            AND (message_id = ? OR in_reply_to = ? OR email_references LIKE ?)
             "#,
         )
         .bind(folder)
@@ -370,7 +448,7 @@ impl ConversationService {
             UPDATE emails 
             SET is_starred = ?
             WHERE user_id = ? 
-            AND (message_id = ? OR in_reply_to = ? OR references LIKE ?)
+            AND (message_id = ? OR in_reply_to = ? OR email_references LIKE ?)
             "#,
         )
         .bind(starred)
