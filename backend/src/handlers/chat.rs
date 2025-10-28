@@ -101,11 +101,12 @@ pub async fn list_conversations(
 ) -> HttpResponse {
     let user_id = user.user_id;
 
-    let result = sqlx::query_as::<_, (String, String, String, String, i32)>(
+    let result = sqlx::query_as::<_, (String, String, Option<String>, String, String, i32)>(
         r#"
         SELECT 
             c.id,
             c.title,
+            c.automation_id,
             c.created_at,
             c.updated_at,
             COUNT(m.id) as message_count
@@ -122,10 +123,11 @@ pub async fn list_conversations(
 
     match result {
         Ok(rows) => {
-            let conversations: Vec<serde_json::Value> = rows.iter().map(|(id, title, created_at, updated_at, count)| {
+            let conversations: Vec<serde_json::Value> = rows.iter().map(|(id, title, automation_id, created_at, updated_at, count)| {
                 serde_json::json!({
                     "id": id,
                     "title": title,
+                    "automation_id": automation_id,
                     "created_at": created_at,
                     "updated_at": updated_at,
                     "message_count": count,

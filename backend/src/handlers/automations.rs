@@ -496,12 +496,13 @@ pub async fn trigger_automation(
             
             // Create conversation
             let _ = sqlx::query(
-                r#"INSERT INTO chat_conversations (id, user_id, title, created_at, updated_at)
-                   VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"#
+                r#"INSERT INTO chat_conversations (id, user_id, title, automation_id, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"#
             )
             .bind(&conv_id)
             .bind(user_id)
             .bind(&title)
+            .bind(&id)
             .execute(pool.get_ref())
             .await;
 

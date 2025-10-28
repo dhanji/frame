@@ -3191,7 +3191,10 @@ Be concise, professional, and actionable.`
                 <div class="conversation" onclick="openChatConversation('${conv.id}')" style="cursor: pointer;">
                     <div class="conversation-line">
                         <div class="conversation-info">
-                            <div class="subject-line">🤖 ${escapeHtml(conv.title || 'New Chat')}</div>
+                            <div class="subject-line">
+                                ${conv.automation_id ? '<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 8px;">⚡ AUTO</span>' : ''}
+                                🤖 ${escapeHtml(conv.title || 'New Chat')}
+                            </div>
                             <div class="content-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</div>
                         </div>
                         <div class="timestamp">${formatDate(conv.updated_at)}</div>
@@ -3693,8 +3696,133 @@ Be concise, professional, and actionable.`
             }
         }
 
-        function editAutomation(id) {
-            showNotification('Automation editing coming soon!', 'info');
+        async function editAutomation(id) {
+            try {
+                // Fetch automation details
+                const response = await fetch(`/api/automations/${id}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    showNotification('Failed to load automation', 'error');
+                    return;
+                }
+                
+                const automation = await response.json();
+                
+                // Create edit modal
+                const modal = document.createElement('div');
+                modal.id = 'automationEditModal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+                modal.innerHTML = `
+                    <div style="background: white; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; font-size: 20px;">Edit Automation</h2>
+                            <button onclick="document.getElementById('automationEditModal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Name</label>
+                            <input type="text" id="editAutomationName" value="${escapeHtml(automation.name)}" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Description (optional)</label>
+                            <input type="text" id="editAutomationDescription" value="${escapeHtml(automation.description || '')}" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Schedule (cron expression)</label>
+                            <select id="editAutomationSchedulePreset" onchange="updateEditScheduleInput(this.value)" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; margin-bottom: 8px; font-size: 14px;">
+                                <option value="">Custom</option>
+                                <option value="0 9 * * *">Daily at 9 AM</option>
+                                <option value="0 9 * * 1">Weekly on Monday at 9 AM</option>
+                                <option value="0 9 1 * *">Monthly on 1st at 9 AM</option>
+                                <option value="0 */6 * * *">Every 6 hours</option>
+                                <option value="0 */1 * * *">Every hour</option>
+                                <option value="*/30 * * * *">Every 30 minutes</option>
+                            </select>
+                            <input type="text" id="editAutomationSchedule" value="${escapeHtml(automation.schedule)}" placeholder="0 9 * * *" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; font-size: 14px;">
+                            <div style="font-size: 12px; color: #65676b; margin-top: 4px;">📅 ${escapeHtml(automation.schedule_human)}</div>
+                            <small style="color: #65676b; font-size: 12px;">Format: minute hour day month weekday</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="font-weight: 600; display: block; margin-bottom: 8px;">AI Prompt</label>
+                            <textarea id="editAutomationPrompt" placeholder="Summarize all unread emails from the last 24 hours" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; resize: vertical; font-size: 14px; font-family: inherit;" rows="6">${escapeHtml(automation.prompt)}</textarea>
+                            <small style="color: #65676b; font-size: 12px;">This prompt will be sent to the AI agent when the automation runs</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="editAutomationEnabled" ${automation.enabled ? 'checked' : ''} style="margin-right: 8px;">
+                                <span style="font-weight: 600;">Enabled</span>
+                            </label>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;">
+                            <button onclick="document.getElementById('automationEditModal').remove()" style="padding: 10px 20px; border: 1px solid #dadde1; background: white; border-radius: 6px; cursor: pointer; font-size: 14px;">Cancel</button>
+                            <button onclick="saveAutomationEdit('${id}')" class="compose-btn" style="padding: 10px 20px;">Save Changes</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Failed to load automation for editing:', error);
+                showNotification('Failed to load automation', 'error');
+            }
+        }
+        
+        function updateEditScheduleInput(preset) {
+            const input = document.getElementById('editAutomationSchedule');
+            if (preset && input) {
+                input.value = preset;
+            }
+        }
+
+        async function saveAutomationEdit(id) {
+            const name = document.getElementById('editAutomationName').value.trim();
+            const description = document.getElementById('editAutomationDescription').value.trim();
+            const schedule = document.getElementById('editAutomationSchedule').value.trim();
+            const prompt = document.getElementById('editAutomationPrompt').value.trim();
+            const enabled = document.getElementById('editAutomationEnabled').checked;
+            
+            if (!name) {
+                showNotification('Please enter a name', 'error');
+                return;
+            }
+            if (!schedule) {
+                showNotification('Please enter a schedule', 'error');
+                return;
+            }
+            if (!prompt) {
+                showNotification('Please enter a prompt', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/automations/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description: description || null, schedule, prompt, enabled })
+                });
+                
+                if (response.ok) {
+                    showNotification('Automation updated successfully', 'success');
+                    document.getElementById('automationEditModal').remove();
+                    loadAutomations();
+                } else {
+                    const error = await response.json().catch(() => ({}));
+                    showNotification(error.error || 'Failed to update automation', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to save automation:', error);
+                showNotification('Failed to update automation', 'error');
+            }
         }
 
         async function deleteAutomation(id) {
