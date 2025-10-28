@@ -135,15 +135,7 @@ export default function App() {
                     }`}
                     style={selectedEmailId === item.id ? { backgroundColor: "hsl(var(--sidebar-accent))" } : {}}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Unread Indicator */}
-                      {item.unread && (
-                        <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-green-500 mt-2.5 flex-shrink-0" />
-                      )}
-                      {!item.unread && (
-                        <div className="w-2 h-2 rounded-sm bg-zinc-400 dark:bg-zinc-600 mt-2.5 flex-shrink-0" />
-                      )}
-                      
+                    <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 line-clamp-1">
@@ -159,7 +151,7 @@ export default function App() {
                           {item.preview}
                         </p>
                         <p className="text-xs text-slate-500 dark:text-slate-500">
-                          {item.sender} · {item.timestamp}
+                          {item.sender} {item.timestamp}
                         </p>
                       </div>
                     </div>
