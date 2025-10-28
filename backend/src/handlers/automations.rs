@@ -467,7 +467,9 @@ pub async fn trigger_automation(
             let result_text = agent_engine
                 .process_message(prompt.clone(), vec![])
                 .await
-                .unwrap_or_else(|e| format!("Error: {}", e));
+                .unwrap_or_else(|e| (format!("Error: {}", e), vec![]));
+            
+            let (result_text, _tool_calls) = result_text;
 
             // Update automation run with result
             let _ = sqlx::query(

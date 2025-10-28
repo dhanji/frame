@@ -3149,7 +3149,7 @@ Be concise, professional, and actionable.`
             view.innerHTML = `
                 <div style="padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: 600;">🤖 Goose Chat</h1>
+                        <h1 style="font-size: 24px; font-weight: 600;">💬 Chat</h1>
                         <button class="compose-btn" onclick="startNewChat()">+ New Chat</button>
                     </div>
                     <div id="chatConversationsList" style="display: grid; gap: 12px;">
@@ -3193,11 +3193,14 @@ Be concise, professional, and actionable.`
                         <div class="conversation-info">
                             <div class="subject-line">
                                 ${conv.automation_id ? '<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 8px;">⚡ AUTO</span>' : ''}
-                                🤖 ${escapeHtml(conv.title || 'New Chat')}
+                                💬 ${escapeHtml(conv.title || 'New Chat')}
                             </div>
                             <div class="content-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</div>
                         </div>
-                        <div class="timestamp">${formatDate(conv.updated_at)}</div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="timestamp">${formatDate(conv.updated_at)}</div>
+                            <button class="icon-btn" onclick="event.stopPropagation(); deleteChatConversationFromList('${conv.id}')" title="Delete" style="font-size: 14px;">🗑️</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -3244,7 +3247,7 @@ Be concise, professional, and actionable.`
                     <div style="padding: 16px; border-bottom: 1px solid #e4e6eb; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <button onclick="showChatView()" style="background: none; border: none; cursor: pointer; font-size: 20px;">←</button>
-                            <span style="font-weight: 600; margin-left: 12px;">🤖 Goose Chat</span>
+                            <span style="font-weight: 600; margin-left: 12px;">💬 Chat</span>
                         </div>
                         <button onclick="deleteChatConversation()" class="icon-btn" title="Delete Conversation">🗑️</button>
                     </div>
@@ -3370,8 +3373,35 @@ Be concise, professional, and actionable.`
                 document.getElementById('chatLoading')?.remove();
                 
                 if (response.ok) {
-                    // Reload all messages to get the assistant response
-                    await loadChatMessages(conversationId);
+                    const data = await response.json();
+                    
+                    // Display tool calls if any
+                    if (data.tool_calls && data.tool_calls.length > 0) {
+                        for (const toolCall of data.tool_calls) {
+                            const toolHtml = `
+                                <div style="display: flex; justify-content: flex-start; margin: 8px 0;">
+                                    <div style="max-width: 70%; padding: 10px 14px; border-radius: 8px; background: #fff3cd; border-left: 3px solid #ffc107;">
+                                        <div style="font-weight: 600; font-size: 12px; color: #856404; margin-bottom: 4px;">🔧 Tool: ${escapeHtml(toolCall.tool)}</div>
+                                        <div style="font-size: 11px; color: #856404; margin-bottom: 6px;">Args: ${escapeHtml(JSON.stringify(toolCall.args).substring(0, 100))}${JSON.stringify(toolCall.args).length > 100 ? '...' : ''}</div>
+                                        <div style="font-size: 11px; color: #856404;">Result: ${escapeHtml(JSON.stringify(toolCall.result).substring(0, 150))}${JSON.stringify(toolCall.result).length > 150 ? '...' : ''}</div>
+                                    </div>
+                                </div>
+                            `;
+                            container.insertAdjacentHTML('beforeend', toolHtml);
+                        }
+                    }
+                    
+                    // Display assistant response
+                    const assistantHtml = `
+                        <div style="display: flex; justify-content: flex-start;">
+                            <div style="max-width: 70%; padding: 12px 16px; border-radius: 12px; background: #f0f2f5; color: #1c1e21;">
+                                <div style="white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(data.assistant_response)}</div>
+                                <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">${new Date().toLocaleTimeString()}</div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', assistantHtml);
+                    container.scrollTop = container.scrollHeight;
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     console.error('Failed to send message:', errorData);
@@ -3389,9 +3419,10 @@ Be concise, professional, and actionable.`
         }
 
         async function deleteChatConversation() {
+            // Delete from detail view (called from header button)
             const chatInterface = document.getElementById('chatInterface');
             const conversationId = chatInterface?.dataset.conversationId;
-            if (!conversationId || !confirm('Delete this conversation?')) return;
+            if (!conversationId) return;
             
             try {
                 await fetch(`/api/chat/conversations/${conversationId}`, {
@@ -3400,6 +3431,22 @@ Be concise, professional, and actionable.`
                 });
                 showNotification('Conversation deleted', 'success');
                 showChatView();
+            } catch (error) {
+                showNotification('Failed to delete conversation', 'error');
+            }
+        }
+        
+        async function deleteChatConversationFromList(conversationId) {
+            // Delete from list view (no confirmation)
+            if (!conversationId) return;
+            
+            try {
+                await fetch(`/api/chat/conversations/${conversationId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                showNotification('Conversation deleted', 'success');
+                loadChatConversations();
             } catch (error) {
                 showNotification('Failed to delete conversation', 'error');
             }

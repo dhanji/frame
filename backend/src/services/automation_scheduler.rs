@@ -82,6 +82,8 @@ impl AutomationScheduler {
 
                 match result {
                     Ok(response) => {
+                        let (response_text, _tool_calls) = response;
+                        
                         // Update automation run with success
                         let _ = sqlx::query(
                             r#"
@@ -90,7 +92,7 @@ impl AutomationScheduler {
                             WHERE id = ?
                             "#
                         )
-                        .bind(&response)
+                        .bind(&response_text)
                         .bind(&run_id)
                         .execute(&pool)
                         .await;

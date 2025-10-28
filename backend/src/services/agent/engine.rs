@@ -2,6 +2,14 @@ use super::provider::{LLMProvider, Message, ToolCall};
 use super::tools::ToolRegistry;
 use serde_json::Value;
 use std::sync::Arc;
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolCallInfo {
+    pub tool: String,
+    pub args: Value,
+    pub result: Value,
+}
 
 pub struct AgentEngine {
     provider: Box<dyn LLMProvider>,
@@ -26,8 +34,10 @@ impl AgentEngine {
         &self,
         user_message: String,
         conversation_history: Vec<Message>,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(String, Vec<ToolCallInfo>), Box<dyn std::error::Error + Send + Sync>> {
         let mut messages = conversation_history;
+        let mut all_tool_calls = Vec::new();
+        
         messages.push(Message {
             role: "user".to_string(),
             content: user_message,
@@ -39,7 +49,7 @@ impl AgentEngine {
         }
 
         let mut iterations = 0;
-        let max_iterations = 10;
+        let max_iterations = 25; // Allow more iterations for complex tasks
 
         loop {
             iterations += 1;
@@ -55,14 +65,26 @@ impl AgentEngine {
 
             // If no tool calls, return the response
             if response.tool_calls.is_empty() {
-                return Ok(response.content);
+                log::info!("Agent completed after {} iterations with {} tool calls", iterations, all_tool_calls.len());
+                return Ok((response.content, all_tool_calls));
             }
+
+            log::info!("Iteration {}: Agent making {} tool calls", iterations, response.tool_calls.len());
 
             // Execute tool calls
             let mut tool_results = Vec::new();
             for tool_call in &response.tool_calls {
                 let result = self.execute_tool(tool_call).await?;
                 tool_results.push((tool_call.id.clone(), tool_call.name.clone(), result));
+            }
+
+            // Track tool calls for response
+            for (_, tool_name, result) in &tool_results {
+                all_tool_calls.push(ToolCallInfo {
+                    tool: tool_name.clone(),
+                    args: serde_json::json!({}), // We don't have args here, would need to track from tool_call
+                    result: result.clone(),
+                });
             }
 
             // Add assistant message with tool calls

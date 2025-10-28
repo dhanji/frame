@@ -8,6 +8,13 @@ use crate::services::agent::tools::create_tool_registry;
 use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ToolCallInfo {
+    pub tool: String,
+    pub args: serde_json::Value,
+    pub result: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateConversationRequest {
     pub title: Option<String>,
     pub initial_message: Option<String>,
@@ -292,7 +299,7 @@ pub async fn send_message(
 
                     // Call AI agent
                     log::info!("Calling AI agent for user {} with {} messages in history", user.user_id, messages.len());
-                    let assistant_response = match agent_engine
+                    let (assistant_response, tool_calls) = match agent_engine
                         .process_message(body.content.clone(), messages)
                         .await {
                         Ok(response) => response,
@@ -302,35 +309,38 @@ pub async fn send_message(
                             
                             // Provide helpful error message
                             if error_msg.contains("No AI provider configured") || error_msg.contains("not configured") {
-                                "I'm sorry, but the AI assistant is not configured for your account yet. Please go to Settings and configure your AI provider (Anthropic, OpenAI, etc.) with a valid API key.".to_string()
+                                ("I'm sorry, but the AI assistant is not configured for your account yet. Please go to Settings and configure your AI provider (Anthropic, OpenAI, etc.) with a valid API key.".to_string(), vec![])
                             } else if error_msg.contains("API") || error_msg.contains("401") || error_msg.contains("authentication") || error_msg.contains("Unauthorized") {
-                                "I'm sorry, but there's an authentication issue with the AI service. Please check your API key in Settings and make sure it's valid. You can get an API key from:\n\n".to_string() + 
+                                ("I'm sorry, but there's an authentication issue with the AI service. Please check your API key in Settings and make sure it's valid. You can get an API key from:\n\n".to_string() + 
                                 "- Anthropic: https://console.anthropic.com/\n" +
                                 "- OpenAI: https://platform.openai.com/api-keys\n" +
-                                "- Databricks: Your Databricks workspace"
+                                "- Databricks: Your Databricks workspace", vec![])
                             } else if error_msg.contains("dummy-key") || error_msg.contains("test-key") {
-                                "I'm sorry, but I'm running in demo mode without a valid API key. To use the AI assistant, please set the ANTHROPIC_API_KEY environment variable and restart the server.".to_string()
+                                ("I'm sorry, but I'm running in demo mode without a valid API key. To use the AI assistant, please set the ANTHROPIC_API_KEY environment variable and restart the server.".to_string(), vec![])
                             } else if error_msg.contains("rate limit") || error_msg.contains("quota") {
-                                "I'm sorry, but the AI service rate limit has been exceeded. Please try again in a few moments.".to_string()
+                                ("I'm sorry, but the AI service rate limit has been exceeded. Please try again in a few moments.".to_string(), vec![])
                             } else if error_msg.contains("timeout") {
-                                "I'm sorry, but the request timed out. The AI service might be experiencing high load. Please try again.".to_string()
+                                ("I'm sorry, but the request timed out. The AI service might be experiencing high load. Please try again.".to_string(), vec![])
                             } else {
-                                format!("I encountered an error while processing your request: {}. Please check the server logs for more details.", error_msg)
+                                (format!("I encountered an error while processing your request: {}. Please check the server logs for more details.", error_msg), vec![])
                             }
                         }
                     };
                     
                     // Save assistant response
                     let assistant_message_id = uuid::Uuid::new_v4().to_string();
+                    
+                    // Serialize tool calls to JSON for storage
+                    let tool_calls_json = serde_json::to_string(&tool_calls).unwrap_or_else(|_| "[]".to_string());
+                    
                     let _ = sqlx::query(
-                        r#"
-                        INSERT INTO chat_messages (id, conversation_id, role, content, created_at)
-                        VALUES (?, ?, 'assistant', ?, CURRENT_TIMESTAMP)
-                        "#
+                        r#"INSERT INTO chat_messages (id, conversation_id, role, content, tool_calls, created_at)
+                           VALUES (?, ?, 'assistant', ?, ?, CURRENT_TIMESTAMP)"#
                     )
                     .bind(&assistant_message_id)
                     .bind(&conversation_id)
                     .bind(&assistant_response)
+                    .bind(&tool_calls_json)
                     .execute(pool.get_ref())
                     .await;
 
@@ -338,6 +348,7 @@ pub async fn send_message(
                         "user_message_id": message_id,
                         "assistant_message_id": assistant_message_id,
                         "assistant_response": assistant_response,
+                        "tool_calls": tool_calls,
                     }))
                 }
                 Err(e) => {
@@ -457,7 +468,7 @@ pub async fn send_message_stream(
                     let assistant_response = agent_engine
                         .process_message(body.content.clone(), messages)
                         .await
-                        .unwrap_or_else(|e| format!("Error: {}", e));
+                        .unwrap_or_else(|e| (format!("Error: {}", e), vec![]));
                     
                     HttpResponse::Ok()
                         .content_type("text/event-stream")
