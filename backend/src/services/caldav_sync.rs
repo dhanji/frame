@@ -9,6 +9,7 @@ pub struct CalDavSyncService {
 
 impl CalDavSyncService {
     pub fn new(pool: SqlitePool) -> Self {
+        log::info!("🗓️  CalDavSyncService::new() called");
         Self {
             pool,
             sync_interval: Duration::from_secs(5 * 60), // Sync every 5 minutes
@@ -18,17 +19,19 @@ impl CalDavSyncService {
     /// Start the CalDAV sync service
     pub async fn start(self) {
         let mut interval = interval(self.sync_interval);
+        log::info!("🗓️  CalDAV interval created, sync_interval={} seconds", self.sync_interval.as_secs());
         
-        log::info!("CalDAV sync service starting, will sync every {} seconds", self.sync_interval.as_secs());
+        log::info!("🗓️  CalDAV sync service starting, will sync every {} seconds", self.sync_interval.as_secs());
         
         loop {
             interval.tick().await;
             
-            log::info!("Starting CalDAV sync cycle");
+            log::info!("🗓️  Starting CalDAV sync cycle");
             
             // Get all users with CalDAV configured
             match self.get_users_with_caldav().await {
                 Ok(users) => {
+                    log::info!("🗓️  Found {} users with CalDAV configured", users.len());
                     for user in users {
                         if let Err(e) = self.sync_user_calendar(&user).await {
                             log::error!("Failed to sync calendar for user {}: {}", user.id, e);
@@ -45,12 +48,14 @@ impl CalDavSyncService {
     /// Get users who have CalDAV configured
     async fn get_users_with_caldav(&self) -> Result<Vec<crate::models::User>, sqlx::Error> {
         // Check if users have caldav_url in their settings
+        log::debug!("🗓️  Querying database for users with CalDAV configured");
         let users = sqlx::query_as::<_, crate::models::User>(
             "SELECT * FROM users WHERE is_active = TRUE AND settings LIKE '%caldav_url%'"
         )
         .fetch_all(&self.pool)
         .await?;
         
+        log::debug!("🗓️  Found {} users with CalDAV in settings", users.len());
         Ok(users)
     }
 

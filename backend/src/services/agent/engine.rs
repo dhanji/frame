@@ -38,6 +38,14 @@ impl AgentEngine {
         let mut messages = conversation_history;
         let mut all_tool_calls = Vec::new();
         
+        // Add system message if this is the first message
+        if messages.is_empty() {
+            messages.push(Message {
+                role: "system".to_string(),
+                content: "You are a helpful AI assistant. Always format your responses using Markdown for better readability. Use headers, lists, code blocks, and emphasis where appropriate.".to_string(),
+            });
+        }
+        
         messages.push(Message {
             role: "user".to_string(),
             content: user_message,

@@ -640,3 +640,70 @@ pub async fn cleanup_orphaned_attachments(
         "count": deleted_count
     })))
 }
+
+pub async fn reprocess_attachments(
+    pool: web::Data<SqlitePool>,
+    user: crate::middleware::auth::AuthenticatedUser,
+) -> Result<HttpResponse, actix_web::Error> {
+    // Get all attachments with email_id but missing sender info
+    let attachments = sqlx::query!(
+        r#"
+        SELECT a.id, a.email_id, e.from_address, e.date
+        FROM attachments a
+        INNER JOIN emails e ON a.email_id = e.id
+        WHERE e.user_id = ? AND a.sender_email IS NULL
+        "#,
+        user.user_id
+    )
+    .fetch_all(pool.get_ref())
+    .await
+    .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+
+    let mut count = 0;
+
+    for attachment in attachments {
+        if let Some(_email_id) = attachment.email_id {
+            let (sender_name, sender_email) = parse_email_address(&attachment.from_address);
+
+            sqlx::query!(
+                r#"
+                UPDATE attachments
+                SET 
+                    sender_email = ?,
+                    sender_name = ?,
+                    received_at = ?,
+                    source_account = 'default'
+                WHERE id = ?
+                "#,
+                sender_email,
+                sender_name,
+                attachment.date,
+                attachment.id
+            )
+            .execute(pool.get_ref())
+            .await
+            .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+
+            count += 1;
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": format!("Reprocessed {} attachments", count),
+        "count": count
+    })))
+}
+
+fn parse_email_address(address: &str) -> (String, String) {
+    // Handle formats like "John Doe <john@example.com>" or "john@example.com"
+    if let Some(start) = address.find('<') {
+        if let Some(end) = address.find('>') {
+            let name = address[..start].trim().trim_matches('"').to_string();
+            let email = address[start + 1..end].trim().to_string();
+            return (name, email);
+        }
+    }
+    
+    // Just an email address
+    (address.to_string(), address.to_string())
+}

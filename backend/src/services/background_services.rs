@@ -126,7 +126,7 @@ impl BackgroundServiceManager {
     }
 
     /// Start attachment cleanup job (runs daily)
-    pub async fn start_attachment_cleanup_job(&self) {
+    pub fn start_attachment_cleanup_job(&self) {
         let pool = self.pool.clone();
 
         tokio::spawn(async move {

@@ -334,6 +334,40 @@ pub async fn test_imap_connection(
     }
 }
 
+/// Test CalDAV sync service initialization
+pub async fn test_caldav_sync_init(
+    pool: web::Data<SqlitePool>,
+    user: AuthenticatedUser,
+) -> Result<HttpResponse, actix_web::Error> {
+    log::info!("🗓️  Manual CalDAV sync initialization test triggered by user {}", user.user_id);
+    
+    // Try to create the service
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        crate::services::caldav_sync::CalDavSyncService::new(pool.get_ref().clone())
+    }));
+    
+    match result {
+        Ok(service) => {
+            log::info!("🗓️  CalDAV sync service created successfully");
+            
+            // Try to get users with CalDAV
+            // Note: We can't call private methods, so we'll just return success
+            
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "success": true,
+                "message": "CalDAV sync service initialized successfully",
+            })))
+        }
+        Err(e) => {
+            log::error!("🗓️  CalDAV sync service panicked: {:?}", e);
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "success": false,
+                "error": "CalDAV sync service panicked during initialization"
+            })))
+        }
+    }
+}
+
 /// Trigger manual sync for the current user
 pub async fn trigger_manual_sync(
     pool: web::Data<SqlitePool>,

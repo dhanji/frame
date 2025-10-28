@@ -54,7 +54,7 @@ async fn main() -> std::io::Result<()> {
     let bg_service_manager = BackgroundServiceManager::new(pool.clone(), ws_manager.clone(), email_manager.clone());
     
     // Start attachment cleanup job
-    bg_service_manager.start_attachment_cleanup_job().await;
+    bg_service_manager.start_attachment_cleanup_job();
     
     // Start IMAP IDLE monitors for all active users
     let pool_idle = pool.clone();
@@ -65,25 +65,63 @@ async fn main() -> std::io::Result<()> {
         bg_service_manager_idle.start_all_imap_idle_monitors().await;
     });
     
-    // Create AI Agent Engine
-    let provider_config = ProviderConfig::Anthropic {
-        api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| {
-            log::error!("ANTHROPIC_API_KEY not found in environment!");
-            "dummy-key".to_string()
-        }),
-        model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|_| "claude-3-5-sonnet-20241022".to_string()),
-    };
-    let provider = services::agent::provider::create_provider(provider_config);
-    // Note: Tool registry will be created per-user in handlers
-    let tool_registry = Arc::new(services::agent::tools::create_tool_registry(pool.clone(), 1));
-    let agent_engine = Arc::new(AgentEngine::new(provider, tool_registry));
-    
-    // Start automation scheduler
-    let pool_automation = pool.clone();
-    let agent_engine_automation = agent_engine.clone();
+    log::info!("🔧 About to start OAuth token refresh service");
+    // Start OAuth token refresh service
+    let pool_oauth = pool.clone();
     tokio::spawn(async move {
-        match AutomationScheduler::new(pool_automation, agent_engine_automation).await {
+        log::info!("Starting OAuth token refresh service");
+        services::token_refresh::start_token_refresh_service(Arc::new(pool_oauth)).await;
+    });
+    log::info!("✅ OAuth token refresh service spawned");
+    
+    // Start CalDAV sync service (CRITICAL FEATURE)
+    log::info!("🔧 About to start CalDAV sync service");
+    let pool_caldav = pool.clone();
+    let caldav_handle = tokio::spawn(async move {
+        // Wait a bit for server to be ready
+        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        log::info!("🗓️  Starting CalDAV sync service...");
+        
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            services::caldav_sync::CalDavSyncService::new(pool_caldav)
+        })) {
+            Ok(caldav_sync) => {
+                log::info!("🗓️  CalDAV sync service initialized successfully");
+                caldav_sync.start().await;
+                log::warn!("🗓️  CalDAV sync service stopped unexpectedly!");
+            }
+            Err(e) => {
+                log::error!("🗓️  CalDAV sync service panicked during initialization: {:?}", e);
+            }
+        }
+    });
+    log::info!("🗓️  CalDAV sync task spawned with handle: {:?}", caldav_handle);
+
+    // Create AI Agent Engine (async to not block main thread)
+    log::info!("🔧 Creating AI Agent Engine asynchronously...");
+    let pool_agent = pool.clone();
+    tokio::spawn(async move {
+        log::info!("🤖 Agent engine initialization starting...");
+        let provider_config = ProviderConfig::Anthropic {
+            api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| {
+                log::error!("ANTHROPIC_API_KEY not found in environment!");
+                "dummy-key".to_string()
+            }),
+            model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-3-5-sonnet-20241022".to_string()),
+        };
+        log::info!("🤖 Creating provider...");
+        let provider = services::agent::provider::create_provider(provider_config);
+        log::info!("🤖 Creating tool registry...");
+        let tool_registry = Arc::new(services::agent::tools::create_tool_registry(pool_agent.clone(), 1));
+        log::info!("🤖 Creating agent engine...");
+        let agent_engine = Arc::new(AgentEngine::new(provider, tool_registry));
+        log::info!("✅ Agent engine created successfully!");
+        
+        // Start automation scheduler
+        log::info!("🤖 Starting automation scheduler...");
+        match AutomationScheduler::new(pool_agent, agent_engine.clone()).await {
             Ok(mut scheduler) => {
+                log::info!("✅ Automation scheduler created, starting...");
                 if let Err(e) = scheduler.start().await {
                     log::error!("Failed to start automation scheduler: {:?}", e);
                 }
@@ -93,21 +131,16 @@ async fn main() -> std::io::Result<()> {
             }
         }
     });
-    
-    // Start OAuth token refresh service
-    let pool_oauth = pool.clone();
-    tokio::spawn(async move {
-        log::info!("Starting OAuth token refresh service");
-        services::token_refresh::start_token_refresh_service(Arc::new(pool_oauth)).await;
-    });
-    
-    // Start CalDAV sync service (CRITICAL FEATURE)
-    let pool_caldav = pool.clone();
-    tokio::spawn(async move {
-        log::info!("Starting CalDAV sync service");
-        let caldav_sync = services::caldav_sync::CalDavSyncService::new(pool_caldav);
-        caldav_sync.start().await;
-    });
+    log::info!("✅ Agent engine task spawned");
+
+    // Create a dummy agent engine for the HTTP server (will be replaced with lazy loading)
+    let provider_config = ProviderConfig::Anthropic {
+        api_key: "dummy".to_string(),
+        model: "claude-3-5-sonnet-20241022".to_string(),
+    };
+    let provider = services::agent::provider::create_provider(provider_config);
+    let tool_registry = Arc::new(services::agent::tools::create_tool_registry(pool.clone(), 1));
+    let agent_engine = Arc::new(AgentEngine::new(provider, tool_registry));
 
     // Start HTTP server
     HttpServer::new(move || {
@@ -146,6 +179,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/debug/test-imap", web::get().to(handlers::debug::test_imap_connection))
                             .route("/debug/manual-sync", web::post().to(handlers::debug::trigger_manual_sync))
                             .route("/debug/test-caldav", web::get().to(handlers::debug::test_caldav_connection))
+                            .route("/debug/test-caldav-init", web::get().to(handlers::debug::test_caldav_sync_init))
                             // Auth endpoints
                             .route("/logout", web::post().to(handlers::auth::logout))
                             .route("/refresh-token", web::post().to(handlers::auth::refresh_token_endpoint))
@@ -184,7 +218,9 @@ async fn main() -> std::io::Result<()> {
                             .route("/attachments/{id}/thumbnail", web::get().to(handlers::attachments::download_thumbnail))
                             .route("/attachments/gallery", web::get().to(handlers::attachments::get_gallery))
                             .route("/attachments/gallery/recents", web::get().to(handlers::attachments::get_gallery_recents))
-                            .route("/attachments/gallery/by-sender", web::get().to(handlers::attachments::get_gallery_by_sender))                            .route("/maintenance/cleanup-attachments", web::post().to(handlers::attachments::cleanup_orphaned_attachments))
+                            .route("/attachments/gallery/by-sender", web::get().to(handlers::attachments::get_gallery_by_sender))
+                            .route("/attachments/reprocess", web::post().to(handlers::attachments::reprocess_attachments))
+                            .route("/maintenance/cleanup-attachments", web::post().to(handlers::attachments::cleanup_orphaned_attachments))
                             // Settings endpoints
                             .route("/settings", web::get().to(handlers::settings::get_settings))
                             .route("/settings", web::put().to(handlers::settings::update_settings))
