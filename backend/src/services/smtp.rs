@@ -1,11 +1,9 @@
 use lettre::{
     message::{header::ContentType, Mailbox, Message, MultiPart},
     transport::smtp::authentication::{Credentials, Mechanism},
-    transport::smtp::client::Tls,
     AsyncSmtpTransport, AsyncTransport, Tokio1Executor,
 };
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailComposition {

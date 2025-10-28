@@ -148,7 +148,7 @@ start_server() {
     print_info "Starting backend server..."
     cd "$BACKEND_DIR"
     # Start the server in background
-    RUST_LOG=info ./target/release/email-server >> "$LOG_FILE" 2>&1 &
+    nohup env RUST_LOG=info ./target/release/email-server >> "$LOG_FILE" 2>&1 </dev/null &
     local PID=$!
     
     # Save PID

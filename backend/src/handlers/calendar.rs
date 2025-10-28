@@ -2,7 +2,7 @@ use actix_web::{web, HttpResponse};
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use crate::middleware::auth::AuthenticatedUser;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use crate::services::caldav::{CalDavClient, CalendarEvent};
 use crate::models::User;
 
@@ -117,7 +117,7 @@ pub async fn create_event(
     .await;
 
     // Try to sync to CalDAV if configured
-    if let Ok(user_record) = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
+    if let Ok(_user_record) = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
         .bind(user_id)
         .fetch_one(pool.get_ref())
         .await

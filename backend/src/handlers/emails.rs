@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse};
-use crate::utils::sanitize::{sanitize_for_storage, sanitize_for_display};
+use crate::utils::sanitize::sanitize_for_storage;
 use crate::services::email_sync::EmailSyncService;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sqlx::SqlitePool;
 use std::sync::Arc;
 

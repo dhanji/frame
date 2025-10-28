@@ -1,4 +1,4 @@
-use actix_web::{dev::ServiceRequest, Error, HttpMessage};
+use actix_web::{dev::ServiceRequest, Error};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use std::collections::HashMap;
 use std::sync::Arc;

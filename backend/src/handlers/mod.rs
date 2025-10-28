@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod conversations;
+pub mod conversations_goose;
 pub mod emails;
 pub mod folders;
 pub mod drafts;

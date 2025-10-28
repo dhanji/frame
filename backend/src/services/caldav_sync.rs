@@ -1,5 +1,4 @@
 use sqlx::SqlitePool;
-use std::sync::Arc;
 use tokio::time::{interval, Duration};
 use crate::services::caldav::CalDavClient;
 

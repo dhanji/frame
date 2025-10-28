@@ -14,8 +14,6 @@ use std::sync::Arc;
 use crate::middleware::auth::Claims;
 use crate::models::User;
 use crate::services::EmailManager;
-use crate::services::email_sync::EmailSyncService;
-use oauth2::RefreshToken;
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
@@ -429,7 +427,7 @@ pub async fn google_callback(
         actix_web::error::ErrorInternalServerError("Database error")
     })?;
 
-    let user = if let Some(mut user) = existing_user {
+    let user = if let Some(user) = existing_user {
         // Update existing user with new OAuth tokens
         let encrypted_access_token = encryption.encrypt(access_token)
             .map_err(|e| {

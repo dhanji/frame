@@ -1,4 +1,4 @@
-use crate::models::{Email, User};
+use crate::models::User;
 use crate::services::EmailManager;
 use chrono::{Duration, Utc};
 use sqlx::SqlitePool;

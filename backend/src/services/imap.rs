@@ -1,6 +1,7 @@
 use imap::{Session, ImapConnection};
 use chrono::{DateTime, Utc};
-use mail_parser::{MessageParser, MimeHeaders};
+use mail_parser::MessageParser;
+use mail_parser::MimeHeaders;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use crate::services::OAuthRefreshService;
@@ -216,7 +217,24 @@ impl ImapService {
             
             session.select(&folder)?;
             
-            let sequence_set = format!("1:{}", limit);
+            // Get the total number of messages in the folder
+            let mailbox = session.examine(&folder)?;
+            let total_messages = mailbox.exists;
+            
+            log::info!("Folder {} has {} total messages", folder, total_messages);
+            
+            // Fetch newest messages first (highest UIDs)
+            let sequence_set = if total_messages > limit {
+                // Fetch the last 'limit' messages
+                let start = total_messages - limit + 1;
+                format!("{}:*", start)
+            } else {
+                // Fetch all messages
+                "1:*".to_string()
+            };
+            
+            log::info!("Fetching messages with sequence: {}", sequence_set);
+            
             let messages = session.fetch(sequence_set, "(UID FLAGS ENVELOPE BODY[] BODYSTRUCTURE)")?;
             
             let mut email_messages = Vec::new();
@@ -285,7 +303,48 @@ impl ImapService {
                                 .iter()
                                 .map(|f| format!("{:?}", f))
                                 .collect(),
-                            attachments: vec![],
+                            attachments: {
+                                let mut attachments = Vec::new();
+                                
+                                // Parse attachments from the message
+                                for part in parsed_msg.attachments() {
+                                    if let Some(filename) = part.attachment_name() {
+                                        let content_type = part
+                                            .content_type()
+                                            .map(|ct| ct.c_type.to_string())
+                                            .unwrap_or_else(|| "application/octet-stream".to_string());
+                                        
+                                        let content = part.contents().to_vec();
+                                        let size = content.len();
+                                        
+                                        // Generate a unique ID for the attachment
+                                        let attachment_id = format!(
+                                            "{}-{}",
+                                            parsed_msg
+                                                .message_id()
+                                                .map(|id| id.to_string())
+                                                .unwrap_or_else(|| "unknown".to_string()),
+                                            filename
+                                        );
+                                        
+                                        attachments.push(Attachment {
+                                            id: attachment_id,
+                                            filename: filename.to_string(),
+                                            content_type: content_type.clone(),
+                                            size,
+                                            content: Some(content),
+                                        });
+                                        
+                                        log::info!(
+                                            "Found attachment: {} ({} bytes, {})",
+                                            filename,
+                                            size,
+                                            content_type
+                                        );
+                                    }
+                                }
+                                attachments
+                            },
                             in_reply_to: None,
                             references: vec![],
                         };
@@ -294,6 +353,10 @@ impl ImapService {
                 }
             }
             
+            // Reverse to get newest first
+            email_messages.reverse();
+            
+            log::info!("Fetched {} messages from folder {}", email_messages.len(), folder);
             session.logout()?;
             Ok(email_messages)
         }).await?

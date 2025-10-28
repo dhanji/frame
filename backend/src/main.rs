@@ -5,7 +5,6 @@ use actix_web_httpauth::middleware::HttpAuthentication;
 use email_client_backend::utils::encryption::Encryption;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use sqlx::SqlitePool;
 use email_client_backend::{handlers, services, websocket, db};
 
 use services::{EmailManager, EmailSyncService, BackgroundServiceManager, AgentEngine, ProviderConfig, AutomationScheduler};
@@ -40,23 +39,38 @@ async fn main() -> std::io::Result<()> {
     // Create WebSocket connection manager
     let ws_manager = Arc::new(RwLock::new(ConnectionManager::new()));
     
-    // Start background email sync service (non-blocking)
-    // Disabled: blocks server startup with IMAP connections
-    log::info!("Email sync service disabled (blocks startup)");
+    // Start background email sync service (delayed to not block server startup)
+    let pool_sync = pool.clone();
+    let email_manager_sync = email_manager.clone();
+    tokio::spawn(async move {
+        // Wait 5 seconds before starting sync to allow server to become responsive
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        log::info!("Starting background email sync service...");
+        let email_sync_service = EmailSyncService::new(pool_sync, email_manager_sync);
+        email_sync_service.start().await;
+    });
     
     // Start background services (IMAP IDLE, attachment cleanup)
     let bg_service_manager = BackgroundServiceManager::new(pool.clone(), ws_manager.clone(), email_manager.clone());
     
-    // Start IMAP IDLE monitors for all active users
-    // Commented out to avoid blocking on expired OAuth tokens
-    // bg_service_manager.start_all_imap_idle_monitors().await;
-    
     // Start attachment cleanup job
     bg_service_manager.start_attachment_cleanup_job().await;
     
+    // Start IMAP IDLE monitors for all active users
+    let pool_idle = pool.clone();
+    let ws_manager_idle = ws_manager.clone();
+    let email_manager_idle = email_manager.clone();
+    tokio::spawn(async move {
+        let bg_service_manager_idle = BackgroundServiceManager::new(pool_idle, ws_manager_idle, email_manager_idle);
+        bg_service_manager_idle.start_all_imap_idle_monitors().await;
+    });
+    
     // Create AI Agent Engine
     let provider_config = ProviderConfig::Anthropic {
-        api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| "dummy-key".to_string()),
+        api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| {
+            log::error!("ANTHROPIC_API_KEY not found in environment!");
+            "dummy-key".to_string()
+        }),
         model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|_| "claude-3-5-sonnet-20241022".to_string()),
     };
     let provider = services::agent::provider::create_provider(provider_config);
@@ -65,8 +79,20 @@ async fn main() -> std::io::Result<()> {
     let agent_engine = Arc::new(AgentEngine::new(provider, tool_registry));
     
     // Start automation scheduler
-    // Disabled: causes tokio_cron_scheduler errors and blocks startup
-    log::info!("Automation scheduler disabled (causes errors)");
+    let pool_automation = pool.clone();
+    let agent_engine_automation = agent_engine.clone();
+    tokio::spawn(async move {
+        match AutomationScheduler::new(pool_automation, agent_engine_automation).await {
+            Ok(mut scheduler) => {
+                if let Err(e) = scheduler.start().await {
+                    log::error!("Failed to start automation scheduler: {:?}", e);
+                }
+            }
+            Err(e) => {
+                log::error!("Failed to create automation scheduler: {:?}", e);
+            }
+        }
+    });
     
     // Start OAuth token refresh service
     let pool_oauth = pool.clone();
@@ -100,12 +126,17 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(agent_engine.clone()))
             .app_data(web::Data::new(Encryption::new()))
             .route("/health", web::get().to(health_check))
+            .route("/ws", web::get().to(websocket::ws_handler))
             // Public auth endpoints - NO AUTHENTICATION REQUIRED
-            .route("/auth/auto-login", web::get().to(handlers::auth::auto_login))
-            .route("/api/auth/google", web::get().to(handlers::auth::google_auth_url))
-            .route("/api/auth/google/callback", web::get().to(handlers::auth::google_callback))
+            .service(
+                web::scope("/api/auth")
+                    .route("/auto-login", web::get().to(handlers::auth::auto_login))
+                    .route("/google", web::get().to(handlers::auth::google_auth_url))
+                    .route("/google/callback", web::get().to(handlers::auth::google_callback))
+            )
             .route("/api/register", web::post().to(handlers::auth::register))
             .route("/api/login", web::post().to(handlers::auth::login))
+            // Protected API routes
             .service(
                 web::scope("/api")
                     .wrap(HttpAuthentication::bearer(email_client_backend::middleware::auth::validator))
@@ -114,6 +145,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/debug/sync", web::get().to(handlers::debug::get_sync_debug))
                             .route("/debug/test-imap", web::get().to(handlers::debug::test_imap_connection))
                             .route("/debug/manual-sync", web::post().to(handlers::debug::trigger_manual_sync))
+                            .route("/debug/test-caldav", web::get().to(handlers::debug::test_caldav_connection))
                             // Auth endpoints
                             .route("/logout", web::post().to(handlers::auth::logout))
                             .route("/refresh-token", web::post().to(handlers::auth::refresh_token_endpoint))
@@ -175,6 +207,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/automations/{id}", web::delete().to(handlers::automations::delete_automation))
                             .route("/automations/{id}/trigger", web::post().to(handlers::automations::trigger_automation))
                             .route("/automations/{id}/runs", web::get().to(handlers::automations::get_runs))
+                            .route("/automations/{automation_id}/runs/{run_id}", web::get().to(handlers::automations::get_run_details))
                             // Reminder endpoints
                             .route("/reminders", web::post().to(handlers::reminders::create_reminder))
                             .route("/reminders", web::get().to(handlers::reminders::list_reminders))
@@ -194,8 +227,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/money/transactions", web::post().to(handlers::money::add_transaction))
                             .route("/money/sync", web::post().to(handlers::money::sync_accounts))
             )
-            .route("/ws", web::get().to(websocket::ws_handler))
-            // Serve static files from frontend directory (index.html is now the working version)
+            // Serve static files and SPA fallback
             .service(fs::Files::new("/", "../frontend").index_file("index.html"))
     })
     .bind(("127.0.0.1", 8080))?

@@ -171,13 +171,33 @@ fn default_settings() -> UserSettings {
 #[derive(Debug, Deserialize)]
 pub struct SaveEnvSettingsRequest {
     pub anthropic_api_key: Option<String>,
+    pub caldav_url: Option<String>,
+    pub caldav_username: Option<String>,
+    pub caldav_password: Option<String>,
 }
 
 pub async fn save_env_settings(
     body: web::Json<SaveEnvSettingsRequest>,
     _user: crate::middleware::auth::AuthenticatedUser,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let env_path = Path::new("backend/.env");
+    // Get current working directory for debugging
+    let cwd = std::env::current_dir()
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|_| "unknown".to_string());
+    log::info!("Current working directory: {}", cwd);
+    
+    // Try to find .env file
+    let env_path = if Path::new(".env").exists() {
+        log::info!("Found .env in current directory");
+        ".env"
+    } else if Path::new("backend/.env").exists() {
+        log::info!("Found .env in backend/ subdirectory");
+        "backend/.env"
+    } else {
+        log::error!(".env file not found in current directory or backend/ subdirectory");
+        return Err(actix_web::error::ErrorNotFound(".env file not found. Please ensure .env exists in the backend directory."));
+    };
+    log::info!("Using .env file at: {}", env_path);
     
     // Read current .env file
     let env_content = fs::read_to_string(env_path)
@@ -208,6 +228,57 @@ pub async fn save_env_settings(
         }
     }
     
+    // Update CALDAV_URL if provided
+    if let Some(ref caldav_url) = body.caldav_url {
+        let mut found = false;
+        for line in &mut lines {
+            if line.starts_with("CALDAV_URL=") {
+                *line = format!("CALDAV_URL={}", caldav_url);
+                found = true;
+                updated = true;
+                break;
+            }
+        }
+        if !found {
+            lines.push(format!("CALDAV_URL={}", caldav_url));
+            updated = true;
+        }
+    }
+
+    // Update CALDAV_USERNAME if provided
+    if let Some(ref caldav_username) = body.caldav_username {
+        let mut found = false;
+        for line in &mut lines {
+            if line.starts_with("CALDAV_USERNAME=") {
+                *line = format!("CALDAV_USERNAME={}", caldav_username);
+                found = true;
+                updated = true;
+                break;
+            }
+        }
+        if !found {
+            lines.push(format!("CALDAV_USERNAME={}", caldav_username));
+            updated = true;
+        }
+    }
+
+    // Update CALDAV_PASSWORD if provided
+    if let Some(ref caldav_password) = body.caldav_password {
+        let mut found = false;
+        for line in &mut lines {
+            if line.starts_with("CALDAV_PASSWORD=") {
+                *line = format!("CALDAV_PASSWORD={}", caldav_password);
+                found = true;
+                updated = true;
+                break;
+            }
+        }
+        if !found {
+            lines.push(format!("CALDAV_PASSWORD={}", caldav_password));
+            updated = true;
+        }
+    }
+
     if updated {
         // Write back to .env file
         let new_content = lines.join("\n") + "\n";
@@ -231,8 +302,15 @@ pub async fn save_env_settings(
 pub async fn get_env_settings(
     _user: crate::middleware::auth::AuthenticatedUser,
 ) -> Result<HttpResponse, actix_web::Error> {
-    // For security, we don't return the actual API key, just whether it's set
+    // For security, we don't return the actual keys/passwords, just whether they're set
     let api_key = std::env::var("ANTHROPIC_API_KEY").ok();
+    let caldav_url = std::env::var("CALDAV_URL").ok();
+    let caldav_username = std::env::var("CALDAV_USERNAME").ok();
+    let caldav_password = std::env::var("CALDAV_PASSWORD").ok();
+    
+    log::info!("get_env_settings - CALDAV_URL: {:?}", caldav_url.as_ref().map(|s| &s[..s.len().min(50)]));
+    log::info!("get_env_settings - CALDAV_USERNAME: {:?}", caldav_username);
+    log::info!("get_env_settings - CALDAV_PASSWORD set: {}", caldav_password.is_some());
     
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "anthropic_api_key_set": api_key.is_some(),
@@ -240,6 +318,17 @@ pub async fn get_env_settings(
             // Return masked version
             if k.len() > 8 {
                 format!("{}...{}", &k[..4], &k[k.len()-4..])
+            } else {
+                "***".to_string()
+            }
+        }),
+        "caldav_url": caldav_url,
+        "caldav_username": caldav_username,
+        "caldav_password_set": caldav_password.is_some(),
+        "caldav_password": caldav_password.map(|p| {
+            // Return masked version
+            if p.len() > 8 {
+                format!("{}...{}", &p[..4], &p[p.len()-4..])
             } else {
                 "***".to_string()
             }

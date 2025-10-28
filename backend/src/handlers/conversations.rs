@@ -47,6 +47,12 @@ pub async fn get_conversations(
     user: AuthenticatedUser,
 ) -> Result<HttpResponse, actix_web::Error> {
     let folder = query.folder.as_deref().unwrap_or("INBOX");
+    
+    // Special handling for Goose Chat tab
+    if folder == "GOOSE_CHAT" {
+        return crate::handlers::conversations_goose::get_goose_chat_conversations(pool, user).await;
+    }
+    
     let limit = query.limit.unwrap_or(50).min(100);
     let offset = query.offset.unwrap_or(0);
     
@@ -54,7 +60,10 @@ pub async fn get_conversations(
     
     // Fetch emails from database
     let mut sql_query = String::from(
-        "SELECT * FROM emails WHERE user_id = ? AND folder = ?"
+        // Exclude emails from goose@squareup.com (Goose Chat)
+        "SELECT * FROM emails WHERE user_id = ? AND folder = ? 
+         AND from_address NOT LIKE '%goose@squareup.com%'
+         AND from_address NOT LIKE '%Goose%<%goose@squareup.com%>%'"
     );
     
     if query.unread_only.unwrap_or(false) {
@@ -135,10 +144,10 @@ pub async fn get_conversations(
     
     all_conversations.extend(response);
     
-    // If viewing INBOX, also include chat conversations and automation results
+    // Fetch chat conversations but don't include them in INBOX
     if folder == "INBOX" {
         // Fetch chat conversations
-        let chat_convs = sqlx::query_as::<_, (String, String, String, String, i32)>(
+        let _chat_convs = sqlx::query_as::<_, (String, String, String, String, i32)>(
             r#"
             SELECT 
                 c.id,
@@ -151,7 +160,7 @@ pub async fn get_conversations(
             WHERE c.user_id = ?
             GROUP BY c.id
             ORDER BY c.updated_at DESC
-            LIMIT 20
+            LIMIT 50
             "#
         )
         .bind(user.user_id)
@@ -159,40 +168,6 @@ pub async fn get_conversations(
         .await
         .unwrap_or_default();
         
-        for (id, title, _created_at, updated_at, msg_count) in chat_convs {
-            // Get last message preview
-            let last_msg = sqlx::query_scalar::<_, String>(
-                "SELECT content FROM chat_messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT 1"
-            )
-            .bind(&id)
-            .fetch_optional(pool.get_ref())
-            .await
-            .unwrap_or_default()
-            .unwrap_or_else(|| "No messages yet".to_string());
-            
-            let preview = last_msg.chars().take(200).collect::<String>();
-            
-            all_conversations.push(ConversationResponse {
-                id,
-                preview,
-                conversation_type: "chat".to_string(),
-                icon: "🤖".to_string(),
-                subject: title,
-                participants: vec!["Goose AI".to_string()],
-                last_message_date: chrono::DateTime::parse_from_rfc3339(&updated_at)
-                    .unwrap_or_else(|_| chrono::Utc::now().into())
-                    .with_timezone(&chrono::Utc),
-                message_count: msg_count as usize,
-                unread_count: 0,
-                preview_messages: vec![],
-                has_attachments: false,
-                is_starred: false,
-                folder: "INBOX".to_string(),
-            });
-        }
-        
-        // Sort all conversations by date (most recent first)
-        all_conversations.sort_by(|a, b| b.last_message_date.cmp(&a.last_message_date));
     }
     
     Ok(HttpResponse::Ok().json(all_conversations))
@@ -225,7 +200,7 @@ pub async fn get_conversation(
             }
             
             // Mark conversation as read after 2 seconds
-            let pool_clone = pool.get_ref().clone();
+            let _pool_clone = pool.get_ref().clone();
             let conv_id = conversation_id.clone();
             let user_id = user.user_id;
             tokio::spawn(async move {

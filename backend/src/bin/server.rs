@@ -3,7 +3,6 @@ use actix_web::{middleware::Logger, web, App, HttpServer, HttpResponse};
 use actix_files as fs;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use std::sync::Arc;
-use sqlx::SqlitePool;
 use email_client_backend::{handlers, services, websocket, db, utils::encryption::Encryption};
 
 use services::{EmailManager, EmailSyncService};

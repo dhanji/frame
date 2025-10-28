@@ -1,5 +1,4 @@
 use actix_web::{web, HttpResponse};
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use std::sync::Arc;
@@ -206,9 +205,6 @@ pub async fn send_draft(
         body_html: draft.body_html,
         attachments: vec![],
     };
-    
-    // Send email using the email handler
-    use crate::handlers::emails;
     
     let _ = crate::handlers::emails::send_email_internal(pool.get_ref(), &send_request, &email_manager, &user).await?;
     

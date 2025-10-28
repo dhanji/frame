@@ -2,6 +2,9 @@ use tokio_cron_scheduler::{JobScheduler, Job};
 use sqlx::SqlitePool;
 use std::sync::Arc;
 use crate::services::agent::AgentEngine;
+use std::error::Error as StdError;
+
+type BoxError = Box<dyn StdError + Send + Sync>;
 
 pub struct AutomationScheduler {
     scheduler: JobScheduler,
@@ -10,7 +13,7 @@ pub struct AutomationScheduler {
 }
 
 impl AutomationScheduler {
-    pub async fn new(pool: SqlitePool, agent_engine: Arc<AgentEngine>) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(pool: SqlitePool, agent_engine: Arc<AgentEngine>) -> Result<Self, BoxError> {
         let scheduler = JobScheduler::new().await?;
         Ok(Self {
             scheduler,
@@ -19,7 +22,7 @@ impl AutomationScheduler {
         })
     }
 
-    pub async fn start(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn start(&mut self) -> Result<(), BoxError> {
         log::info!("Starting automation scheduler...");
         
         // Load all enabled automations from database
@@ -45,7 +48,7 @@ impl AutomationScheduler {
         automation_id: String,
         schedule: String,
         prompt: String,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), BoxError> {
         let pool = self.pool.clone();
         let agent_engine = self.agent_engine.clone();
         let automation_id_clone = automation_id.clone();
@@ -127,7 +130,7 @@ impl AutomationScheduler {
         Ok(())
     }
 
-    pub async fn reload_automations(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn reload_automations(&mut self) -> Result<(), BoxError> {
         log::info!("Reloading automations...");
         
         // Remove all existing jobs

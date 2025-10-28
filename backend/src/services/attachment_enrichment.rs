@@ -1,5 +1,4 @@
 use sqlx::SqlitePool;
-use chrono::Utc;
 
 /// Service to enrich attachment metadata from parent emails
 pub struct AttachmentEnrichmentService {
@@ -74,7 +73,7 @@ impl AttachmentEnrichmentService {
         let mut count = 0;
 
         for attachment in attachments {
-            if let Some(email_id) = attachment.email_id {
+            if let Some(_email_id) = attachment.email_id {
                 let (sender_name, sender_email) = parse_email_address(&attachment.from_address);
 
                 sqlx::query!(

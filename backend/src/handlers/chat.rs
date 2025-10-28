@@ -1,12 +1,10 @@
-use actix_web::{web, HttpResponse, HttpRequest};
+use actix_web::{web, HttpResponse};
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use crate::middleware::auth::AuthenticatedUser;
 use chrono::{DateTime, Utc};
 use crate::services::agent::AgentEngine;
-use futures::stream::StreamExt;
-use actix_web::rt::time::interval;
-use std::time::Duration;
+use crate::services::agent::tools::create_tool_registry;
 use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,6 +44,7 @@ pub async fn create_conversation(
     user: AuthenticatedUser,
     body: web::Json<CreateConversationRequest>,
 ) -> HttpResponse {
+    log::info!("Creating new chat conversation for user {}", user.user_id);
     let user_id = user.user_id;
 
     let conversation_id = uuid::Uuid::new_v4().to_string();
@@ -62,6 +61,7 @@ pub async fn create_conversation(
     .bind(&title)
     .execute(pool.get_ref())
     .await;
+    log::info!("Chat conversation creation result: {:?}", result.is_ok());
 
     match result {
         Ok(_) => {
@@ -81,6 +81,7 @@ pub async fn create_conversation(
                 .await;
             }
 
+            log::info!("Successfully created chat conversation: {}", conversation_id);
             HttpResponse::Ok().json(serde_json::json!({
                 "id": conversation_id,
                 "title": title,
@@ -203,7 +204,6 @@ pub async fn get_conversation(
 
 pub async fn send_message(
     pool: web::Data<SqlitePool>,
-    agent_engine: web::Data<Arc<AgentEngine>>,
     user: AuthenticatedUser,
     path: web::Path<String>,
     body: web::Json<SendMessageRequest>,
@@ -269,20 +269,49 @@ pub async fn send_message(
                         })
                         .collect();
 
+                    // Create per-user tool registry and agent engine
+                    let tool_registry = Arc::new(create_tool_registry(pool.get_ref().clone(), user_id as i64));
+                    
+                    // Get user's AI settings
+                    let user_settings = sqlx::query_as::<_, (String,)>(
+                        "SELECT settings FROM users WHERE id = ?"
+                    )
+                    .bind(user_id)
+                    .fetch_optional(pool.get_ref())
+                    .await
+                    .ok()
+                    .flatten();
+                    
+                    // Create provider based on user settings or environment
+                    let provider = create_user_provider(user_settings).await;
+                    
+                    // Create agent engine for this user
+                    let agent_engine = AgentEngine::new(provider, tool_registry);
+
                     // Call AI agent
+                    log::info!("Calling AI agent for user {} with {} messages in history", user.user_id, messages.len());
                     let assistant_response = match agent_engine
                         .process_message(body.content.clone(), messages)
                         .await {
                         Ok(response) => response,
                         Err(e) => {
                             let error_msg = e.to_string();
-                            log::error!("Agent error: {}", error_msg);
+                            log::error!("Agent error for user {}: {}", user.user_id, error_msg);
                             
                             // Provide helpful error message
-                            if error_msg.contains("API") || error_msg.contains("401") || error_msg.contains("authentication") {
-                                "I'm sorry, but I'm not properly configured yet. To use the AI assistant, please set a valid ANTHROPIC_API_KEY environment variable and restart the server. You can get an API key from https://console.anthropic.com/".to_string()
-                            } else if error_msg.contains("dummy-key") {
+                            if error_msg.contains("No AI provider configured") || error_msg.contains("not configured") {
+                                "I'm sorry, but the AI assistant is not configured for your account yet. Please go to Settings and configure your AI provider (Anthropic, OpenAI, etc.) with a valid API key.".to_string()
+                            } else if error_msg.contains("API") || error_msg.contains("401") || error_msg.contains("authentication") || error_msg.contains("Unauthorized") {
+                                "I'm sorry, but there's an authentication issue with the AI service. Please check your API key in Settings and make sure it's valid. You can get an API key from:\n\n".to_string() + 
+                                "- Anthropic: https://console.anthropic.com/\n" +
+                                "- OpenAI: https://platform.openai.com/api-keys\n" +
+                                "- Databricks: Your Databricks workspace"
+                            } else if error_msg.contains("dummy-key") || error_msg.contains("test-key") {
                                 "I'm sorry, but I'm running in demo mode without a valid API key. To use the AI assistant, please set the ANTHROPIC_API_KEY environment variable and restart the server.".to_string()
+                            } else if error_msg.contains("rate limit") || error_msg.contains("quota") {
+                                "I'm sorry, but the AI service rate limit has been exceeded. Please try again in a few moments.".to_string()
+                            } else if error_msg.contains("timeout") {
+                                "I'm sorry, but the request timed out. The AI service might be experiencing high load. Please try again.".to_string()
                             } else {
                                 format!("I encountered an error while processing your request: {}. Please check the server logs for more details.", error_msg)
                             }
@@ -432,9 +461,55 @@ pub async fn send_message_stream(
                         .content_type("text/event-stream")
                         .body(format!("data: {}\n\n", serde_json::json!({"content": assistant_response})))
                 }
-                Err(e) => HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to send message"}))
+                Err(_e) => HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to send message"}))
             }
         }
         _ => HttpResponse::Forbidden().json(serde_json::json!({"error": "Access denied"}))
     }
+}
+
+async fn create_user_provider(user_settings: Option<(String,)>) -> Box<dyn crate::services::agent::provider::LLMProvider> {
+    use crate::services::agent::provider::{create_provider, ProviderConfig};
+    
+    // Parse user settings if available
+    if let Some((settings_json,)) = user_settings {
+        if let Ok(settings) = serde_json::from_str::<serde_json::Value>(&settings_json) {
+            let ai_provider = settings["ai_provider"].as_str().unwrap_or("anthropic");
+            let ai_api_key = settings["ai_api_key"].as_str();
+            let ai_model = settings["ai_model"].as_str();
+            
+            // If user has configured their own API key, use it
+            if let Some(api_key) = ai_api_key {
+                if !api_key.is_empty() && api_key != "null" {
+                    let model = ai_model.unwrap_or("claude-3-5-sonnet-20241022").to_string();
+                    
+                    return match ai_provider {
+                        "anthropic" => create_provider(ProviderConfig::Anthropic {
+                            api_key: api_key.to_string(),
+                            model,
+                        }),
+                        "openai" => create_provider(ProviderConfig::OpenAI {
+                            api_key: api_key.to_string(),
+                            model: ai_model.unwrap_or("gpt-4").to_string(),
+                        }),
+                        _ => create_provider(ProviderConfig::Anthropic {
+                            api_key: api_key.to_string(),
+                            model,
+                        }),
+                    };
+                }
+            }
+        }
+    }
+    
+    // Fall back to environment variable
+    let api_key = std::env::var("ANTHROPIC_API_KEY").unwrap_or_else(|_| {
+        log::warn!("No AI provider configured for user and ANTHROPIC_API_KEY not found in environment");
+        "dummy-key".to_string()
+    });
+    
+    create_provider(ProviderConfig::Anthropic {
+        api_key,
+        model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|_| "claude-3-5-sonnet-20241022".to_string()),
+    })
 }

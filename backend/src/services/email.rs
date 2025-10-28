@@ -1,4 +1,4 @@
-use crate::models::{Email, User};
+use crate::models::User;
 use crate::services::{ImapService, SmtpService};
 use crate::utils::encryption::Encryption;
 use chrono::Utc;
@@ -94,7 +94,7 @@ impl EmailService {
         // Store emails in database
         for message in messages {
             // Create a properly initialized Email struct with all required fields
-            let email_id = sqlx::query(
+            let _email_id = sqlx::query(
                 r#"
                 INSERT OR REPLACE INTO emails (
                     user_id, message_id, thread_id, from_address, to_addresses, 

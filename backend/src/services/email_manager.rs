@@ -1,13 +1,10 @@
 use crate::models::User;
-use crate::services::{ImapService, SmtpService, OAuthRefreshService};
+use crate::services::{ImapService, SmtpService};
 use crate::utils::encryption::Encryption;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use sqlx::SqlitePool;
-use std::sync::Mutex;
-use std::collections::HashSet;
 
 /// Manages IMAP and SMTP services for all users
 pub struct EmailManager {

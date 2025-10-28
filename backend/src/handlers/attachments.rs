@@ -254,10 +254,10 @@ pub async fn get_gallery(
         }
     }
     
-    if let Some(date_from) = &query.date_from {
+    if let Some(_date_from) = &query.date_from {
         where_clauses.push("a.received_at >= ?".to_string());
     }
-    if let Some(date_to) = &query.date_to {
+    if let Some(_date_to) = &query.date_to {
         where_clauses.push("a.received_at <= ?".to_string());
     }
     
@@ -267,10 +267,10 @@ pub async fn get_gallery(
         }
     }
     
-    if let Some(size_min) = query.size_min {
+    if let Some(_size_min) = query.size_min {
         where_clauses.push("a.size >= ?".to_string());
     }
-    if let Some(size_max) = query.size_max {
+    if let Some(_size_max) = query.size_max {
         where_clauses.push("a.size <= ?".to_string());
     }
     
@@ -340,14 +340,12 @@ pub async fn get_gallery_recents(
         r#"
         SELECT a.*
         FROM attachments a
-        LEFT JOIN emails e ON a.email_id = e.id
-        LEFT JOIN drafts d ON a.draft_id = d.id
-        WHERE (e.user_id = ? OR d.user_id = ?)
+        INNER JOIN emails e ON a.email_id = e.id
+        WHERE e.user_id = ?
         ORDER BY a.received_at DESC, a.created_at DESC
         LIMIT ? OFFSET ?
         "#
     )
-    .bind(user.user_id)
     .bind(user.user_id)
     .bind(limit)
     .bind(offset)
@@ -359,12 +357,10 @@ pub async fn get_gallery_recents(
         r#"
         SELECT COUNT(*)
         FROM attachments a
-        LEFT JOIN emails e ON a.email_id = e.id
-        LEFT JOIN drafts d ON a.draft_id = d.id
-        WHERE (e.user_id = ? OR d.user_id = ?)
+        INNER JOIN emails e ON a.email_id = e.id
+        WHERE e.user_id = ?
         "#
     )
-    .bind(user.user_id)
     .bind(user.user_id)
     .fetch_one(pool.get_ref())
     .await
@@ -394,15 +390,13 @@ pub async fn get_gallery_by_sender(
             COUNT(*) as attachment_count,
             SUM(a.size) as total_size
         FROM attachments a
-        LEFT JOIN emails e ON a.email_id = e.id
-        LEFT JOIN drafts d ON a.draft_id = d.id
-        WHERE (e.user_id = ? OR d.user_id = ?)
+        INNER JOIN emails e ON a.email_id = e.id
+        WHERE e.user_id = ?
         AND a.sender_email IS NOT NULL
         GROUP BY a.sender_email, a.sender_name
         ORDER BY attachment_count DESC
         "#,
         user.user_id,
-        user.user_id
     )
     .fetch_all(pool.get_ref())
     .await
@@ -418,15 +412,13 @@ pub async fn get_gallery_by_sender(
             r#"
             SELECT a.*
             FROM attachments a
-            LEFT JOIN emails e ON a.email_id = e.id
-            LEFT JOIN drafts d ON a.draft_id = d.id
-            WHERE (e.user_id = ? OR d.user_id = ?)
+            INNER JOIN emails e ON a.email_id = e.id
+            WHERE e.user_id = ?
             AND a.sender_email = ?
             ORDER BY a.received_at DESC, a.created_at DESC
             LIMIT 10
             "#
         )
-        .bind(user.user_id)
         .bind(user.user_id)
         .bind(&sender_email)
         .fetch_all(pool.get_ref())

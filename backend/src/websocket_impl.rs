@@ -1,7 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse, Error};
 use actix_web_actors::ws;
 use actix::{Actor, StreamHandler, AsyncContext, ActorContext, Handler, Message};
-use actix::prelude::*;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};

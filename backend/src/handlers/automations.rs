@@ -5,8 +5,153 @@ use crate::middleware::auth::AuthenticatedUser;
 use chrono::{DateTime, Utc};
 use crate::services::agent::AgentEngine;
 use std::sync::Arc;
-use crate::services::agent::tools::create_tool_registry;
 
+// Convert cron expression to human-readable format
+fn cron_to_human(cron: &str) -> String {
+    let parts: Vec<&str> = cron.split_whitespace().collect();
+    
+    if parts.len() < 5 {
+        return cron.to_string();
+    }
+    
+    let minute = parts[0];
+    let hour = parts[1];
+    let day = parts[2];
+    let month = parts[3];
+    let weekday = parts[4];
+    
+    // Handle common patterns
+    match (minute, hour, day, month, weekday) {
+        ("*", "*", "*", "*", "*") => "Every minute".to_string(),
+        (m, "*", "*", "*", "*") if m != "*" => format!("Every hour at minute {}", m),
+        ("0", h, "*", "*", "*") if h != "*" => {
+            let hour_num = h.parse::<u32>().unwrap_or(0);
+            if hour_num == 0 {
+                "Daily at midnight".to_string()
+            } else if hour_num == 12 {
+                "Daily at noon".to_string()
+            } else if hour_num < 12 {
+                format!("Daily at {}:00 AM", hour_num)
+            } else {
+                format!("Daily at {}:00 PM", hour_num - 12)
+            }
+        }
+        (m, h, "*", "*", "*") if m != "*" && h != "*" => {
+            let hour_num = h.parse::<u32>().unwrap_or(0);
+            let min_num = m.parse::<u32>().unwrap_or(0);
+            if hour_num < 12 {
+                format!("Daily at {}:{:02} AM", hour_num, min_num)
+            } else if hour_num == 12 {
+                format!("Daily at {}:{:02} PM", hour_num, min_num)
+            } else {
+                format!("Daily at {}:{:02} PM", hour_num - 12, min_num)
+            }
+        }
+        ("0", "0", "*", "*", "0") => "Weekly on Sunday at midnight".to_string(),
+        ("0", "0", "*", "*", "1") => "Weekly on Monday at midnight".to_string(),
+        ("0", "9", "*", "*", "1-5") => "Weekdays at 9:00 AM".to_string(),
+        (m, h, "*", "*", w) if w != "*" => {
+            let weekday_name = match w {
+                "0" => "Sunday",
+                "1" => "Monday",
+                "2" => "Tuesday",
+                "3" => "Wednesday",
+                "4" => "Thursday",
+                "5" => "Friday",
+                "6" => "Saturday",
+                "1-5" => "Weekdays",
+                _ => "certain days",
+            };
+            let hour_num = h.parse::<u32>().unwrap_or(0);
+            let min_num = m.parse::<u32>().unwrap_or(0);
+            if hour_num < 12 {
+                format!("{} at {}:{:02} AM", weekday_name, hour_num, min_num)
+            } else if hour_num == 12 {
+                format!("{} at {}:{:02} PM", weekday_name, hour_num, min_num)
+            } else {
+                format!("{} at {}:{:02} PM", weekday_name, hour_num - 12, min_num)
+            }
+        }
+        ("0", "0", "1", "*", "*") => "Monthly on the 1st at midnight".to_string(),
+        ("*/15", "*", "*", "*", "*") => "Every 15 minutes".to_string(),
+        ("*/30", "*", "*", "*", "*") => "Every 30 minutes".to_string(),
+        _ => format!("Custom schedule: {}", cron),
+    }
+}
+
+pub async fn get_run_details(
+    pool: web::Data<SqlitePool>,
+    user: AuthenticatedUser,
+    path: web::Path<(String, String)>,
+) -> HttpResponse {
+    let user_id = user.user_id;
+    let (automation_id, run_id) = path.into_inner();
+
+    // Verify ownership
+    let owner_check = sqlx::query_scalar::<_, i64>(
+        "SELECT user_id FROM automations WHERE id = ?"
+    )
+    .bind(&automation_id)
+    .fetch_optional(pool.get_ref())
+    .await;
+
+    match owner_check {
+        Ok(Some(owner_id)) if owner_id == user_id => {
+            let run_result = sqlx::query_as::<_, (String, String, Option<String>, Option<String>, String, Option<String>)>(
+                r#"SELECT id, status, result, error, started_at, completed_at
+                   FROM automation_runs
+                   WHERE id = ? AND automation_id = ?"#
+            )
+            .bind(&run_id)
+            .bind(&automation_id)
+            .fetch_optional(pool.get_ref())
+            .await;
+
+            match run_result {
+                Ok(Some((id, status, result, error, started_at, completed_at))) => {
+                    // Try to find associated chat conversation
+                    let chat_conv = sqlx::query_as::<_, (String, String)>(
+                        r#"SELECT id, title FROM chat_conversations
+                           WHERE user_id = ? AND title LIKE ?
+                           AND created_at >= ?
+                           ORDER BY created_at DESC LIMIT 1"#
+                    )
+                    .bind(user_id)
+                    .bind(format!("%{}%", automation_id))
+                    .bind(&started_at)
+                    .fetch_optional(pool.get_ref())
+                    .await
+                    .ok()
+                    .flatten();
+
+                    HttpResponse::Ok().json(serde_json::json!({
+                        "id": id,
+                        "status": status,
+                        "result": result,
+                        "error": error,
+                        "started_at": started_at,
+                        "completed_at": completed_at,
+                        "chat_conversation": chat_conv.map(|(id, title)| serde_json::json!({
+                            "id": id,
+                            "title": title
+                        }))
+                    }))
+                }
+                Ok(None) => HttpResponse::NotFound().json(serde_json::json!({"error": "Run not found"})),
+                Err(e) => {
+                    log::error!("Failed to fetch run details: {}", e);
+                    HttpResponse::InternalServerError().json(serde_json::json!({"error": "Failed to fetch run details"}))
+                }
+            }
+        }
+        Ok(Some(_)) => HttpResponse::Forbidden().json(serde_json::json!({"error": "Access denied"})),
+        Ok(None) => HttpResponse::NotFound().json(serde_json::json!({"error": "Automation not found"})),
+        Err(e) => {
+            log::error!("Failed to check automation ownership: {}", e);
+            HttpResponse::InternalServerError().json(serde_json::json!({"error": "Internal error"}))
+        }
+    }
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateAutomationRequest {
     pub name: String,
@@ -118,6 +263,7 @@ pub async fn list_automations(
                     "name": name,
                     "description": desc,
                     "schedule": schedule,
+                    "schedule_human": cron_to_human(schedule),
                     "prompt": prompt,
                     "enabled": enabled,
                     "last_run": last_run,
@@ -164,6 +310,7 @@ pub async fn get_automation(
                 "name": name,
                 "description": desc,
                 "schedule": schedule,
+                "schedule_human": cron_to_human(&schedule),
                 "prompt": prompt,
                 "enabled": enabled,
                 "last_run": last_run,

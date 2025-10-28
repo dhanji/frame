@@ -1,4 +1,4 @@
-use crate::models::{Conversation, Email};
+use crate::models::Email;
 use crate::services::threading::{JwzThreading, ThreadableEmail, ThreadNode};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

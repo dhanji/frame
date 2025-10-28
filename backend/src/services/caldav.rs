@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 use icalendar::{Calendar, Component, Event, EventLike};
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarEvent {
@@ -38,7 +37,15 @@ impl CalDavClient {
             .build()
             .unwrap();
 
-        let calendar_path = calendar_path.unwrap_or_else(|| "/calendar/".to_string());
+        // If base_url already contains a path (like /events), don't add another path
+        let calendar_path = if base_url.ends_with("/events") || base_url.ends_with("/events/") 
+                              || base_url.ends_with("/user") || base_url.contains("/calendar/dav/") {
+            String::new()  // Don't append anything
+        } else {
+            calendar_path.unwrap_or_else(|| "/calendar/".to_string())
+        };
+
+        log::info!("CalDavClient initialized: base_url={}, calendar_path='{}', final_url={}{}", base_url, calendar_path, base_url, calendar_path);
 
         Self {
             client,
@@ -287,24 +294,35 @@ impl CalDavClient {
 
     /// Parse iCalendar string into CalendarEvent
     fn parse_ical_event(&self, ical_str: &str) -> Result<CalendarEvent, Box<dyn std::error::Error + Send + Sync>> {
-        // Parse using icalendar crate
-        let calendar: Calendar = ical_str.parse()?;
-        
-        // Extract event properties from the calendar
-        // The icalendar crate doesn't expose components directly in a simple way
-        // We need to work with the calendar's properties
-        
-        // For now, create a simplified parser that extracts basic event info
+        log::debug!("Parsing iCal event (first 200 chars): {}", ical_str.chars().take(200).collect::<String>());
+
         let mut uid = String::new();
         let mut title = String::from("Untitled Event");
         let mut description = None;
         let mut location = None;
         let mut start_time = chrono::Utc::now();
         let mut end_time = chrono::Utc::now();
+        let mut attendees = Vec::new();
+        let mut recurrence = None;
+        let mut in_vevent = false;
         
         // Parse the iCalendar text manually for now
         for line in ical_str.lines() {
             let line = line.trim();
+            
+            if line == "BEGIN:VEVENT" {
+                in_vevent = true;
+                continue;
+            }
+            if line == "END:VEVENT" {
+                in_vevent = false;
+                continue;
+            }
+            
+            if !in_vevent {
+                continue;
+            }
+            
             if line.starts_with("UID:") {
                 uid = line[4..].trim().to_string();
             } else if line.starts_with("SUMMARY:") {
@@ -313,34 +331,69 @@ impl CalDavClient {
                 description = Some(line[12..].trim().to_string());
             } else if line.starts_with("LOCATION:") {
                 location = Some(line[9..].trim().to_string());
-            } else if line.starts_with("DTSTART:") {
-                if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(line[8..].trim()) {
-                    start_time = dt.with_timezone(&chrono::Utc);
+            } else if line.starts_with("DTSTART") {
+                // Handle DTSTART;TZID=... or DTSTART:...
+                if let Some(colon_pos) = line.find(':') {
+                    let value = &line[colon_pos+1..];
+                    if let Ok(dt) = self.parse_ical_datetime(value) {
+                        start_time = dt;
+                    }
                 }
-            } else if line.starts_with("DTEND:") {
-                if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(line[6..].trim()) {
-                    end_time = dt.with_timezone(&chrono::Utc);
+            } else if line.starts_with("DTEND") {
+                // Handle DTEND;TZID=... or DTEND:...
+                if let Some(colon_pos) = line.find(':') {
+                    let value = &line[colon_pos+1..];
+                    if let Ok(dt) = self.parse_ical_datetime(value) {
+                        end_time = dt;
+                    }
                 }
+            } else if line.starts_with("ATTENDEE") {
+                if let Some(colon_pos) = line.find(':') {
+                    attendees.push(line[colon_pos+1..].trim().to_string());
+                }
+            } else if line.starts_with("RRULE:") {
+                recurrence = Some(line[6..].trim().to_string());
             }
         }
         
         if !uid.is_empty() {
+            log::debug!("Parsed event: uid={}, title={}, start={}", uid, title, start_time);
             return Ok(CalendarEvent {
                 uid,
                 title,
                 description,
                 location,
-                
-                    start_time,
-                    end_time,
-                    all_day: false, // TODO: detect all-day events
-                    attendees: vec![], // TODO: parse attendees
-                    recurrence: None, // TODO: parse recurrence rules
-                    etag: None,
-                });
+                start_time,
+                end_time,
+                all_day: false,
+                attendees,
+                recurrence,
+                etag: None,
+            });
         }
         
         Err("No VEVENT found in iCalendar data".into())
+    }
+    
+    /// Parse iCalendar datetime format
+    fn parse_ical_datetime(&self, value: &str) -> Result<DateTime<Utc>, Box<dyn std::error::Error + Send + Sync>> {
+        let value = value.trim();
+        
+        // Format: 20191106T023000 or 20191105T152000Z
+        if value.ends_with('Z') {
+            // UTC time
+            let dt = chrono::NaiveDateTime::parse_from_str(&value[..value.len()-1], "%Y%m%dT%H%M%S")?;
+            Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+        } else if value.contains('T') {
+            // Local time (treat as UTC for now)
+            let dt = chrono::NaiveDateTime::parse_from_str(value, "%Y%m%dT%H%M%S")?;
+            Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+        } else {
+            // Date only
+            let date = chrono::NaiveDate::parse_from_str(value, "%Y%m%d")?;
+            let datetime = date.and_hms_opt(0, 0, 0).unwrap();
+            Ok(DateTime::<Utc>::from_naive_utc_and_offset(datetime, Utc))
+        }
     }
 
     /// Sync events from database to CalDAV server

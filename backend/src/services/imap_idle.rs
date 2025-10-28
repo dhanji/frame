@@ -1,7 +1,7 @@
 use imap::{Session, ImapConnection};
 use std::time::Duration;
 use sqlx::SqlitePool;
-use crate::websocket_impl::{ConnectionManager, WsMessage};
+use crate::websocket_impl::ConnectionManager;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::services::email_sync::EmailSyncService;
@@ -199,7 +199,7 @@ impl ImapIdleService {
                     if let Some(body) = message.body() {
                         if let Some(parsed) = MessageParser::default().parse(body) {
                             // Store email in database
-                            let message_id = parsed
+                            let _message_id = parsed
                                 .message_id()
                                 .map(|s| s.to_string())
                                 .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
@@ -215,7 +215,7 @@ impl ImapIdleService {
                             let body_text = parsed.body_text(0).map(|s| s.to_string());
                             let body_html = parsed.body_html(0).map(|s| s.to_string());
                             
-                            let preview = body_text
+                            let _preview = body_text
                                 .as_ref()
                                 .or(body_html.as_ref())
                                 .map(|s| {

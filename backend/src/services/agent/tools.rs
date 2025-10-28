@@ -978,6 +978,232 @@ impl Tool for ReminderSearchTool {
     }
 }
 
+// Reminder Update Tool
+pub struct ReminderUpdateTool {
+    pool: SqlitePool,
+    user_id: i64,
+}
+
+impl ReminderUpdateTool {
+    pub fn new(pool: SqlitePool, user_id: i64) -> Self {
+        Self { pool, user_id }
+    }
+}
+
+#[async_trait]
+impl Tool for ReminderUpdateTool {
+    fn name(&self) -> &str {
+        "update_reminder"
+    }
+
+    fn description(&self) -> &str {
+        "Update an existing reminder's title, notes, or due date."
+    }
+
+    fn parameters(&self) -> Value {
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "reminder_id": {
+                    "type": "string",
+                    "description": "ID of the reminder to update"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "New title (optional)"
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "New notes (optional)"
+                },
+                "due_date": {
+                    "type": "string",
+                    "description": "New due date in ISO format (optional)"
+                }
+            },
+            "required": ["reminder_id"]
+        })
+    }
+
+    async fn execute(
+        &self,
+        arguments: Value,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let reminder_id = arguments["reminder_id"].as_str().ok_or("Missing reminder_id")?;
+        
+        let mut updates = vec![];
+        let mut params: Vec<String> = vec![];
+        
+        if let Some(title) = arguments["title"].as_str() {
+            updates.push("title = ?");
+            params.push(title.to_string());
+        }
+        if let Some(notes) = arguments["notes"].as_str() {
+            updates.push("notes = ?");
+            params.push(notes.to_string());
+        }
+        if let Some(due_date) = arguments["due_date"].as_str() {
+            updates.push("due_date = ?");
+            params.push(due_date.to_string());
+        }
+        
+        if updates.is_empty() {
+            return Err("No fields to update".into());
+        }
+        
+        updates.push("updated_at = CURRENT_TIMESTAMP");
+        
+        let sql = format!(
+            "UPDATE reminders SET {} WHERE id = ? AND user_id = ?",
+            updates.join(", ")
+        );
+        
+        let mut query = sqlx::query(&sql);
+        for param in params {
+            query = query.bind(param);
+        }
+        query = query.bind(reminder_id).bind(self.user_id);
+        
+        let result = query.execute(&self.pool).await?;
+        
+        if result.rows_affected() == 0 {
+            return Err("Reminder not found".into());
+        }
+        
+        Ok(serde_json::json!({
+            "reminder_id": reminder_id,
+            "message": "Reminder updated successfully"
+        }))
+    }
+}
+
+// Reminder Complete Tool
+pub struct ReminderCompleteTool {
+    pool: SqlitePool,
+    user_id: i64,
+}
+
+impl ReminderCompleteTool {
+    pub fn new(pool: SqlitePool, user_id: i64) -> Self {
+        Self { pool, user_id }
+    }
+}
+
+#[async_trait]
+impl Tool for ReminderCompleteTool {
+    fn name(&self) -> &str {
+        "complete_reminder"
+    }
+
+    fn description(&self) -> &str {
+        "Mark a reminder as completed or uncompleted."
+    }
+
+    fn parameters(&self) -> Value {
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "reminder_id": {
+                    "type": "string",
+                    "description": "ID of the reminder to mark as completed"
+                },
+                "completed": {
+                    "type": "boolean",
+                    "description": "Whether to mark as completed (true) or uncompleted (false)"
+                }
+            },
+            "required": ["reminder_id", "completed"]
+        })
+    }
+
+    async fn execute(
+        &self,
+        arguments: Value,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let reminder_id = arguments["reminder_id"].as_str().ok_or("Missing reminder_id")?;
+        let completed = arguments["completed"].as_bool().ok_or("Missing completed")?;
+        
+        let result = sqlx::query(
+            "UPDATE reminders SET completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?"
+        )
+        .bind(completed)
+        .bind(reminder_id)
+        .bind(self.user_id)
+        .execute(&self.pool)
+        .await?;
+        
+        if result.rows_affected() == 0 {
+            return Err("Reminder not found".into());
+        }
+        
+        Ok(serde_json::json!({
+            "reminder_id": reminder_id,
+            "completed": completed,
+            "message": format!("Reminder marked as {}", if completed { "completed" } else { "uncompleted" })
+        }))
+    }
+}
+
+// Reminder Delete Tool
+pub struct ReminderDeleteTool {
+    pool: SqlitePool,
+    user_id: i64,
+}
+
+impl ReminderDeleteTool {
+    pub fn new(pool: SqlitePool, user_id: i64) -> Self {
+        Self { pool, user_id }
+    }
+}
+
+#[async_trait]
+impl Tool for ReminderDeleteTool {
+    fn name(&self) -> &str {
+        "delete_reminder"
+    }
+
+    fn description(&self) -> &str {
+        "Delete a reminder permanently."
+    }
+
+    fn parameters(&self) -> Value {
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "reminder_id": {
+                    "type": "string",
+                    "description": "ID of the reminder to delete"
+                }
+            },
+            "required": ["reminder_id"]
+        })
+    }
+
+    async fn execute(
+        &self,
+        arguments: Value,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let reminder_id = arguments["reminder_id"].as_str().ok_or("Missing reminder_id")?;
+        
+        let result = sqlx::query(
+            "DELETE FROM reminders WHERE id = ? AND user_id = ?"
+        )
+        .bind(reminder_id)
+        .bind(self.user_id)
+        .execute(&self.pool)
+        .await?;
+        
+        if result.rows_affected() == 0 {
+            return Err("Reminder not found".into());
+        }
+        
+        Ok(serde_json::json!({
+            "reminder_id": reminder_id,
+            "message": "Reminder deleted successfully"
+        }))
+    }
+}
+
 // Money Account List Tool
 pub struct MoneyAccountListTool {
     pool: SqlitePool,
@@ -1166,6 +1392,9 @@ pub fn create_tool_registry(pool: SqlitePool, user_id: i64) -> ToolRegistry {
     // Reminder tools
     registry.register(Arc::new(ReminderCreateTool::new(pool.clone(), user_id)));
     registry.register(Arc::new(ReminderSearchTool::new(pool.clone(), user_id)));
+    registry.register(Arc::new(ReminderUpdateTool::new(pool.clone(), user_id)));
+    registry.register(Arc::new(ReminderCompleteTool::new(pool.clone(), user_id)));
+    registry.register(Arc::new(ReminderDeleteTool::new(pool.clone(), user_id)));
     
     // Money tools
     registry.register(Arc::new(MoneyAccountListTool::new(pool.clone(), user_id)));

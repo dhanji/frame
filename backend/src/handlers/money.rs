@@ -227,7 +227,7 @@ pub async fn add_transaction(
 }
 
 pub async fn sync_accounts(
-    pool: web::Data<SqlitePool>,
+    _pool: web::Data<SqlitePool>,
     user: AuthenticatedUser,
 ) -> HttpResponse {
     let _user_id = user.user_id;

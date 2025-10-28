@@ -1,5 +1,4 @@
 use actix_web::{dev::ServiceRequest, Error};
-use rand::Rng;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
