@@ -22,7 +22,7 @@ export function TeamSwitcher({
 }: {
   teams: {
     name: string
-    logo: React.ElementType
+    logo: React.ElementType | string
     plan: string
   }[]
 }) {
@@ -42,8 +42,12 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <activeTeam.logo className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-slate-900 dark:bg-white">
+                {typeof activeTeam.logo === 'string' ? (
+                  <img src={activeTeam.logo} alt={activeTeam.name} className="size-4 invert-0 dark:invert" />
+                ) : (
+                  <activeTeam.logo className="size-4" />
+                )}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
@@ -69,8 +73,12 @@ export function TeamSwitcher({
                 onClick={() => setActiveTeam(team)}
                 className="gap-2 p-2"
               >
-                <div className="flex size-6 items-center justify-center rounded-sm border">
-                  <team.logo className="size-4 shrink-0" />
+                <div className="flex size-6 items-center justify-center rounded-sm border bg-slate-900 dark:bg-white">
+                  {typeof team.logo === 'string' ? (
+                    <img src={team.logo} alt={team.name} className="size-4 shrink-0 invert-0 dark:invert" />
+                  ) : (
+                    <team.logo className="size-4 shrink-0" />
+                  )}
                 </div>
                 {team.name}
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>

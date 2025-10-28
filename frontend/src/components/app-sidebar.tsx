@@ -1,7 +1,6 @@
 import * as React from "react"
 import {
-  Command,
-  Mail,
+  Inbox,
   MessageSquare,
   Calendar,
   CheckSquare2,
@@ -25,12 +24,12 @@ const data = {
   user: {
     name: "dhanji",
     email: "user@goosepatrol.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "/assets/profile_main-c37796349f5762899e0b50e09dea9bf0.jpg",
   },
   teams: [
     {
       name: "Goose Patrol",
-      logo: Command,
+      logo: "/assets/logo.svg",
       plan: "Enterprise",
     },
   ],
@@ -38,7 +37,7 @@ const data = {
     {
       title: "Inbox",
       url: "#",
-      icon: Mail,
+      icon: Inbox,
       isActive: true,
       items: [
         {
