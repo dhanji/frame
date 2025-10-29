@@ -11,12 +11,17 @@
             box-sizing: border-box;
         }
 
+        html {
+            height: 100%;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #ffffff;
             color: rgb(16,23,41);
             font-weight: 400;
             line-height: 1.5;
+            height: 100%;
         }
 
         /* Login Screen Styles */
@@ -157,10 +162,18 @@
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: 500;
             color: rgb(16,23,41);
             letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            padding: 4px;
+            background: black;
+            border-radius: 8px;
         }
 
         .search-bar {
@@ -225,11 +238,8 @@
             width: 240px;
             background: white;
             border-right: 1px solid rgb(229,229,229);
-            padding: 0 20px 0 0;
-
 
             top: 80px;
-            width: 200px;
         }
 
         .folder-item {
@@ -253,27 +263,37 @@
             background: #0066FF;
             color: white;
             padding: 2px 8px;
-            border-radius: 0;
-            font-size: 12px;
-            font-weight: 600;
+            margin-left: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.85;
         }
 
         .main-content {
             flex: 1;
         }
 
+        .converation-list {
+            width: 24%;
+        }
+
         .conversation {
             background: white;
             border-radius: 0;
-            margin-bottom: 0;
+            margin: 0 4px;
             padding: 12px 16px;
-            width: 80%;
-
             cursor: pointer;
         }
 
         .conversation:hover {
-            background: #F5F5F5;
+            background: rgb(244,244,245);
+            border-radius: 4px;
+        }
+
+        .conversation-list {
+            width: 24%;
+            border-right: 1px solid rgb(229,229,229);
         }
 
         .automationsList .conversation {
@@ -304,6 +324,9 @@
             font-weight: 500;
             color: rgb(16,23,41);
             margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .content-snippet {
@@ -313,7 +336,9 @@
             font-weight: 400;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            display: -webkit-box;
         }
 
         .conversation-actions-hover {
@@ -323,69 +348,37 @@
         }
 
         .conversation:hover .conversation-actions-hover {
-            display: flex;
+            display: none;
         }
 
         .icon-btn {
-            background: transparent;
-            border: 1px solid rgb(16,23,41);
-            width: 32px;
-            height: 32px;
+            width: 18px;
+            height: 18px;
+            border: none;
             border-radius: 0;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 16px;
+            color: rgb(80,91,109);
         }
 
         .icon-btn:hover {
-            background: #F5F5F5;
+            color: rgb(16,23,41);
         }
 
-        /* Slideover Panel */
-        .slideover-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 1000;
-            display: none;
-        }
-
-        .slideover-overlay.active {
-            display: block;
-        }
-
-        .slideover-panel {
-            position: fixed;
-            top: 0;
-            right: -600px;
-            width: 600px;
-            height: 100%;
-            background: white;
-            border-left: 1px solid rgb(16,23,41);
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .slideover-overlay.active .slideover-panel {
-            right: 0;
-        }
-
+        /* Email Detail Panel */
         .slideover-header {
             padding: 20px;
-            border-bottom: 1px solid rgb(16,23,41);
+            background: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .slideover-header h2 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: rgb(16,23,41);
         }
@@ -1351,7 +1344,7 @@
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
             <div class="login-header">
-                <h1>📧 Goose Hub</h1>
+                <h1><div class="logo-icon"><img src="goose_logo.png"/></div> Hub</h1>
             </div>
 
             <div class="demo-notice">
@@ -1393,13 +1386,12 @@
     <!-- Main App -->
     <div class="main-app" id="mainApp">
         <div class="header">
-            <div class="logo">📧 Goose Hub</div>
+            <div class="logo"><img class="logo-icon" src="goose_logo.png"/></div>
             <div class="search-bar">
                 <input type="text" placeholder="Search" id="searchInput">
                 <div class="search-results" id="searchResults" style="display: none; position: absolute; background: white; border: 1px solid #dadde1; border-radius: 8px; margin-top: 4px; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; width: 400px;"></div>
             </div>
             <div class="header-actions">
-                <button class="compose-btn" id="gooseBtn">Goose</button>
                 <button class="compose-btn" id="composeBtn">Compose</button>
                 <button class="compose-btn" id="debugBtn">Debug</button>
             </div>
@@ -1411,40 +1403,19 @@
                 <!-- Attachments tab will be added here -->
             </div>
 
-            <div id="conversationList" style="flex: 1;">
+            <div id="conversationList" class="conversation-list">
                 <div class="loading">Loading conversations...</div>
             </div>
-            <div class="main-content" id="dynamicViewsContainer" style="flex: 1;"></div>
+
+            <div id="emailDetailPanel" style="flex: 1; display: flex; flex-direction: column; background: white; font-size: 14px;">
+                <div class="loading" style="padding: 40px; text-align: center; color: #65676b;">Select a conversation to view details</div>
+            </div>
+
+            <div class="main-content" id="dynamicViewsContainer" style="flex: 1; display: none;"></div>
         </div>
     </div>
 
 
-    <!-- Slideover Panel -->
-    <div class="slideover-overlay" id="slideoverOverlay">
-        <div class="slideover-panel">
-            <div class="slideover-header">
-                <h2 id="slideoverSubject">Conversation</h2>
-                <button class="close-btn" onclick="closeSlideover()">×</button>
-            </div>
-            <div class="slideover-content" id="slideoverContent">
-                <!-- Messages will be loaded here -->
-            </div>
-            <div class="slideover-footer">
-                <div class="reply-actions">
-                    <button class="btn-secondary" onclick="replyTo()">Reply</button>
-                    <button class="btn-secondary" onclick="replyAll()">Reply All</button>
-                    <button class="btn-secondary" onclick="forward()">Forward</button>
-                    <button class="btn-primary" onclick="analyzeEmail()">Analyze</button>
-                </div>
-                <div class="reply-box">
-                    <textarea id="quickReplyText" placeholder="Write a reply..."></textarea>
-                    <input type="file" id="replyFileInput" multiple style="display: none;">
-                    <button class="send-btn" onclick="sendQuickReply()">Send</button>
-                    <button class="btn-secondary" onclick="document.getElementById('replyFileInput').click()" style="margin-left: 8px;">📎 Attach</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Attachment Gallery -->
     <div class="container gallery-container" id="galleryContainer">
@@ -2228,6 +2199,7 @@
 
             // Show conversation list for email folders
             document.getElementById('conversationList').style.display = 'block';
+            document.getElementById('emailDetailPanel').style.display = 'flex';
 
             // Update active state
             document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
@@ -2518,10 +2490,10 @@
                 return;
             }
 
-            // Show search results with animation
-            searchResults.style.display = 'block';
-            searchResults.style.animation = 'slideDown 0.2s ease-out';
-            searchResults.innerHTML = '<div style="padding: 12px; color: #65676b;">Searching...</div>';
+            // // Show search results with animation
+            // searchResults.style.display = 'block';
+            // searchResults.style.animation = 'slideDown 0.2s ease-out';
+            // searchResults.innerHTML = '<div style="padding: 12px; color: #65676b;">Searching...</div>';
 
             // Try API search first
             try {
@@ -2843,21 +2815,39 @@ Be concise, professional, and actionable.`
         // Slideover functions
         function openSlideover(conv) {
             currentConversation = conv;
-            const overlay = document.getElementById('slideoverOverlay');
-            const subject = document.getElementById('slideoverSubject');
-            const content = document.getElementById('slideoverContent');
+            const panel = document.getElementById('emailDetailPanel');
 
-            subject.textContent = conv.subject;
+            // Build the email detail view
+            panel.innerHTML = `
+                <div class="slideover-header">
+                    <h2>${escapeHtml(conv.subject)}</h2>
+                </div>
+                <div class="slideover-content" id="slideoverContent">
+                    <div class="loading">Loading messages...</div>
+                </div>
+                <div class="slideover-footer">
+                    <div class="reply-actions">
+                        <button class="btn-secondary" onclick="replyTo()">Reply</button>
+                        <button class="btn-secondary" onclick="replyAll()">Reply All</button>
+                        <button class="btn-secondary" onclick="forward()">Forward</button>
+                        <button class="btn-primary" onclick="analyzeEmail()">Analyze</button>
+                    </div>
+                    <div class="reply-box">
+                        <textarea id="quickReplyText" placeholder="Write a reply..."></textarea>
+                        <input type="file" id="replyFileInput" multiple style="display: none;">
+                        <button class="send-btn" onclick="sendQuickReply()">Send</button>
+                        <button class="btn-secondary" onclick="document.getElementById('replyFileInput').click()" style="margin-left: 8px;">📎 Attach</button>
+                    </div>
+                </div>
+            `;
 
             // Load conversation messages
             loadConversationMessages(conv.id);
-
-            overlay.classList.add('active');
         }
 
         function closeSlideover() {
-            const overlay = document.getElementById('slideoverOverlay');
-            overlay.classList.remove('active');
+            const panel = document.getElementById('emailDetailPanel');
+            panel.innerHTML = '<div class="loading" style="padding: 40px; text-align: center; color: #65676b;">Select a conversation to view details</div>';
             currentConversation = null;
         }
 
@@ -3079,13 +3069,6 @@ Be concise, professional, and actionable.`
             }
         }
 
-        // Close slideover when clicking overlay
-        document.getElementById('slideoverOverlay')?.addEventListener('click', (e) => {
-            if (e.target.id === 'slideoverOverlay') {
-                closeSlideover();
-            }
-        });
-
         // Mock data
         function getMockFolders() {
             return [
@@ -3180,6 +3163,7 @@ Be concise, professional, and actionable.`
         function showAttachmentGallery(event) {
             // Hide conversation list
             document.getElementById('conversationList').style.display = 'none';
+            document.getElementById('emailDetailPanel').style.display = 'none';
 
             // Show gallery
             const gallery = document.getElementById('galleryContainer');
@@ -3201,6 +3185,7 @@ Be concise, professional, and actionable.`
 
             // Show conversation list
             document.getElementById('conversationList').style.display = 'block';
+            document.getElementById('emailDetailPanel').style.display = 'flex';
         }
 
         // ===== CHAT VIEW =====
@@ -3230,7 +3215,6 @@ Be concise, professional, and actionable.`
             view.className = 'tab-view';
             view.innerHTML = `
                 <div class="tab-view-header">
-                    <h1 class="tab-view-title">💬 Chat</h1>
                     <button class="compose-btn" onclick="startNewChat()">+ New Chat</button>
                 </div>
                 <div id="chatConversationsList" class="tab-view-content">
@@ -3552,7 +3536,6 @@ Be concise, professional, and actionable.`
             view.className = 'tab-view';
             view.innerHTML = `
                 <div class="tab-view-header">
-                    <h1 class="tab-view-title">⚙️ Automations</h1>
                     <button class="compose-btn" onclick="createAutomation()">+ New Automation</button>
                 </div>
                 <div id="automationsList" class="tab-view-content">
@@ -3607,14 +3590,15 @@ Be concise, professional, and actionable.`
                                     >
                                 <span style="font-size: 13px;">${auto.enabled ? 'Enabled' : 'Disabled'}</span>
                             </label>
-                            <button class="icon-btn" onclick="runAutomation('${auto.id}')" title="Run Now">▶️</button>
-                            <button class="icon-btn" onclick="editAutomation('${auto.id}')" title="Edit">✏️</button>
+                            <button class="icon-btn" onclick="runAutomation('${auto.id}')" title="Run Now" data-lucide="circle-play"> </button>
+                            <button class="icon-btn" onclick="editAutomation('${auto.id}')" title="Edit" data-lucide="file-pen-line"> </button>
                             <button class="icon-btn" onclick="deleteAutomation('${auto.id}')" title="Delete">🗑️</button>
                             <button class="icon-btn" onclick="viewAutomationDetail('${auto.id}')" title="View Details & Runs">📊</button>
                         </div>
                     </div>
                 </div>
             `).join('');
+            lucide.createIcons();
         }
 
         function createAutomation() {
@@ -4974,6 +4958,7 @@ Be concise, professional, and actionable.`
         // ===== HELPER FUNCTIONS =====
         function hideAllViews() {
             document.getElementById('conversationList').style.display = 'none';
+            document.getElementById('emailDetailPanel').style.display = 'none';
             document.getElementById('galleryContainer').style.display = 'none';
             document.getElementById('dynamicViewsContainer').style.display = 'block';
             ['chatView', 'chatInterface', 'automationsView', 'remindersView', 'calendarView', 'moneyView', 'settingsView'].forEach(id => {
