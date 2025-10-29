@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frame Email Client</title>
+    <title>Goose Hub</title>
     <style>
         * {
             margin: 0;
@@ -12,9 +12,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #ffffff;
-            color: #000000;
+            color: rgb(16,23,41);
             font-weight: 400;
             line-height: 1.5;
         }
@@ -30,7 +30,7 @@
 
         .login-container {
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             width: 100%;
             max-width: 400px;
             padding: 40px;
@@ -49,7 +49,7 @@
         }
 
         .login-header p {
-            color: #666666;
+            color: rgb(80,91,109);
             font-size: 16px;
             font-weight: 400;
         }
@@ -62,14 +62,14 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #000000;
+            color: rgb(16,23,41);
             font-size: 14px;
         }
 
         .form-group input {
             width: 100%;
             padding: 12px 16px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             border-radius: 0;
             font-size: 16px;
             background: #ffffff;
@@ -109,10 +109,10 @@
 
         .demo-notice {
             background: #F5F5F5;
-            color: #000000;
+            color: rgb(16,23,41);
             padding: 12px;
             margin-bottom: 20px;
-            border-left: 2px solid #000000;
+            border-left: 2px solid rgb(16,23,41);
             font-size: 14px;
         }
 
@@ -125,13 +125,13 @@
 
         .error-message {
             background: #F5F5F5;
-            color: #000000;
-            border-color: #000000;
+            color: rgb(16,23,41);
+            border-color: rgb(16,23,41);
         }
 
         .success-message {
             background: #F5F5F5;
-            color: #000000;
+            color: rgb(16,23,41);
             border-color: #0066FF;
         }
 
@@ -146,7 +146,7 @@
 
         .header {
             background: white;
-            border-bottom: 1px solid #000000;
+
             padding: 12px 20px;
             display: flex;
             align-items: center;
@@ -159,7 +159,7 @@
         .logo {
             font-size: 24px;
             font-weight: 700;
-            color: #000000;
+            color: rgb(16,23,41);
             letter-spacing: -0.5px;
         }
 
@@ -172,26 +172,28 @@
         .search-bar input {
             width: 100%;
             padding: 8px 12px;
-            border: 1px solid #000000;
-            border-radius: 0;
-            background: #ffffff;
+            border: none;
+            border-radius: 8px;
+            background: rgb(244,244,245);
             outline: none;
             font-size: 14px;
         }
 
         .compose-btn {
-            background: #ffffff;
-            color: #000000;
-            border: 1px solid #000000;
+            background: rgb(244,244,245);
+            color: rgb(16,23,41);
+            border: none;
+            border-radius: 30px;
+
             padding: 8px 20px;
-            border-radius: 0;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: normal;
             font-size: 14px;
         }
 
         .compose-btn:hover {
-            background: #F5F5F5;
+            background: rgb(41,101,246);
+            color: #fff;
         }
 
         .header-actions {
@@ -202,8 +204,8 @@
 
         .logout-btn {
             background: #ffffff;
-            color: #000000;
-            border: 1px solid #000000;
+            color: rgb(16,23,41);
+            border: 1px solid rgb(16,23,41);
             padding: 8px 16px;
             border-radius: 0;
             cursor: pointer;
@@ -213,7 +215,7 @@
 
         .container {
             display: flex;
-            max-width: 1200px;
+
             margin: 20px auto;
             gap: 0;
             padding: 0 20px;
@@ -222,34 +224,29 @@
         .sidebar {
             width: 240px;
             background: white;
-            border-right: 1px solid #000000;
-            padding: 0;
-            height: fit-content;
-            position: sticky;
+            border-right: 1px solid rgb(229,229,229);
+            padding: 0 20px 0 0;
+
+
             top: 80px;
+            width: 200px;
         }
 
         .folder-item {
             padding: 10px 12px;
             border-radius: 0;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
             margin-bottom: 0;
-            border-bottom: 1px solid #F5F5F5;
+            width: 160px;
+
             font-size: 14px;
             font-weight: 400;
         }
 
         .folder-item:hover {
-            background: #F5F5F5;
-        }
-
-        .folder-item.active {
-            background: #000000;
-            color: #ffffff;
-            font-weight: 600;
+            background: rgb(244,244,245);
+            border-radius: 8px;
         }
 
         .unread-count {
@@ -270,12 +267,17 @@
             border-radius: 0;
             margin-bottom: 0;
             padding: 12px 16px;
-            border-bottom: 1px solid #F5F5F5;
+            width: 80%;
+
             cursor: pointer;
         }
 
         .conversation:hover {
             background: #F5F5F5;
+        }
+
+        .automationsList .conversation {
+
         }
 
         .conversation-line {
@@ -286,7 +288,7 @@
         }
 
         .timestamp {
-            color: #666666;
+            color: rgb(80,91,109);
             font-size: 13px;
             font-weight: 400;
             white-space: nowrap;
@@ -299,13 +301,13 @@
 
         .subject-line {
             font-size: 14px;
-            font-weight: 700;
-            color: #000000;
+            font-weight: 500;
+            color: rgb(16,23,41);
             margin-bottom: 4px;
         }
 
         .content-snippet {
-            color: #666666;
+            color: rgb(80,91,109);
             font-size: 13px;
             line-height: 1.4;
             font-weight: 400;
@@ -326,7 +328,7 @@
 
         .icon-btn {
             background: transparent;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             width: 32px;
             height: 32px;
             border-radius: 0;
@@ -364,7 +366,7 @@
             width: 600px;
             height: 100%;
             background: white;
-            border-left: 1px solid #000000;
+            border-left: 1px solid rgb(16,23,41);
             z-index: 1001;
             display: flex;
             flex-direction: column;
@@ -376,7 +378,7 @@
 
         .slideover-header {
             padding: 20px;
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid rgb(16,23,41);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -385,7 +387,7 @@
         .slideover-header h2 {
             font-size: 18px;
             font-weight: 600;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .close-btn {
@@ -393,7 +395,7 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: #000000;
+            color: rgb(16,23,41);
             width: 36px;
             height: 36px;
             border-radius: 0;
@@ -424,12 +426,12 @@
 
         .message-sender {
             font-weight: 600;
-            color: #000000;
+            color: rgb(16,23,41);
             font-size: 14px;
         }
 
         .message-time {
-            color: #666666;
+            color: rgb(80,91,109);
             font-size: 13px;
             font-weight: 400;
         }
@@ -439,12 +441,12 @@
             padding: 12px 16px;
             border-radius: 0;
             line-height: 1.5;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .slideover-footer {
             padding: 20px;
-            border-top: 1px solid #000000;
+            border-top: 1px solid rgb(16,23,41);
         }
 
         .reply-actions {
@@ -461,7 +463,7 @@
         .reply-box textarea {
             flex: 1;
             padding: 12px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             border-radius: 0;
             resize: none;
             font-family: inherit;
@@ -491,19 +493,19 @@
         }
 
         .unread {
-            border-left: 2px solid #0066FF;
+            /*border-left: 2px solid #0066FF;*/
         }
 
         .loading, .empty-state {
             text-align: center;
             padding: 40px;
-            color: #666666;
+            color: rgb(80,91,109);
             font-weight: 400;
         }
 
         .empty-state h3 {
             margin-bottom: 8px;
-            color: #000000;
+            color: rgb(16,23,41);
             font-weight: 600;
         }
 
@@ -513,7 +515,7 @@
             top: 20px;
             right: 20px;
             padding: 12px 20px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             background: white;
             z-index: 10000;
         }
@@ -523,11 +525,11 @@
         }
 
         .notification.error {
-            border-left: 2px solid #000000;
+            border-left: 2px solid rgb(16,23,41);
         }
 
         .notification.info {
-            border-left: 2px solid #666666;
+            border-left: 2px solid rgb(80,91,109);
         }
 
         /* Modal styles */
@@ -547,7 +549,7 @@
         .compose-modal {
             background: white;
             padding: 30px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             width: 90%;
             max-width: 600px;
             max-height: 80vh;
@@ -556,7 +558,7 @@
 
         .compose-modal h2 {
             margin-bottom: 20px;
-            color: #000000;
+            color: rgb(16,23,41);
             font-weight: 600;
         }
 
@@ -567,7 +569,7 @@
         .compose-modal textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             border-radius: 0;
             font-size: 14px;
             font-family: inherit;
@@ -582,7 +584,7 @@
         }
 
         .drop-zone {
-            border: 1px dashed #000000;
+            border: 1px dashed rgb(16,23,41);
             border-radius: 0;
             padding: 20px;
             text-align: center;
@@ -590,11 +592,11 @@
             cursor: pointer;
             margin-bottom: 16px;
         }
-        
+
         .drop-zone:hover {
             background: #E5E5E5;
         }
-        
+
         .drop-zone.active {
             background: #E5E5E5;
         }
@@ -608,7 +610,7 @@
 
         .btn-secondary {
             padding: 10px 20px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             background: white;
             border-radius: 0;
             cursor: pointer;
@@ -649,7 +651,7 @@
 
         .gallery-header {
             background: white;
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid rgb(16,23,41);
             padding: 20px;
             margin-bottom: 20px;
         }
@@ -658,7 +660,7 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 16px;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .gallery-controls {
@@ -671,7 +673,7 @@
         .view-mode-switcher {
             display: flex;
             gap: 4px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             padding: 4px;
         }
 
@@ -682,11 +684,11 @@
             border-radius: 0;
             cursor: pointer;
             font-weight: 500;
-            color: #666666;
+            color: rgb(80,91,109);
         }
 
         .view-mode-btn.active {
-            background: #000000;
+            background: rgb(16,23,41);
             color: #ffffff;
         }
 
@@ -741,7 +743,7 @@
 
         .attachment-card {
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             overflow: hidden;
             cursor: pointer;
         }
@@ -775,7 +777,7 @@
         .attachment-filename {
             font-weight: 500;
             font-size: 14px;
-            color: #000000;
+            color: rgb(16,23,41);
             margin-bottom: 4px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -784,7 +786,7 @@
 
         .attachment-meta {
             font-size: 12px;
-            color: #666666;
+            color: rgb(80,91,109);
             display: flex;
             justify-content: space-between;
         }
@@ -792,12 +794,12 @@
         /* Sender View */
         .sender-list {
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             overflow: hidden;
         }
 
         .sender-group {
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid rgb(16,23,41);
         }
 
         .sender-group:last-child {
@@ -838,18 +840,18 @@
         .sender-details h3 {
             font-size: 15px;
             font-weight: 600;
-            color: #000000;
+            color: rgb(16,23,41);
             margin-bottom: 2px;
         }
 
         .sender-details p {
             font-size: 13px;
-            color: #666666;
+            color: rgb(80,91,109);
         }
 
         .sender-count {
             background: #F5F5F5;
-            color: #000000;
+            color: rgb(16,23,41);
             padding: 4px 12px;
             border-radius: 0;
             font-size: 13px;
@@ -872,14 +874,14 @@
 
         .sender-header::after {
             content: '▶';
-            color: #666666;
+            color: rgb(80,91,109);
             font-size: 12px;
         }
 
         .attachment-list-item {
             padding: 12px;
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             margin-bottom: 8px;
             display: flex;
             align-items: center;
@@ -918,7 +920,7 @@
         .attachment-details h4 {
             font-size: 14px;
             font-weight: 500;
-            color: #000000;
+            color: rgb(16,23,41);
             margin-bottom: 4px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -927,7 +929,7 @@
 
         .attachment-details p {
             font-size: 12px;
-            color: #666666;
+            color: rgb(80,91,109);
         }
 
         /* Preview Modal */
@@ -952,7 +954,7 @@
             max-width: 90%;
             max-height: 90%;
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -960,7 +962,7 @@
 
         .preview-header {
             padding: 16px 20px;
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid rgb(16,23,41);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -969,7 +971,7 @@
         .preview-header h3 {
             font-size: 16px;
             font-weight: 600;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .preview-actions {
@@ -995,7 +997,7 @@
 
         .preview-metadata {
             padding: 16px 20px;
-            border-top: 1px solid #000000;
+            border-top: 1px solid rgb(16,23,41);
             background: white;
         }
 
@@ -1007,12 +1009,12 @@
         }
 
         .metadata-label {
-            color: #666666;
+            color: rgb(80,91,109);
             font-weight: 500;
         }
 
         .metadata-value {
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .pagination {
@@ -1022,13 +1024,13 @@
             gap: 8px;
             padding: 20px;
             background: white;
-            border-top: 1px solid #000000;
+            border-top: 1px solid rgb(16,23,41);
             margin-top: 20px;
         }
 
         .pagination button {
             padding: 8px 16px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             background: white;
             border-radius: 0;
             cursor: pointer;
@@ -1045,28 +1047,31 @@
         }
 
         .pagination span {
-            color: #666666;
+            color: rgb(80,91,109);
             font-size: 14px;
         }
 
         /* Filter Buttons */
         .filter-btn {
             padding: 8px 16px;
-            border: 1px solid #000000;
-            background: white;
-            border-radius: 0;
+            background: rgb(244,244,245);
+            color: rgb(16,23,41);
+            border: none;
+            border-radius: 30px;
+
             cursor: pointer;
             font-size: 14px;
         }
 
         .filter-btn:hover {
-            background: #F5F5F5;
+            background: rgb(41,101,246);
+            color: white;
         }
 
         .filter-btn.active {
-            background: #000000;
+            background: rgb(16,23,41);
             color: white;
-            border-color: #000000;
+            border-color: rgb(16,23,41);
         }
 
         /* Notifications */
@@ -1083,7 +1088,7 @@
 
         .notification {
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             padding: 16px;
             display: flex;
             align-items: start;
@@ -1096,21 +1101,21 @@
         }
 
         .notification.error {
-            border-color: #000000;
+            border-color: rgb(16,23,41);
         }
 
         .notification.info {
-            border-color: #666666;
+            border-color: rgb(80,91,109);
         }
 
         .notification.warning {
-            border-color: #000000;
+            border-color: rgb(16,23,41);
         }
 
         .notification-content {
             flex: 1;
             font-size: 14px;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         /* Settings Modal Styles */
@@ -1133,7 +1138,7 @@
 
         .settings-modal {
             background: white;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             padding: 30px;
             max-width: 600px;
             width: 90%;
@@ -1144,12 +1149,12 @@
         .settings-modal h2 {
             margin: 0 0 8px 0;
             font-size: 24px;
-            color: #000000;
+            color: rgb(16,23,41);
             font-weight: 600;
         }
 
         .settings-modal .subtitle {
-            color: #666666;
+            color: rgb(80,91,109);
             margin-bottom: 24px;
             font-size: 14px;
         }
@@ -1157,7 +1162,7 @@
         .settings-section {
             margin-bottom: 24px;
             padding-bottom: 24px;
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid rgb(16,23,41);
         }
 
         .settings-section:last-child {
@@ -1170,7 +1175,7 @@
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 16px;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .form-row {
@@ -1188,14 +1193,14 @@
             margin-bottom: 6px;
             font-weight: 500;
             font-size: 14px;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .form-group-small input,
         .form-group-small select {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             border-radius: 0;
             font-size: 14px;
         }
@@ -1209,7 +1214,7 @@
 
         .help-text {
             font-size: 12px;
-            color: #666666;
+            color: rgb(80,91,109);
             margin-top: 4px;
         }
 
@@ -1219,7 +1224,7 @@
             justify-content: flex-end;
             margin-top: 24px;
             padding-top: 20px;
-            border-top: 1px solid #000000;
+            border-top: 1px solid rgb(16,23,41);
         }
 
         .btn-link {
@@ -1243,7 +1248,7 @@
             margin-bottom: 16px;
             padding: 12px;
             background: #F5F5F5;
-            border: 1px solid #000000;
+            border: 1px solid rgb(16,23,41);
             cursor: pointer;
         }
 
@@ -1258,7 +1263,7 @@
             font-size: 14px;
             font-weight: 500;
             margin: 0;
-            color: #000000;
+            color: rgb(16,23,41);
         }
 
         .collapsible-section {
@@ -1274,40 +1279,39 @@
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
             <div class="login-header">
-                <h1>📧 Frame</h1>
-                <p>Modern Email Client</p>
+                <h1>📧 Goose Hub</h1>
             </div>
-            
+
             <div class="demo-notice">
                 <strong>Demo Mode:</strong> You can use any username/password to login and explore the features.
             </div>
-            
+
             <div id="loginError" class="error-message"></div>
             <div id="loginSuccess" class="success-message"></div>
-            
+
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Username or Email</label>
                     <input type="text" id="username" name="username" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                
+
                 <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
             </form>
-            
+
             <div style="text-align: center; margin: 20px 0; color: #65676b; font-size: 14px;">
                 <span>or</span>
             </div>
-            
-            <button type="button" class="login-btn" id="googleSignInBtn" style="background: white; color: #000000; border: 1px solid #000000; display: flex; align-items: center; justify-content: center; gap: 12px;">
+
+            <button type="button" class="login-btn" id="googleSignInBtn" style="background: white; color: rgb(16,23,41); border: 1px solid rgb(16,23,41); display: flex; align-items: center; justify-content: center; gap: 12px;">
                 <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.593.102-1.17.282-1.709V4.958H.957C.347 6.173 0 7.548 0 9c0 1.452.348 2.827.957 4.042l3.007-2.335z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
                 Sign in with Google
             </button>
-            
+
             <div class="settings-link">
                 <button class="btn-link" onclick="openAccountSettingsModal()">⚙️ Create Account with Settings</button>
             </div>
@@ -1317,16 +1321,15 @@
     <!-- Main App -->
     <div class="main-app" id="mainApp">
         <div class="header">
-            <div class="logo">📧 Frame</div>
+            <div class="logo">📧 Goose Hub</div>
             <div class="search-bar">
-                <input type="text" placeholder="Search emails..." id="searchInput">
+                <input type="text" placeholder="Search" id="searchInput">
                 <div class="search-results" id="searchResults" style="display: none; position: absolute; background: white; border: 1px solid #dadde1; border-radius: 8px; margin-top: 4px; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; width: 400px;"></div>
             </div>
             <div class="header-actions">
                 <button class="compose-btn" id="gooseBtn">Goose</button>
                 <button class="compose-btn" id="composeBtn">Compose</button>
                 <button class="compose-btn" id="debugBtn">Debug</button>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
             </div>
         </div>
 
@@ -1446,7 +1449,7 @@
         <div class="settings-modal">
             <h2>Create New Account</h2>
             <p class="subtitle">Configure your email and AI settings to create a new account</p>
-            
+
             <form id="accountSettingsForm">
                 <!-- Account Credentials -->
                 <div class="settings-section">
@@ -1497,7 +1500,7 @@
                         <input type="checkbox" id="enable-ai" onchange="toggleAISettings(this.checked)">
                         <label for="enable-ai">Enable AI features (Goose Chat, Automations)</label>
                     </div>
-                    
+
                     <div id="ai-settings-section" class="collapsible-section">
                         <div class="form-group-small">
                             <label>LLM Provider *</label>
@@ -1530,7 +1533,7 @@
                         <input type="checkbox" id="enable-calendar" onchange="toggleCalendarSettings(this.checked)">
                         <label for="enable-calendar">Enable calendar sync</label>
                     </div>
-                    
+
                     <div id="calendar-settings-section" class="collapsible-section">
                         <div class="form-group-small">
                             <label>CalDAV Server URL</label>
@@ -1597,7 +1600,7 @@
         let pageSize = 20;
 
         // ===== ERROR HANDLING HELPERS (MUST BE DEFINED EARLY) =====
-        
+
         // Check if user is authenticated with real account
         function isRealAccount() {
             return authToken && authToken !== 'demo-token';
@@ -1630,7 +1633,7 @@
                     showLoginScreen();
                 });
             }
-            
+
             setupEventListeners();
         }
 
@@ -1663,7 +1666,7 @@
             const provider = document.getElementById('new-llm-provider').value;
             const modelInput = document.getElementById('new-model-id');
             const helpText = document.getElementById('model-help-text');
-            
+
             const placeholders = {
                 'anthropic': {
                     placeholder: 'claude-3-5-sonnet-20241022',
@@ -1682,7 +1685,7 @@
                     help: 'Path to your local GGUF model file'
                 }
             };
-            
+
             const config = placeholders[provider] || placeholders['anthropic'];
             modelInput.placeholder = config.placeholder;
             helpText.textContent = config.help;
@@ -1698,16 +1701,16 @@
 
         async function handleAccountCreation(e) {
             e.preventDefault();
-            
+
             const createBtn = document.getElementById('createAccountBtn');
             const originalText = createBtn.textContent;
             createBtn.disabled = true;
             createBtn.textContent = 'Creating Account...';
-            
+
             const formData = new FormData(e.target);
             const aiEnabled = document.getElementById('enable-ai').checked;
             const calendarEnabled = document.getElementById('enable-calendar').checked;
-            
+
             // Build account data
             const accountData = {
                 email: formData.get('email'),
@@ -1717,37 +1720,37 @@
                 smtp_host: formData.get('smtp_host'),
                 smtp_port: parseInt(formData.get('smtp_port'))
             };
-            
+
             // Add AI settings if enabled
             if (aiEnabled) {
                 accountData.llm_provider = formData.get('llm_provider');
                 accountData.api_key = formData.get('api_key');
                 accountData.model_id = formData.get('model_id');
             }
-            
+
             // Add calendar settings if enabled
             if (calendarEnabled) {
                 accountData.caldav_url = formData.get('caldav_url');
                 accountData.caldav_username = formData.get('caldav_username');
                 accountData.caldav_password = formData.get('caldav_password');
             }
-            
+
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(accountData)
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     authToken = data.token;
                     localStorage.setItem('auth_token', authToken);
                     localStorage.setItem('user', JSON.stringify(data.user || { email: accountData.email }));
-                    
+
                     showNotification('Account created successfully!', 'success');
                     closeAccountSettingsModal();
-                    
+
                     setTimeout(() => {
                         showMainApp();
                         loadFolders();
@@ -1788,7 +1791,7 @@
         function showLoginScreen() {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').classList.remove('active');
-            
+
             // Check for OAuth redirect parameters
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
@@ -1796,7 +1799,7 @@
             const oauthSuccess = urlParams.get('oauth_success');
             const error = urlParams.get('error');
             const errorMessage = urlParams.get('message');
-            
+
             // Handle OAuth errors
             if (error) {
                 let displayMessage = 'Authentication failed';
@@ -1811,25 +1814,25 @@
                 window.history.replaceState({}, document.title, '/');
                 return;
             }
-            
+
             // Handle successful OAuth login
             if (token && email) {
                 // Store token and redirect to main app
                 authToken = token;
                 localStorage.setItem('auth_token', authToken);
                 localStorage.setItem('user', JSON.stringify({ email }));
-                
+
                 // Show success message
                 if (oauthSuccess) {
                     showNotification('Successfully signed in with Google! Your emails are being synced...', 'success');
                 }
-                
+
                 // Clean up URL
                 window.history.replaceState({}, document.title, '/');
-                
+
                 showMainApp();
                 loadFolders();
-                
+
                 // Load conversations (sync is happening in background on backend)
                 loadConversations();
             }
@@ -1858,7 +1861,7 @@
                 showNotification('Failed to initiate Google sign in', 'error');
             }
         }
-        
+
         // Auto-login if single user exists (desktop app mode)
         async function checkAutoLogin() {
             try {
@@ -1867,7 +1870,7 @@
                 if (existingToken) {
                     return true; // Already logged in
                 }
-                
+
                 // Try to get single user auto-login
                 const response = await fetch('/api/auth/auto-login');
                 if (response.ok) {
@@ -1877,13 +1880,13 @@
                         authToken = data.token;
                         localStorage.setItem('auth_token', authToken);
                         localStorage.setItem('user', JSON.stringify(data.user));
-                        
+
                         console.log('Auto-login successful for:', data.user.email);
-                        
+
                         // Show main app
                         document.getElementById('loginScreen').style.display = 'none';
                         document.getElementById('mainApp').classList.add('active');
-                        
+
                         // Load initial data
                         loadFolders();
                         loadConversations();
@@ -1931,36 +1934,36 @@
 
         async function handleLogin(e) {
             e.preventDefault();
-            
+
             const loginBtn = document.getElementById('loginBtn');
             const errorDiv = document.getElementById('loginError');
             const successDiv = document.getElementById('loginSuccess');
-            
+
             loginBtn.disabled = true;
             loginBtn.textContent = 'Signing in...';
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
-            
+
             const formData = new FormData(e.target);
             const username = formData.get('username');
             const password = formData.get('password');
-            
+
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     authToken = data.token || 'demo-token';
                     localStorage.setItem('auth_token', authToken);
                     localStorage.setItem('user', JSON.stringify(data.user || { username, email: username }));
-                    
+
                     successDiv.textContent = 'Login successful!';
                     successDiv.style.display = 'block';
-                    
+
                     setTimeout(() => {
                         showMainApp();
                         loadFolders();
@@ -1975,10 +1978,10 @@
                 authToken = 'demo-token';
                 localStorage.setItem('auth_token', authToken);
                 localStorage.setItem('user', JSON.stringify({ username, email: username }));
-                
+
                 successDiv.textContent = 'Demo login successful!';
                 successDiv.style.display = 'block';
-                
+
                 setTimeout(() => {
                     showMainApp();
                     loadFolders();
@@ -2002,7 +2005,7 @@
                 const response = await fetch('/api/folders', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     folders = await response.json();
                 } else {
@@ -2011,7 +2014,7 @@
             } catch (error) {
                 folders = getMockFolders();
             }
-            
+
             renderFolders();
         }
 
@@ -2019,14 +2022,14 @@
             console.log('renderFolders called with', folders.length, 'folders');
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = '';
-            
+
             // Standard folders that should always be visible
             const standardFolders = ['INBOX', 'Sent', 'Drafts', 'Trash', 'Spam', 'Archive', 'Starred'];
-            
+
             // Separate standard and non-standard folders
             const standard = folders.filter(f => standardFolders.includes(f.name));
             const nonStandard = folders.filter(f => !standardFolders.includes(f.name));
-            
+
             // Render standard folders
             standard.forEach(folder => {
                 const folderItem = document.createElement('div');
@@ -2038,7 +2041,7 @@
                 folderItem.addEventListener('click', () => selectFolder(folder.name));
                 sidebar.appendChild(folderItem);
             });
-            
+
             // Add "Show More" collapsible section for non-standard folders
             if (nonStandard.length > 0) {
                 const showMoreHeader = document.createElement('div');
@@ -2048,11 +2051,11 @@
                 showMoreHeader.innerHTML = `
                     <span style="color: #65676b; font-size: 13px;">▶ Show More (${nonStandard.length})</span>
                 `;
-                
+
                 const nonStandardContainer = document.createElement('div');
                 nonStandardContainer.id = 'nonStandardFolders';
                 nonStandardContainer.style.display = 'none';
-                
+
                 nonStandard.forEach(folder => {
                     const folderItem = document.createElement('div');
                     folderItem.className = 'folder-item' + (folder.id === currentFolder ? ' active' : '');
@@ -2064,7 +2067,7 @@
                     folderItem.addEventListener('click', () => selectFolder(folder.name));
                     nonStandardContainer.appendChild(folderItem);
                 });
-                
+
                 showMoreHeader.addEventListener('click', () => toggleNonStandardFolders());
                 sidebar.appendChild(showMoreHeader);
                 sidebar.appendChild(nonStandardContainer);
@@ -2090,7 +2093,7 @@
             // Add Chat/Goose tab
             const chatTab = document.createElement('div');
             chatTab.className = 'folder-item';
-            chatTab.innerHTML = `<span>🤖 Goose Chat</span>`;
+            chatTab.innerHTML = `<span>Chat</span>`;
             chatTab.addEventListener('click', (e) => showChatView(e));
             sidebar.appendChild(chatTab);
 
@@ -2134,7 +2137,7 @@
         function toggleNonStandardFolders() {
             const container = document.getElementById('nonStandardFolders');
             const header = document.getElementById('showMoreFolders');
-            
+
             if (container.style.display === 'none') {
                 container.style.display = 'block';
                 header.innerHTML = `<span style="color: #65676b; font-size: 13px;">▼ Show Less</span>`;
@@ -2146,14 +2149,14 @@
 
         function selectFolder(folderId) {
             currentFolder = folderId;
-            
+
             // Hide all special views
             hideAttachmentGallery();
             hideAllViews();
-            
+
             // Show conversation list for email folders
             document.getElementById('conversationList').style.display = 'block';
-            
+
             // Update active state
             document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
             event.target.closest('.folder-item').classList.add('active');
@@ -2163,15 +2166,15 @@
         async function loadConversations() {
             const container = document.getElementById('conversationList');
             container.innerHTML = '<div class="loading">Loading conversations...</div>';
-            
+
             try {
                 const response = await fetch(`/api/conversations?folder=${currentFolder}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     conversations = await response.json();
-                    
+
                     // Filter out empty chat conversations from inbox view
                     if (currentFolder === 'INBOX') {
                         conversations = conversations.filter(conv => {
@@ -2200,18 +2203,18 @@
             } catch (error) {
                 conversations = getMockConversations();
             }
-            
+
             renderConversations();
         }
 
         function renderConversations() {
             const container = document.getElementById('conversationList');
-            
+
             if (conversations.length === 0) {
                 container.innerHTML = '<div class="empty-state"><h3>No conversations found</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
             conversations.forEach(conv => {
                 const convEl = createConversationElement(conv);
@@ -2222,18 +2225,18 @@
         function createConversationElement(conv) {
             const div = document.createElement('div');
             div.className = `conversation ${conv.unread_count > 0 ? 'unread' : ''}`;
-            
+
             // Add special styling for chat and automation conversations
             if (conv.conversation_type === 'chat') {
                 div.style.borderLeft = '4px solid #10a37f';
             } else if (conv.conversation_type === 'automation') {
                 div.style.borderLeft = '4px solid #ff9800';
             }
-            
+
             div.innerHTML = `
                 <div class="conversation-line">
                     <div class="conversation-info">
-                        ${conv.icon ? `<span style="font-size: 20px; margin-right: 8px;">${conv.icon}</span>` : ''}
+
                         ${conv.conversation_type === 'chat' ? `<span style="font-size: 16px; margin-right: 8px;">🤖</span>` : ''}
                         ${conv.conversation_type === 'automation' ? `<span style="font-size: 16px; margin-right: 8px;">⚙️</span>` : ''}
                         <div class="subject-line">${escapeHtml(conv.subject)}</div>
@@ -2248,7 +2251,7 @@
                     <div class="timestamp">${formatDate(conv.last_message_date)}</div>
                 </div>
             `;
-            
+
             // Add context menu
             div.addEventListener('contextmenu', (e) => showContextMenu(e, conv));
             div.addEventListener('click', () => {
@@ -2259,7 +2262,7 @@
                     openSlideover(conv);
                 }
             });
-            
+
             return div;
         }
 
@@ -2267,21 +2270,21 @@
             // Hide inbox and show chat interface
             hideAllViews();
             document.getElementById('conversationList').style.display = 'none';
-            
+
             // Update sidebar to show chat as active
             document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
-            
+
             // Open the chat interface
             openChatConversation(conversationId);
         }
 
         function showContextMenu(e, conv) {
             e.preventDefault();
-            
+
             // Remove any existing context menu
             const existing = document.querySelector('.context-menu');
             if (existing) existing.remove();
-            
+
             const menu = document.createElement('div');
             menu.className = 'context-menu';
             menu.style.cssText = `
@@ -2295,7 +2298,7 @@
                 z-index: 10000;
                 min-width: 200px;
             `;
-            
+
             const menuItems = [
                 { label: '🤖 Ask Goose about this', action: () => askGooseAboutEmail(conv) },
                 { label: '↩️ Reply', action: () => replyAllDirect(conv.id) },
@@ -2303,7 +2306,7 @@
                 { label: '📁 Move', action: () => moveConversation(conv.id) },
                 { label: '🗑️ Delete', action: () => deleteConv(conv.id) },
             ];
-            
+
             menuItems.forEach(item => {
                 const menuItem = document.createElement('div');
                 menuItem.textContent = item.label;
@@ -2316,9 +2319,9 @@
                 };
                 menu.appendChild(menuItem);
             });
-            
+
             document.body.appendChild(menu);
-            
+
             // Close menu on click outside
             setTimeout(() => {
                 document.addEventListener('click', () => menu.remove(), { once: true });
@@ -2344,7 +2347,7 @@
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         content: `I need help with this email:\n\nSubject: ${conv.subject}\n\nCan you help me understand it and suggest a response?`
                     })
                 });
@@ -2356,9 +2359,9 @@
             const date = new Date(dateStr);
             const now = new Date();
             const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
-            
+
             if (diffHours < 1) return 'Just now';
-            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffHours < 24) return `${diffHours}h`;
             if (diffHours < 48) return 'Yesterday';
             return date.toLocaleDateString();
         }
@@ -2373,25 +2376,25 @@
         function showNotification(message, type = 'info') {
             const container = document.getElementById('notificationContainer');
             if (!container) return;
-            
+
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
-            
+
             const icons = {
                 success: '✓',
                 error: '✗',
                 info: 'ℹ',
                 warning: '⚠'
             };
-            
+
             notification.innerHTML = `
                 <div style="font-size: 20px;">${icons[type] || icons.info}</div>
                 <div class="notification-content">${escapeHtml(message)}</div>
                 <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #65676b;">×</button>
             `;
-            
+
             container.appendChild(notification);
-            
+
             // Auto-dismiss after 3 seconds
             setTimeout(() => {
                 notification.style.animation = 'slideIn 0.3s ease-out reverse';
@@ -2403,7 +2406,7 @@
             }, 3000);
         }
 
-        // Handle API errors gracefully  
+        // Handle API errors gracefully
         function handleApiError(error, context, response = null) {
             console.error(`${context} error:`, error);
             if (response) {
@@ -2430,36 +2433,36 @@
         async function handleSearch(e) {
             const query = e.target.value.toLowerCase();
             const searchResults = document.getElementById('searchResults');
-            
+
             if (!query) {
                 searchResults.style.display = 'none';
                 renderConversations();
                 return;
             }
-            
+
             // Show search results with animation
             searchResults.style.display = 'block';
             searchResults.style.animation = 'slideDown 0.2s ease-out';
             searchResults.innerHTML = '<div style="padding: 12px; color: #65676b;">Searching...</div>';
-            
+
             // Try API search first
             try {
                 const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const results = await response.json();
                     if (results.emails && results.emails.length > 0) {
                         // Show results in dropdown
                         searchResults.innerHTML = results.emails.slice(0, 5).map(email => `
-                            <div style="padding: 12px; border-bottom: 1px solid #e4e6eb; cursor: pointer;" 
+                            <div style="padding: 12px; border-bottom: 1px solid #e4e6eb; cursor: pointer;"
                                  onclick="loadConversationById('${email.thread_id || email.id}')">
                                 <div style="font-weight: 600; margin-bottom: 4px;">${email.subject}</div>
                                 <div style="font-size: 12px; color: #65676b;">${email.from_address}</div>
                             </div>
                         `).join('');
-                        
+
                         // Convert search results to conversation format and display
                         displaySearchResults(results.emails);
                         return;
@@ -2468,20 +2471,20 @@
             } catch (error) {
                 console.log('API search failed, using local filter:', error);
             }
-            
+
             // Fallback to local filtering
-            const filtered = conversations.filter(conv => 
+            const filtered = conversations.filter(conv =>
                 conv.subject.toLowerCase().includes(query) ||
                 conv.preview.toLowerCase().includes(query) ||
                 conv.participants.some(p => p.toLowerCase().includes(query))
             );
-            
+
             const container = document.getElementById('conversationList');
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state"><h3>No results found</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
             filtered.forEach(conv => {
                 const convEl = createConversationElement(conv);
@@ -2495,7 +2498,7 @@
                 container.innerHTML = '<div class="empty-state"><h3>No results found</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
             emails.forEach(email => {
                 // Convert email to conversation format
@@ -2517,7 +2520,7 @@
             notification.className = `notification ${type}`;
             notification.textContent = message;
             document.body.appendChild(notification);
-            
+
             setTimeout(() => notification.remove(), 3000);
         }
 
@@ -2532,7 +2535,7 @@
                     },
                     body: JSON.stringify({ title: 'New Chat' })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Chat conversation created:', data);
@@ -2559,7 +2562,7 @@
         function openComposeModal(options = {}) {
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
-            
+
             const modal = document.createElement('div');
             modal.className = 'compose-modal';
             modal.innerHTML = `
@@ -2585,45 +2588,45 @@
                     </div>
                 </form>
             `;
-            
+
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
-            
+
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) closeComposeModal();
             });
-            
+
             // Setup drag and drop
             const dropZone = document.getElementById('composeDropZone');
             const fileInput = document.getElementById('composeFileInput');
-            
+
             dropZone.addEventListener('click', () => fileInput.click());
-            
+
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropZone.style.borderColor = '#7C9CBF';
                 dropZone.style.background = '#f0f7ff';
             });
-            
+
             dropZone.addEventListener('dragleave', () => {
                 dropZone.style.borderColor = '#dadde1';
                 dropZone.style.background = '#f9fafb';
             });
-            
+
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropZone.style.borderColor = '#dadde1';
                 dropZone.style.background = '#f9fafb';
-                
+
                 const files = Array.from(e.dataTransfer.files);
                 handleFileUpload(files, dropZone);
             });
-            
+
             fileInput.addEventListener('change', (e) => {
                 const files = Array.from(e.target.files);
                 handleFileUpload(files, dropZone);
             });
-            
+
             // Also enable drag-drop on textarea
             const textarea = modal.querySelector('textarea');
             textarea.addEventListener('drop', (e) => {
@@ -2631,11 +2634,11 @@
                 const files = Array.from(e.dataTransfer.files);
                 handleFileUpload(files, dropZone);
             });
-            
+
             document.getElementById('composeForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
-                
+
                 try {
                     await fetch('/api/emails/send', {
                         method: 'POST',
@@ -2649,7 +2652,7 @@
                             body_text: formData.get('body')
                         })
                     });
-                    
+
                     showNotification('Email sent successfully!', 'success');
                     closeComposeModal();
                     loadConversations();
@@ -2663,14 +2666,14 @@
 
         function handleFileUpload(files, dropZone) {
             if (files.length === 0) return;
-            
+
             const fileList = files.map(f => f.name).join(', ');
             dropZone.innerHTML = `
                 <div style="color: #7C9CBF;">
                     📎 ${files.length} file(s) attached: ${fileList}
                 </div>
             `;
-            
+
             // In a real implementation, upload files to server
             showNotification(`${files.length} file(s) attached`, 'success');
         }
@@ -2765,12 +2768,12 @@ Be concise, professional, and actionable.`
             const overlay = document.getElementById('slideoverOverlay');
             const subject = document.getElementById('slideoverSubject');
             const content = document.getElementById('slideoverContent');
-            
+
             subject.textContent = conv.subject;
-            
+
             // Load conversation messages
             loadConversationMessages(conv.id);
-            
+
             overlay.classList.add('active');
         }
 
@@ -2783,16 +2786,16 @@ Be concise, professional, and actionable.`
         async function loadConversationMessages(convId) {
             const content = document.getElementById('slideoverContent');
             content.innerHTML = '<div class="loading">Loading messages...</div>';
-            
+
             try {
                 const response = await fetch(`/api/conversations/${convId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Loaded data:', data);
-                    
+
                     // Check if it's a conversation object with messages array
                     let messages;
                     if (data.messages && Array.isArray(data.messages)) {
@@ -2803,7 +2806,7 @@ Be concise, professional, and actionable.`
                         messages = [data];
                     }
                     console.log('Rendering messages:', messages);
-                    
+
                     renderEmailMessages(messages);
                 } else {
                     console.error('API failed with status:', response.status);
@@ -2817,18 +2820,18 @@ Be concise, professional, and actionable.`
 
         function renderEmailMessages(messages) {
             const content = document.getElementById('slideoverContent');
-            
-            
+
+
             if (!messages || messages.length === 0) {
                 content.innerHTML = '<div class="empty-state"><h3>No messages found</h3></div>';
                 return;
             }
-            
+
             content.innerHTML = '';
             messages.forEach(msg => {
                 // Determine if this is an email message or chat message
                 const isEmail = msg.message_id || msg.from_address;
-                
+
                 if (isEmail) {
                     // Render email message
                     const msgEl = document.createElement('div');
@@ -2862,9 +2865,9 @@ Be concise, professional, and actionable.`
             const textarea = document.getElementById('quickReplyText');
             const fileInput = document.getElementById('replyFileInput');
             const text = textarea.value.trim();
-            
+
             if (!text || !currentConversation) return;
-            
+
             // Handle file attachments
             const files = fileInput.files;
             if (files.length > 0) {
@@ -2872,7 +2875,7 @@ Be concise, professional, and actionable.`
                 showNotification(`Reply with ${files.length} attachment(s): ${fileNames}`, 'info');
                 // In real implementation, upload files to server
             }
-            
+
             // Setup drag-drop on reply textarea
             textarea.addEventListener('dragover', (e) => e.preventDefault());
             textarea.addEventListener('drop', (e) => {
@@ -2885,7 +2888,7 @@ Be concise, professional, and actionable.`
                     showNotification(`${droppedFiles.length} file(s) attached to reply`, 'success');
                 }
             });
-            
+
             try {
                 await fetch('/api/emails/send', {
                     method: 'POST',
@@ -2899,7 +2902,7 @@ Be concise, professional, and actionable.`
                         body_text: text
                     })
                 });
-                
+
                 textarea.value = '';
                 fileInput.value = '';
                 showNotification('Reply sent!', 'success');
@@ -2908,7 +2911,7 @@ Be concise, professional, and actionable.`
                 console.log('Quick reply (demo mode):', text);
                 textarea.value = '';
                 showNotification('Reply sent (demo mode)!', 'success');
-                
+
                 // Add message to chat in demo mode
                 const content = document.getElementById('slideoverContent');
                 const msgEl = document.createElement('div');
@@ -2955,7 +2958,7 @@ Be concise, professional, and actionable.`
         function replyAllDirect(convId) {
             const conv = conversations.find(c => c.id === convId);
             if (!conv) return;
-            
+
             openComposeModal({
                 to: conv.participants.join(', '),
                 subject: 'Re: ' + conv.subject
@@ -2971,7 +2974,7 @@ Be concise, professional, and actionable.`
         function moveConversation(convId) {
             const folders = ['inbox', 'sent', 'drafts', 'starred', 'trash'];
             const folderName = prompt('Move to folder:\n' + folders.join('\n'));
-            
+
             if (folderName && folders.includes(folderName.toLowerCase())) {
                 console.log('Move conversation', convId, 'to', folderName);
                 showNotification(`Moved to ${folderName}`, 'success');
@@ -2981,13 +2984,13 @@ Be concise, professional, and actionable.`
 
         async function deleteConv(convId) {
             if (!confirm('Move this conversation to trash?')) return;
-            
+
             try {
                 await fetch(`/api/emails/${convId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 showNotification('Conversation moved to trash', 'success');
                 loadConversations();
             } catch (error) {
@@ -3051,7 +3054,7 @@ Be concise, professional, and actionable.`
         function getMockMessages(convId) {
             const conv = conversations.find(c => c.id === convId);
             if (!conv) return [];
-            
+
             // Generate mock messages based on conversation
             if (convId === '1') {
                 return [
@@ -3088,7 +3091,7 @@ Be concise, professional, and actionable.`
                     }
                 ];
             }
-            
+
             return [{ from: conv.participants[0], date: conv.last_message_date, body: conv.preview }];
         }
 
@@ -3099,16 +3102,16 @@ Be concise, professional, and actionable.`
         function showAttachmentGallery(event) {
             // Hide conversation list
             document.getElementById('conversationList').style.display = 'none';
-            
+
             // Show gallery
             const gallery = document.getElementById('galleryContainer');
             gallery.classList.add('active');
             gallery.style.display = 'block';
-            
+
             // Update sidebar active state
             document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
             event.target.closest('.folder-item').classList.add('active');
-            
+
             // Load attachments
             loadGalleryRecents();
         }
@@ -3117,7 +3120,7 @@ Be concise, professional, and actionable.`
             // Hide gallery
             document.getElementById('galleryContainer').classList.remove('active');
             document.getElementById('galleryContainer').style.display = 'none';
-            
+
             // Show conversation list
             document.getElementById('conversationList').style.display = 'block';
         }
@@ -3131,7 +3134,7 @@ Be concise, professional, and actionable.`
                 document.getElementById('dynamicViewsContainer').appendChild(chatView);
             }
             chatView.style.display = 'block';
-            
+
             // Handle both event object and conversation ID
             if (typeof eventOrId === 'string') {
                 // It's a conversation ID, open it directly
@@ -3163,12 +3166,12 @@ Be concise, professional, and actionable.`
         async function loadChatConversations() {
             const container = document.getElementById('chatConversationsList');
             if (!container) return;
-            
+
             try {
                 const response = await fetch('/api/chat/conversations', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const conversations = await response.json();
                     renderChatConversations(conversations);
@@ -3186,7 +3189,7 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><h3>No chat conversations yet</h3><p>Start a new chat to get help with your emails</p></div>';
                 return;
             }
-            
+
             container.innerHTML = conversations.map(conv => `
                 <div class="conversation" onclick="openChatConversation('${conv.id}')" style="cursor: pointer;">
                     <div class="conversation-line">
@@ -3216,7 +3219,7 @@ Be concise, professional, and actionable.`
                     },
                     body: JSON.stringify({ title: 'New Chat' })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     openChatConversation(data.id);
@@ -3256,8 +3259,8 @@ Be concise, professional, and actionable.`
                     </div>
                     <div style="padding: 16px; border-top: 1px solid #e4e6eb;">
                         <div style="display: flex; gap: 8px;">
-                            <textarea id="chatMessageInput" placeholder="Type your message... (Shift+Enter for new line)" 
-                                style="flex: 1; padding: 12px; border: 1px solid #dadde1; border-radius: 8px; resize: none; font-family: inherit; font-size: 14px;" 
+                            <textarea id="chatMessageInput" placeholder="Type your message... (Shift+Enter for new line)"
+                                style="flex: 1; padding: 12px; border: 1px solid #dadde1; border-radius: 8px; resize: none; font-family: inherit; font-size: 14px;"
                                 rows="3"
                                 onkeydown="handleChatInputKeydown(event)"></textarea>
                             <button onclick="sendChatMessage()" class="compose-btn" style="align-self: flex-end; height: fit-content;">Send</button>
@@ -3271,12 +3274,12 @@ Be concise, professional, and actionable.`
         async function loadChatMessages(conversationId) {
             const container = document.getElementById('chatMessagesContainer');
             if (!container) return;
-            
+
             try {
                 const response = await fetch(`/api/chat/conversations/${conversationId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const messages = await response.json();
                     renderChatMessages(messages);
@@ -3294,7 +3297,7 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
                 return;
             }
-            
+
             container.innerHTML = messages.map(msg => {
                 const isUser = msg.role === 'user';
                 const timestamp = new Date(msg.created_at).toLocaleTimeString();
@@ -3307,7 +3310,7 @@ Be concise, professional, and actionable.`
                     </div>
                 `;
             }).join('');
-            
+
             // Scroll to bottom
             container.scrollTop = container.scrollHeight;
         }
@@ -3324,16 +3327,16 @@ Be concise, professional, and actionable.`
             const chatInterface = document.getElementById('chatInterface');
             const conversationId = chatInterface?.dataset.conversationId;
             console.log('Sending message to conversation:', conversationId);
-            
+
             if (!input || !conversationId) return;
-            
+
             const content = input.value.trim();
             if (!content) return;
-            
+
             // Clear input and disable
             input.value = '';
             input.disabled = true;
-            
+
             // Add user message to UI immediately
             const container = document.getElementById('chatMessagesContainer');
             const userMsgHtml = `
@@ -3345,7 +3348,7 @@ Be concise, professional, and actionable.`
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', userMsgHtml);
-            
+
             // Add loading indicator
             const loadingHtml = `
                 <div id="chatLoading" style="display: flex; justify-content: flex-start;">
@@ -3356,7 +3359,7 @@ Be concise, professional, and actionable.`
             `;
             container.insertAdjacentHTML('beforeend', loadingHtml);
             container.scrollTop = container.scrollHeight;
-            
+
             try {
                 console.log('Posting message to:', `/api/chat/conversations/${conversationId}/messages`);
                 const response = await fetch(`/api/chat/conversations/${conversationId}/messages`, {
@@ -3367,14 +3370,14 @@ Be concise, professional, and actionable.`
                     },
                     body: JSON.stringify({ content })
                 });
-                
+
                 console.log('Message response status:', response.status);
                 // Remove loading indicator
                 document.getElementById('chatLoading')?.remove();
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // Display tool calls if any
                     if (data.tool_calls && data.tool_calls.length > 0) {
                         for (const toolCall of data.tool_calls) {
@@ -3390,7 +3393,7 @@ Be concise, professional, and actionable.`
                             container.insertAdjacentHTML('beforeend', toolHtml);
                         }
                     }
-                    
+
                     // Display assistant response
                     const assistantHtml = `
                         <div style="display: flex; justify-content: flex-start;">
@@ -3423,7 +3426,7 @@ Be concise, professional, and actionable.`
             const chatInterface = document.getElementById('chatInterface');
             const conversationId = chatInterface?.dataset.conversationId;
             if (!conversationId) return;
-            
+
             try {
                 await fetch(`/api/chat/conversations/${conversationId}`, {
                     method: 'DELETE',
@@ -3435,11 +3438,11 @@ Be concise, professional, and actionable.`
                 showNotification('Failed to delete conversation', 'error');
             }
         }
-        
+
         async function deleteChatConversationFromList(conversationId) {
             // Delete from list view (no confirmation)
             if (!conversationId) return;
-            
+
             try {
                 await fetch(`/api/chat/conversations/${conversationId}`, {
                     method: 'DELETE',
@@ -3486,12 +3489,12 @@ Be concise, professional, and actionable.`
         async function loadAutomations() {
             const container = document.getElementById('automationsList');
             if (!container) return;
-            
+
             try {
                 const response = await fetch('/api/automations', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const automations = await response.json();
                     renderAutomations(automations);
@@ -3509,7 +3512,7 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><h3>No automations yet</h3><p>Create an automation to run AI tasks on a schedule</p></div>';
                 return;
             }
-            
+
             container.innerHTML = automations.map(auto => `
                 <div class="conversation" style="padding: 16px; background: white; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -3523,8 +3526,8 @@ Be concise, professional, and actionable.`
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <label style="display: flex; align-items: center; cursor: pointer;">
-                                <input type="checkbox" ${auto.enabled ? 'checked' : ''} 
-                                    onchange="toggleAutomation('${auto.id}', this.checked)" 
+                                <input type="checkbox" ${auto.enabled ? 'checked' : ''}
+                                    onchange="toggleAutomation('${auto.id}', this.checked)"
                                     style="margin-right: 4px;">
                                 <span style="font-size: 13px;">${auto.enabled ? 'Enabled' : 'Disabled'}</span>
                             </label>
@@ -3639,9 +3642,9 @@ Be concise, professional, and actionable.`
 
         async function runAutomation(automationId) {
             if (!confirm('Run this automation now?')) return;
-            
+
             showNotification('Running automation...', 'info');
-            
+
             try {
                 const response = await fetch(`/api/automations/${automationId}/trigger`, {
                     method: 'POST',
@@ -3650,7 +3653,7 @@ Be concise, professional, and actionable.`
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 if (response.ok) {
                     const result = await response.json();
                     showNotification('✅ Automation completed! Check Goose Chat for results.', 'success');
@@ -3663,17 +3666,17 @@ Be concise, professional, and actionable.`
                 showNotification('Failed to run automation', 'error');
             }
         }
-        
+
         async function viewAutomationTools() {
             try {
                 const response = await fetch('/api/agent/tools', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     const tools = data.tools;
-                    
+
                     const modal = document.createElement('div');
                     modal.id = 'toolsModal';
                     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; overflow-y: auto;';
@@ -3749,14 +3752,14 @@ Be concise, professional, and actionable.`
                 const response = await fetch(`/api/automations/${id}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (!response.ok) {
                     showNotification('Failed to load automation', 'error');
                     return;
                 }
-                
+
                 const automation = await response.json();
-                
+
                 // Create edit modal
                 const modal = document.createElement('div');
                 modal.id = 'automationEditModal';
@@ -3767,17 +3770,17 @@ Be concise, professional, and actionable.`
                             <h2 style="margin: 0; font-size: 20px;">Edit Automation</h2>
                             <button onclick="document.getElementById('automationEditModal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
                         </div>
-                        
+
                         <div class="form-group">
                             <label style="font-weight: 600; display: block; margin-bottom: 8px;">Name</label>
                             <input type="text" id="editAutomationName" value="${escapeHtml(automation.name)}" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; font-size: 14px;">
                         </div>
-                        
+
                         <div class="form-group">
                             <label style="font-weight: 600; display: block; margin-bottom: 8px;">Description (optional)</label>
                             <input type="text" id="editAutomationDescription" value="${escapeHtml(automation.description || '')}" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; font-size: 14px;">
                         </div>
-                        
+
                         <div class="form-group">
                             <label style="font-weight: 600; display: block; margin-bottom: 8px;">Schedule (cron expression)</label>
                             <select id="editAutomationSchedulePreset" onchange="updateEditScheduleInput(this.value)" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; margin-bottom: 8px; font-size: 14px;">
@@ -3793,34 +3796,34 @@ Be concise, professional, and actionable.`
                             <div style="font-size: 12px; color: #65676b; margin-top: 4px;">📅 ${escapeHtml(automation.schedule_human)}</div>
                             <small style="color: #65676b; font-size: 12px;">Format: minute hour day month weekday</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label style="font-weight: 600; display: block; margin-bottom: 8px;">AI Prompt</label>
                             <textarea id="editAutomationPrompt" placeholder="Summarize all unread emails from the last 24 hours" style="width: 100%; padding: 10px; border: 1px solid #dadde1; border-radius: 6px; resize: vertical; font-size: 14px; font-family: inherit;" rows="6">${escapeHtml(automation.prompt)}</textarea>
                             <small style="color: #65676b; font-size: 12px;">This prompt will be sent to the AI agent when the automation runs</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label style="display: flex; align-items: center; cursor: pointer;">
                                 <input type="checkbox" id="editAutomationEnabled" ${automation.enabled ? 'checked' : ''} style="margin-right: 8px;">
                                 <span style="font-weight: 600;">Enabled</span>
                             </label>
                         </div>
-                        
+
                         <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;">
                             <button onclick="document.getElementById('automationEditModal').remove()" style="padding: 10px 20px; border: 1px solid #dadde1; background: white; border-radius: 6px; cursor: pointer; font-size: 14px;">Cancel</button>
                             <button onclick="saveAutomationEdit('${id}')" class="compose-btn" style="padding: 10px 20px;">Save Changes</button>
                         </div>
                     </div>
                 `;
-                
+
                 document.body.appendChild(modal);
             } catch (error) {
                 console.error('Failed to load automation for editing:', error);
                 showNotification('Failed to load automation', 'error');
             }
         }
-        
+
         function updateEditScheduleInput(preset) {
             const input = document.getElementById('editAutomationSchedule');
             if (preset && input) {
@@ -3834,7 +3837,7 @@ Be concise, professional, and actionable.`
             const schedule = document.getElementById('editAutomationSchedule').value.trim();
             const prompt = document.getElementById('editAutomationPrompt').value.trim();
             const enabled = document.getElementById('editAutomationEnabled').checked;
-            
+
             if (!name) {
                 showNotification('Please enter a name', 'error');
                 return;
@@ -3847,7 +3850,7 @@ Be concise, professional, and actionable.`
                 showNotification('Please enter a prompt', 'error');
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/automations/${id}`, {
                     method: 'PUT',
@@ -3857,7 +3860,7 @@ Be concise, professional, and actionable.`
                     },
                     body: JSON.stringify({ name, description: description || null, schedule, prompt, enabled })
                 });
-                
+
                 if (response.ok) {
                     showNotification('Automation updated successfully', 'success');
                     document.getElementById('automationEditModal').remove();
@@ -3892,21 +3895,21 @@ Be concise, professional, and actionable.`
                 const autoResponse = await fetch(`/api/automations/${automationId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (!autoResponse.ok) {
                     showNotification('Failed to load automation details', 'error');
                     return;
                 }
-                
+
                 const automation = await autoResponse.json();
-                
+
                 // Fetch automation runs
                 const runsResponse = await fetch(`/api/automations/${automationId}/runs`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 const runs = runsResponse.ok ? await runsResponse.json() : [];
-                
+
                 // Create modal
                 const modal = document.createElement('div');
                 modal.id = 'automationDetailModal';
@@ -3917,7 +3920,7 @@ Be concise, professional, and actionable.`
                             <h2 style="margin: 0; font-size: 20px;">Automation Details</h2>
                             <button onclick="document.getElementById('automationDetailModal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
                         </div>
-                        
+
                         <!-- Automation Info -->
                         <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                             <div style="margin-bottom: 12px;">
@@ -3945,7 +3948,7 @@ Be concise, professional, and actionable.`
                             </div>
                             <button class="compose-btn" onclick="saveAutomationDetails('${automationId}')" style="width: 100%;">Save Changes</button>
                         </div>
-                        
+
                         <!-- Runs History -->
                         <div>
                             <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Run History</h3>
@@ -3971,21 +3974,21 @@ Be concise, professional, and actionable.`
                         </div>
                     </div>
                 `;
-                
+
                 document.body.appendChild(modal);
             } catch (error) {
                 console.error('Failed to load automation details:', error);
                 showNotification('Failed to load automation details', 'error');
             }
         }
-        
+
         async function saveAutomationDetails(automationId) {
             const name = document.getElementById('editName').value;
             const description = document.getElementById('editDescription').value;
             const schedule = document.getElementById('editSchedule').value;
             const prompt = document.getElementById('editPrompt').value;
             const enabled = document.getElementById('editEnabled').checked;
-            
+
             try {
                 const response = await fetch(`/api/automations/${automationId}`, {
                     method: 'PUT',
@@ -3995,7 +3998,7 @@ Be concise, professional, and actionable.`
                     },
                     body: JSON.stringify({ name, description, schedule, prompt, enabled })
                 });
-                
+
                 if (response.ok) {
                     showNotification('Automation updated', 'success');
                     document.getElementById('automationDetailModal').remove();
@@ -4007,7 +4010,7 @@ Be concise, professional, and actionable.`
                 showNotification('Failed to update automation', 'error');
             }
         }
-        
+
         async function viewRunDetail(automationId, runId) {
             // This will open the chat conversation associated with the run
             window.location.hash = '#goose';
@@ -4055,12 +4058,12 @@ Be concise, professional, and actionable.`
         async function loadReminders() {
             const container = document.getElementById('remindersList');
             if (!container) return;
-            
+
             try {
                 const response = await fetch(`/api/reminders?filter=${currentReminderFilter}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const reminders = await response.json();
                     renderReminders(reminders);
@@ -4078,14 +4081,14 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><h3>No reminders found</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = reminders.map(reminder => {
                 const isOverdue = reminder.due_date && new Date(reminder.due_date) < new Date() && !reminder.completed;
                 return `
                 <div class="conversation" style="padding: 16px; background: white; border-radius: 8px; ${reminder.completed ? 'opacity: 0.6;' : ''}">
                     <div style="display: flex; gap: 12px; align-items: start;">
-                        <input type="checkbox" ${reminder.completed ? 'checked' : ''} 
-                            onchange="toggleReminder('${reminder.id}', this.checked)" 
+                        <input type="checkbox" ${reminder.completed ? 'checked' : ''}
+                            onchange="toggleReminder('${reminder.id}', this.checked)"
                             style="margin-top: 4px; cursor: pointer;">
                         <div style="flex: 1;">
                             <div style="font-weight: 600; margin-bottom: 4px; ${reminder.completed ? 'text-decoration: line-through;' : ''}">
@@ -4238,7 +4241,7 @@ Be concise, professional, and actionable.`
             view.innerHTML = `
                 <div style="padding: 20px; max-width: 800px;">
                     <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">⚙️ Settings</h1>
-                    
+
                     <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
                         <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Email Settings</h2>
                         <div class="form-group">
@@ -4250,7 +4253,7 @@ Be concise, professional, and actionable.`
                             <input id="setting-smtp-host" type="text" placeholder="smtp.gmail.com" style="width: 100%; padding: 8px; border: 1px solid #dadde1; border-radius: 4px;">
                         </div>
                     </div>
-                    
+
                     <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
                         <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">AI Agent Settings</h2>
                         <div class="form-group">
@@ -4271,7 +4274,7 @@ Be concise, professional, and actionable.`
                             <input id="setting-model-id" type="text" placeholder="claude-3-5-sonnet-20241022" style="width: 100%; padding: 8px; border: 1px solid #dadde1; border-radius: 4px;">
                         </div>
                     </div>
-                    
+
                     <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
                         <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Calendar Settings</h2>
                         <div class="form-group">
@@ -4287,7 +4290,7 @@ Be concise, professional, and actionable.`
                             <input id="setting-caldav-password" type="password" placeholder="password" style="width: 100%; padding: 8px; border: 1px solid #dadde1; border-radius: 4px;">
                         </div>
                     </div>
-                    
+
                     <div style="background: white; border-radius: 8px; padding: 20px;">
                         <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Personal Money Settings</h2>
                         <div class="form-group">
@@ -4299,15 +4302,15 @@ Be concise, professional, and actionable.`
                             <input id="setting-cashapp-id" type="text" placeholder="$cashtag" style="width: 100%; padding: 8px; border: 1px solid #dadde1; border-radius: 4px;">
                         </div>
                     </div>
-                    
+
                     <div style="margin-top: 20px; text-align: right;">
                         <button class="compose-btn" id="save-settings-btn" style="padding: 12px 32px;">💾 Save Settings</button>
                     </div>
-                    
+
                     <div id="settings-save-status" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
                 </div>
             `;
-            
+
             // Attach event listener after DOM is created
             setTimeout(() => {
                 const saveBtn = document.getElementById('save-settings-btn');
@@ -4315,7 +4318,7 @@ Be concise, professional, and actionable.`
                     saveBtn.addEventListener('click', saveSettings);
                 }
             }, 0);
-            
+
             // Add auto-save listeners after view is created
             setTimeout(() => {
                 const settingInputs = [
@@ -4324,31 +4327,31 @@ Be concise, professional, and actionable.`
                     'setting-caldav-username', 'setting-caldav-password',
                     'setting-bank-account', 'setting-cashapp-id'
                 ];
-                
+
                 settingInputs.forEach(id => {
                     const input = document.getElementById(id);
                     if (input) {
                         input.addEventListener('change', () => saveSettings());
                     }
                 });
-                
+
                 // Load current settings
                 loadSettings();
             }, 100);
-            
+
             return view;
         }
-        
+
         async function loadSettings() {
             try {
                 // Load user settings from database
                 const response = await fetch('/api/settings', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const settings = await response.json();
-                    
+
                     // Populate AI settings
                     if (settings.ai_provider) {
                         const providerSelect = document.getElementById('setting-llm-provider');
@@ -4364,15 +4367,15 @@ Be concise, professional, and actionable.`
                         const modelInput = document.getElementById('setting-model-id');
                         if (modelInput) modelInput.value = settings.ai_model;
                     }
-                    
+
                     console.log('Settings loaded:', settings);
                 }
-                
+
                 // Load environment settings (API keys, etc.)
                 const envResponse = await fetch('/api/settings/env', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (envResponse.ok) {
                     const envSettings = await envResponse.json();
                     if (envSettings.anthropic_api_key) {
@@ -4398,16 +4401,16 @@ Be concise, professional, and actionable.`
                 console.error('Failed to load settings:', error);
             }
         }
-        
+
         async function saveSettings() {
             console.log('saveSettings() called');
             console.log('authToken:', authToken ? 'exists' : 'missing');
-            
+
             if (!authToken) {
                 alert('Not authenticated. Please log in again.');
                 return;
             }
-            
+
             const settings = {
                 // User preferences
                 // imap_host: document.getElementById('setting-imap-host')?.value,
@@ -4421,16 +4424,16 @@ Be concise, professional, and actionable.`
                 bank_account: document.getElementById('setting-bank-account')?.value,
                 cashapp_id: document.getElementById('setting-cashapp-id')?.value
             };
-            
+
             console.log('Settings to save:', settings);
-            
+
             try {
                 const statusDiv = document.getElementById('settings-save-status');
                 statusDiv.style.display = 'block';
                 statusDiv.style.background = '#e3f2fd';
                 statusDiv.style.color = '#1976d2';
                 statusDiv.textContent = '⏳ Saving settings...';
-                
+
                 // Save user settings to database
                 console.log('Sending PUT /api/settings...');
                 const response = await fetch('/api/settings', {
@@ -4441,9 +4444,9 @@ Be concise, professional, and actionable.`
                     },
                     body: JSON.stringify(settings)
                 });
-                
+
                 console.log('Database save response:', response.status, response.ok);
-                
+
                 // Save API key to .env file
                 if (settings.ai_api_key || settings.caldav_url || settings.caldav_username || settings.caldav_password) {
                     console.log('Sending POST /api/settings/env...');
@@ -4460,9 +4463,9 @@ Be concise, professional, and actionable.`
                             caldav_password: settings.caldav_password
                         })
                     });
-                    
+
                     console.log('Env save response:', envResponse.status, envResponse.ok);
-                    
+
                     if (envResponse.ok) {
                         const envResult = await envResponse.json();
                         console.log('Environment settings saved:', envResult.message);
@@ -4471,7 +4474,7 @@ Be concise, professional, and actionable.`
                         console.error('Failed to save env settings:', errorText);
                     }
                 }
-                
+
                 if (response.ok) {
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = '#e8f5e8';
@@ -4504,7 +4507,8 @@ Be concise, professional, and actionable.`
             }
             calendarView.style.display = 'block';
             if (event) updateSidebarActive(event);
-            loadCalendarEvents();
+            loadCalendarEvents(); // Load events for list view
+            renderWeekCalendar(); // Render week view by default
         }
 
         function createCalendarView() {
@@ -4516,26 +4520,26 @@ Be concise, professional, and actionable.`
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h1 style="font-size: 24px; font-weight: 600;">📅 Calendar</h1>
                         <div style="display: flex; gap: 8px;">
-                            <button class="compose-btn" onclick="toggleCalendarView()" id="calendarViewToggle">Week View</button>
+                            <button class="compose-btn" onclick="toggleCalendarView()" id="calendarViewToggle">List View</button>
                             <button class="compose-btn" onclick="createCalendarEvent()">+ New Event</button>
                         </div>
                     </div>
-                    <div id="calendarWeekView" style="display: none;"></div>
-                    <div id="calendarEventsList" style="display: block; gap: 12px;">
+                    <div id="calendarWeekView" style="display: block;"></div>
+                    <div id="calendarEventsList" style="display: none; gap: 12px;">
                         <div class="loading">Loading events...</div>
                     </div>
                 </div>
             `;
             return view;
         }
-        
-        let calendarViewMode = 'list'; // 'list' or 'week'
-        
+
+        let calendarViewMode = 'week'; // 'list' or 'week' - default to week view
+
         function toggleCalendarView() {
             const weekView = document.getElementById('calendarWeekView');
             const listView = document.getElementById('calendarEventsList');
             const toggleBtn = document.getElementById('calendarViewToggle');
-            
+
             if (calendarViewMode === 'list') {
                 calendarViewMode = 'week';
                 weekView.style.display = 'block';
@@ -4549,30 +4553,30 @@ Be concise, professional, and actionable.`
                 toggleBtn.textContent = 'Week View';
             }
         }
-        
+
         async function renderWeekCalendar() {
             const container = document.getElementById('calendarWeekView');
             if (!container) return;
-            
+
             // Get current week dates
             const today = new Date();
             const currentDay = today.getDay();
             const monday = new Date(today);
             monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
-            
+
             const weekDays = [];
             for (let i = 0; i < 7; i++) {
                 const day = new Date(monday);
                 day.setDate(monday.getDate() + i);
                 weekDays.push(day);
             }
-            
+
             // Fetch events for the week
             const dateFrom = weekDays[0].toISOString().split('T')[0];
             const dateTo = new Date(weekDays[6]);
             dateTo.setDate(dateTo.getDate() + 1);
             const dateToStr = dateTo.toISOString().split('T')[0];
-            
+
             let events = [];
             try {
                 const response = await fetch(`/api/calendar/events?date_from=${dateFrom}&date_to=${dateToStr}`, {
@@ -4584,14 +4588,14 @@ Be concise, professional, and actionable.`
             } catch (error) {
                 console.error('Failed to load events:', error);
             }
-            
+
             // Render week calendar
             const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            
+
             let html = `
                 <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px;">
             `;
-            
+
             // Header row with day names and dates
             weekDays.forEach((day, idx) => {
                 const isToday = day.toDateString() === today.toDateString();
@@ -4603,30 +4607,34 @@ Be concise, professional, and actionable.`
                     </div>
                 `;
             });
-            
+
             html += `</div>`;
-            
+
             // Events grid
             html += `<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 400px;">`;
-            
+
             weekDays.forEach((day) => {
                 const dayStr = day.toISOString().split('T')[0];
                 const dayEvents = events.filter(e => {
-                    const eventDate = new Date(e.start_time).toISOString().split('T')[0];
+                    // SQLite returns datetime as "2025-10-29 12:00:00", need to convert to ISO format
+                    const eventDateStr = e.start_time.replace(' ', 'T');
+                    const eventDate = new Date(eventDateStr).toISOString().split('T')[0];
                     return eventDate === dayStr;
                 });
-                
+
                 html += `
                     <div style="background: #f7f8fa; padding: 8px; border-radius: 8px; min-height: 400px;">
                 `;
-                
+
                 dayEvents.forEach(event => {
-                    const startTime = new Date(event.start_time);
-                    const endTime = new Date(event.end_time);
+                    // SQLite returns datetime as "2025-10-29 12:00:00", need to convert to ISO format
+                    const startTimeStr = event.start_time.replace(' ', 'T');
+                    const startTime = new Date(startTimeStr);
+                    const endTime = new Date(event.end_time.replace(' ', 'T'));
                     const timeStr = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}`;
-                    
+
                     html += `
-                        <div style="background: #7C9CBF; color: white; padding: 8px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; font-size: 12px;" 
+                        <div style="background: #7C9CBF; color: white; padding: 8px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; font-size: 12px;"
                              onclick="editCalendarEvent('${event.id}')" title="${escapeHtml(event.description || '')}">
                             <div style="font-weight: 600;">${timeStr}</div>
                             <div style="margin-top: 4px;">${escapeHtml(event.title)}</div>
@@ -4634,24 +4642,24 @@ Be concise, professional, and actionable.`
                         </div>
                     `;
                 });
-                
+
                 html += `</div>`;
             });
-            
+
             html += `</div>`;
-            
+
             container.innerHTML = html;
         }
 
         async function loadCalendarEvents() {
             const container = document.getElementById('calendarEventsList');
             if (!container) return;
-            
+
             try {
                 const response = await fetch('/api/calendar/events', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const events = await response.json();
                     renderCalendarEvents(events);
@@ -4669,7 +4677,7 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><h3>No calendar events</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = events.map(event => {
                 const startDate = new Date(event.start_time);
                 const endDate = new Date(event.end_time);
@@ -4728,7 +4736,7 @@ Be concise, professional, and actionable.`
                 </div>
             `;
             document.body.appendChild(modal);
-            
+
             // Set default times (now and +1 hour)
             const now = new Date();
             const later = new Date(now.getTime() + 60 * 60 * 1000);
@@ -4843,12 +4851,12 @@ Be concise, professional, and actionable.`
             const container = document.getElementById('moneyAccountsList');
             const balanceContainer = document.getElementById('moneyTotalBalance');
             if (!container) return;
-            
+
             try {
                 const response = await fetch('/api/money/accounts', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     renderMoneyAccounts(data.accounts);
@@ -4872,7 +4880,7 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><h3>No accounts</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = accounts.map(account => `
                 <div class="conversation" style="padding: 16px; background: white; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -4911,13 +4919,13 @@ Be concise, professional, and actionable.`
         async function loadGalleryRecents() {
             const container = document.getElementById('recentsView');
             container.innerHTML = '<div class="loading">Loading attachments...</div>';
-            
+
             try {
                 console.log('Loading gallery recents for user');
                 const response = await fetch('/api/attachments/gallery/recents?limit=50', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Gallery response:', data);
@@ -4938,26 +4946,26 @@ Be concise, professional, and actionable.`
                 console.error('Error loading attachments:', error);
                 attachments = getMockAttachments();
             }
-            
+
             filteredAttachments = attachments;
-            
+
             if (attachments.length === 0) {
                 container.innerHTML = '<div class="empty-state"><h3>No attachments found</h3><p>Attachments from your emails will appear here once they are downloaded and processed.</p></div>';
                 return;
             }
-            
+
             renderGalleryView();
         }
 
         async function loadGalleryBySender() {
             const container = document.getElementById('senderView');
             container.innerHTML = '<div class="loading">Loading attachments...</div>';
-            
+
             try {
                 const response = await fetch('/api/attachments/gallery/by-sender', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const senderData = await response.json();
                     renderSenderView(senderData);
@@ -4972,7 +4980,7 @@ Be concise, professional, and actionable.`
 
         function switchGalleryView(mode) {
             currentView = mode;
-            
+
             // Update button states
             document.querySelectorAll('.view-mode-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -4980,12 +4988,12 @@ Be concise, professional, and actionable.`
                     btn.classList.add('active');
                 }
             });
-            
+
             // Hide all views
             document.getElementById('recentsView').style.display = 'none';
             document.getElementById('senderView').style.display = 'none';
             document.getElementById('listView').style.display = 'none';
-            
+
             // Show selected view
             if (mode === 'recents') {
                 document.getElementById('recentsView').style.display = 'grid';
@@ -5001,33 +5009,33 @@ Be concise, professional, and actionable.`
 
         function renderGalleryView() {
             const container = document.getElementById('recentsView');
-            
+
             if (filteredAttachments.length === 0) {
                 container.innerHTML = '<div class="empty-state"><h3>No attachments found</h3><p>Attachments from your emails will appear here</p></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
-            
+
             // Pagination
             const start = (currentPage - 1) * pageSize;
             const end = start + pageSize;
             const pageAttachments = filteredAttachments.slice(start, end);
-            
+
             pageAttachments.forEach(attachment => {
                 const card = createAttachmentCard(attachment);
                 container.appendChild(card);
             });
-            
+
             updatePagination();
         }
 
         function createAttachmentCard(attachment) {
             const card = document.createElement('div');
             card.className = 'attachment-card';
-            
+
             const thumbnail = getThumbnailContent(attachment);
-            
+
             card.innerHTML = `
                 <div class="attachment-thumbnail">
                     ${thumbnail}
@@ -5042,15 +5050,15 @@ Be concise, professional, and actionable.`
                     </div>
                 </div>
             `;
-            
+
             card.addEventListener('click', () => previewAttachment(attachment));
-            
+
             return card;
         }
 
         function getThumbnailContent(attachment) {
             const contentType = attachment.content_type || '';
-            
+
             if (contentType.startsWith('image/')) {
                 // Check if thumbnail exists
                 if (attachment.preview_generated) {
@@ -5078,20 +5086,20 @@ Be concise, professional, and actionable.`
 
         function renderSenderView(senderData) {
             const container = document.getElementById('senderView');
-            
+
             if (!senderData || senderData.length === 0) {
                 container.innerHTML = '<div class="empty-state"><h3>No attachments found</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
-            
+
             senderData.forEach(sender => {
                 const group = document.createElement('div');
                 group.className = 'sender-group';
-                
+
                 const initial = (sender.sender_name || sender.sender_email || '?')[0].toUpperCase();
-                
+
                 group.innerHTML = `
                     <div class="sender-header">
                         <div class="sender-info">
@@ -5107,33 +5115,33 @@ Be concise, professional, and actionable.`
                         <div class="loading">Loading...</div>
                     </div>
                 `;
-                
+
                 group.querySelector('.sender-header').addEventListener('click', () => {
                     toggleSenderGroup(group, sender.sender_email);
                 });
-                
+
                 container.appendChild(group);
             });
         }
 
         async function toggleSenderGroup(groupElement, senderEmail) {
             const isExpanded = groupElement.classList.contains('expanded');
-            
+
             if (isExpanded) {
                 groupElement.classList.remove('expanded');
                 return;
             }
-            
+
             groupElement.classList.add('expanded');
-            
+
             const attachmentsContainer = groupElement.querySelector('.sender-attachments');
-            
+
             // Load attachments for this sender
             try {
                 const response = await fetch(`/api/attachments/gallery?sender=${encodeURIComponent(senderEmail)}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 let senderAttachments;
                 if (response.ok) {
                     const data = await response.json();
@@ -5141,7 +5149,7 @@ Be concise, professional, and actionable.`
                 } else {
                     senderAttachments = attachments.filter(a => a.sender_email === senderEmail);
                 }
-                
+
                 renderSenderAttachments(attachmentsContainer, senderAttachments);
             } catch (error) {
                 const senderAttachments = attachments.filter(a => a.sender_email === senderEmail);
@@ -5154,16 +5162,16 @@ Be concise, professional, and actionable.`
                 container.innerHTML = '<div class="empty-state"><p>No attachments</p></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
-            
+
             attachments.forEach(attachment => {
                 const item = document.createElement('div');
                 item.className = 'attachment-list-item';
-                
+
                 const icon = getThumbnailContent(attachment);
                 const hasImage = attachment.content_type?.startsWith('image/') && attachment.preview_generated;
-                
+
                 item.innerHTML = `
                     <div class="attachment-icon">
                         ${hasImage ? `<img src="/api/attachments/${attachment.id}/thumbnail" alt="${escapeHtml(attachment.filename)}">` : icon}
@@ -5173,42 +5181,42 @@ Be concise, professional, and actionable.`
                         <p>${formatFileSize(attachment.size)} • ${formatDate(attachment.received_at || attachment.created_at)}</p>
                     </div>
                 `;
-                
+
                 item.addEventListener('click', () => previewAttachment(attachment));
-                
+
                 container.appendChild(item);
             });
         }
 
         function renderListView() {
             const container = document.getElementById('listView');
-            
+
             if (filteredAttachments.length === 0) {
                 container.innerHTML = '<div class="empty-state"><h3>No attachments found</h3></div>';
                 return;
             }
-            
+
             container.innerHTML = '';
-            
+
             // Create table
             const table = document.createElement('div');
             table.style.background = 'white';
             table.style.borderRadius = '8px';
             table.style.overflow = 'hidden';
-            
+
             const start = (currentPage - 1) * pageSize;
             const end = start + pageSize;
             const pageAttachments = filteredAttachments.slice(start, end);
-            
+
             pageAttachments.forEach(attachment => {
                 const row = document.createElement('div');
                 row.className = 'attachment-list-item';
                 row.style.margin = '0';
                 row.style.borderRadius = '0';
                 row.style.borderBottom = '1px solid #e4e6eb';
-                
+
                 const icon = getThumbnailContent(attachment);
-                
+
                 row.innerHTML = `
                     <div class="attachment-icon">
                         ${icon}
@@ -5226,29 +5234,29 @@ Be concise, professional, and actionable.`
                         ${formatFileSize(attachment.size)}
                     </div>
                 `;
-                
+
                 row.addEventListener('click', () => previewAttachment(attachment));
-                
+
                 table.appendChild(row);
             });
-            
+
             container.appendChild(table);
             updatePagination();
         }
 
         function searchAttachments() {
             const query = document.getElementById('gallerySearchInput').value.toLowerCase();
-            
+
             if (!query) {
                 filteredAttachments = attachments;
             } else {
-                filteredAttachments = attachments.filter(att => 
+                filteredAttachments = attachments.filter(att =>
                     att.filename.toLowerCase().includes(query) ||
                     (att.sender_name && att.sender_name.toLowerCase().includes(query)) ||
                     (att.sender_email && att.sender_email.toLowerCase().includes(query))
                 );
             }
-            
+
             currentPage = 1;
             applyFilters();
         }
@@ -5257,28 +5265,28 @@ Be concise, professional, and actionable.`
             const dateFilter = document.getElementById('filterDate').value;
             const typeFilter = document.getElementById('filterType').value;
             const sizeFilter = document.getElementById('filterSize').value;
-            
+
             let filtered = filteredAttachments;
-            
+
             // Date filter
             if (dateFilter) {
                 const now = new Date();
                 filtered = filtered.filter(att => {
                     const attDate = new Date(att.received_at || att.created_at);
                     const diffDays = Math.floor((now - attDate) / (1000 * 60 * 60 * 24));
-                    
+
                     if (dateFilter === 'today') return diffDays === 0;
                     if (dateFilter === 'week') return diffDays <= 7;
                     if (dateFilter === 'month') return diffDays <= 30;
                     return true;
                 });
             }
-            
+
             // Type filter
             if (typeFilter) {
                 filtered = filtered.filter(att => {
                     const contentType = att.content_type || '';
-                    
+
                     if (typeFilter === 'image') return contentType.startsWith('image/');
                     if (typeFilter === 'pdf') return contentType === 'application/pdf';
                     if (typeFilter === 'document') return contentType.includes('word') || contentType.includes('document');
@@ -5287,22 +5295,22 @@ Be concise, professional, and actionable.`
                     return true;
                 });
             }
-            
+
             // Size filter
             if (sizeFilter) {
                 filtered = filtered.filter(att => {
                     const sizeMB = att.size / (1024 * 1024);
-                    
+
                     if (sizeFilter === 'small') return sizeMB < 1;
                     if (sizeFilter === 'medium') return sizeMB >= 1 && sizeMB <= 10;
                     if (sizeFilter === 'large') return sizeMB > 10;
                     return true;
                 });
             }
-            
+
             filteredAttachments = filtered;
             currentPage = 1;
-            
+
             if (currentView === 'recents') {
                 renderGalleryView();
             } else if (currentView === 'list') {
@@ -5313,11 +5321,11 @@ Be concise, professional, and actionable.`
         function previewAttachment(attachment) {
             const modal = document.getElementById('previewModal');
             const content = modal.querySelector('.preview-content');
-            
+
             const contentType = attachment.content_type || '';
             const isImage = contentType.startsWith('image/');
             const isPDF = contentType === 'application/pdf';
-            
+
             let previewBody = '';
             if (isImage) {
                 previewBody = `<img src="/api/attachments/${attachment.id}" alt="${escapeHtml(attachment.filename)}">`;
@@ -5326,7 +5334,7 @@ Be concise, professional, and actionable.`
             } else {
                 previewBody = `<div style="text-align: center; padding: 40px;"><div style="font-size: 64px; margin-bottom: 16px;">${getThumbnailContent(attachment)}</div><p>Preview not available for this file type</p></div>`;
             }
-            
+
             content.innerHTML = `
                 <div class="preview-header">
                     <h3>${escapeHtml(attachment.filename)}</h3>
@@ -5358,7 +5366,7 @@ Be concise, professional, and actionable.`
                     </div>
                 </div>
             `;
-            
+
             modal.classList.add('active');
         }
 
@@ -5371,7 +5379,7 @@ Be concise, professional, and actionable.`
                 const response = await fetch(`/api/attachments/${attachmentId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
@@ -5393,21 +5401,21 @@ Be concise, professional, and actionable.`
 
         async function deleteAttachment(attachmentId) {
             if (!confirm('Are you sure you want to delete this attachment?')) return;
-            
+
             try {
                 const response = await fetch(`/api/attachments/${attachmentId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                
+
                 if (response.ok) {
                     showNotification('Attachment deleted', 'success');
                     closePreview();
-                    
+
                     // Remove from local state
                     attachments = attachments.filter(a => a.id !== attachmentId);
                     filteredAttachments = filteredAttachments.filter(a => a.id !== attachmentId);
-                    
+
                     // Re-render current view
                     if (currentView === 'recents') {
                         renderGalleryView();
@@ -5435,18 +5443,18 @@ Be concise, professional, and actionable.`
         function updatePagination() {
             const pagination = document.getElementById('galleryPagination');
             const totalPages = Math.ceil(filteredAttachments.length / pageSize);
-            
+
             if (totalPages <= 1) {
                 pagination.style.display = 'none';
                 return;
             }
-            
+
             pagination.style.display = 'flex';
             document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-            
+
             const prevBtn = pagination.querySelector('button:first-child');
             const nextBtn = pagination.querySelector('button:last-child');
-            
+
             prevBtn.disabled = currentPage === 1;
             nextBtn.disabled = currentPage === totalPages;
         }
@@ -5581,7 +5589,7 @@ Be concise, professional, and actionable.`
                 }
 
                 const data = await response.json();
-                
+
                 debugContent.innerHTML = `
                     <div style="font-family: monospace; font-size: 14px;">
                         <h3>User Information</h3>
@@ -5662,9 +5670,9 @@ Be concise, professional, and actionable.`
         async function testImapConnection() {
             const debugContent = document.getElementById('debugContent');
             const originalContent = debugContent.innerHTML;
-            
+
             debugContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner"></div><p>Testing IMAP connection...</p></div>';
-            
+
             try {
                 const response = await fetch('http://localhost:8080/api/debug/test-imap', {
                     headers: {
@@ -5673,7 +5681,7 @@ Be concise, professional, and actionable.`
                 });
 
                 const data = await response.json();
-                
+
                 debugContent.innerHTML = originalContent + `
                     <div style="margin-top: 20px; padding: 15px; border-radius: 8px; background: ${data.success ? '#e8f5e9' : '#ffebee'};">
                         <h3 style="color: ${data.success ? '#2e7d32' : '#c62828'};">IMAP Connection Test</h3>
@@ -5701,9 +5709,9 @@ Be concise, professional, and actionable.`
         async function triggerManualSync() {
             const debugContent = document.getElementById('debugContent');
             const originalContent = debugContent.innerHTML;
-            
+
             debugContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner"></div><p>Syncing emails...</p></div>';
-            
+
             try {
                 const response = await fetch('http://localhost:8080/api/debug/manual-sync', {
                     method: 'POST',
@@ -5713,7 +5721,7 @@ Be concise, professional, and actionable.`
                 });
 
                 const data = await response.json();
-                
+
                 debugContent.innerHTML = originalContent + `
                     <div style="margin-top: 20px; padding: 15px; border-radius: 8px; background: ${data.success ? '#e8f5e9' : '#ffebee'};">
                         <h3 style="color: ${data.success ? '#2e7d32' : '#c62828'};">Manual Sync Result</h3>
@@ -5732,7 +5740,7 @@ Be concise, professional, and actionable.`
                         ` : ''}
                     </div>
                 `;
-                
+
                 // Reload conversations after sync
                 if (data.success) {
                     setTimeout(() => {
@@ -5752,9 +5760,9 @@ Be concise, professional, and actionable.`
         async function testCalDavConnection() {
             const debugContent = document.getElementById('debugContent');
             const originalContent = debugContent.innerHTML;
-            
+
             debugContent.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="spinner"></div><p>Testing CalDAV connection...</p></div>';
-            
+
             try {
                 const response = await fetch('http://localhost:8080/api/debug/test-caldav', {
                     headers: {
@@ -5767,7 +5775,7 @@ Be concise, professional, and actionable.`
                 }
 
                 const data = await response.json();
-                
+
                 debugContent.innerHTML = originalContent + `
                     <div style="margin-top: 20px; padding: 15px; border-radius: 8px; background: ${data.success ? '#e8f5e9' : '#ffebee'};">
                         <h3 style="color: ${data.success ? '#2e7d32' : '#c62828'};">📅 CalDAV Connection Test</h3>
@@ -5795,6 +5803,10 @@ Be concise, professional, and actionable.`
                 `;
             }
         }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      lucide.createIcons();
     </script>
 </body>
 </html>

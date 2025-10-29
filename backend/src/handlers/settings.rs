@@ -21,6 +21,10 @@ pub struct UserSettings {
     pub ai_api_key: Option<String>,
     pub ai_model: String,
     pub ai_context_window: i32,
+    // CalDAV settings
+    pub caldav_url: Option<String>,
+    pub caldav_username: Option<String>,
+    pub caldav_password: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -40,6 +44,10 @@ pub struct UpdateSettingsRequest {
     pub ai_api_key: Option<String>,
     pub ai_model: Option<String>,
     pub ai_context_window: Option<i32>,
+    // CalDAV settings
+    pub caldav_url: Option<String>,
+    pub caldav_username: Option<String>,
+    pub caldav_password: Option<String>,
 }
 
 pub async fn get_settings(
@@ -128,6 +136,15 @@ pub async fn update_settings(
     if let Some(v) = body.ai_context_window {
         settings.ai_context_window = v;
     }
+    if let Some(ref v) = body.caldav_url {
+        settings.caldav_url = Some(v.clone());
+    }
+    if let Some(ref v) = body.caldav_username {
+        settings.caldav_username = Some(v.clone());
+    }
+    if let Some(ref v) = body.caldav_password {
+        settings.caldav_password = Some(v.clone());
+    }
     
     // Save updated settings
     let settings_json = serde_json::to_string(&settings)
@@ -165,6 +182,10 @@ fn default_settings() -> UserSettings {
         ai_api_key: None,
         ai_model: "claude-3-5-sonnet-20241022".to_string(),
         ai_context_window: 200000,
+        // CalDAV defaults
+        caldav_url: None,
+        caldav_username: None,
+        caldav_password: None,
     }
 }
 

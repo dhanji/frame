@@ -107,7 +107,7 @@ async fn main() -> std::io::Result<()> {
                 log::error!("ANTHROPIC_API_KEY not found in environment!");
                 "dummy-key".to_string()
             }),
-            model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-3-5-sonnet-20241022".to_string()),
+            model: std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|_| "claude-3-5-sonnet-20241022".to_string()),
         };
         log::info!("🤖 Creating provider...");
         let provider = services::agent::provider::create_provider(provider_config);
