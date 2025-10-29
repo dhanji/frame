@@ -1269,6 +1269,78 @@
         .collapsible-section {
             display: none;
         }
+
+        /* Tab Views - Chat, Automations, Calendar, Money, Attachments, Settings */
+        .tab-view {
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .tab-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .tab-view-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .tab-view-content {
+            display: grid;
+            gap: 12px;
+        }
+
+        .tab-card {
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .tab-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .tab-card-body {
+            flex: 1;
+        }
+
+        .tab-card-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .tab-card-description {
+            color: rgb(80,91,109);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .tab-card-meta {
+            font-size: 13px;
+            color: #8a8d91;
+        }
+
+        .tab-card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .tab-card-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .tab-card-toggle input {
+            margin-right: 4px;
+        }
+
     </style>
 </head>
 <body>
@@ -2035,7 +2107,7 @@
                 const folderItem = document.createElement('div');
                 folderItem.className = 'folder-item' + (folder.id === currentFolder ? ' active' : '');
                 folderItem.innerHTML = `
-                    <span>${folder.name}</span>
+                    <span>${formatFolderName(folder.name)}</span>
                     ${folder.unread_count > 0 ? `<span class="unread-count">${folder.unread_count}</span>` : ''}
                 `;
                 folderItem.addEventListener('click', () => selectFolder(folder.name));
@@ -2061,7 +2133,7 @@
                     folderItem.className = 'folder-item' + (folder.id === currentFolder ? ' active' : '');
                     folderItem.style.paddingLeft = '24px';
                     folderItem.innerHTML = `
-                        <span>${folder.name}</span>
+                        <span>${formatFolderName(folder.name)}</span>
                         ${folder.unread_count > 0 ? `<span class="unread-count">${folder.unread_count}</span>` : ''}
                     `;
                     folderItem.addEventListener('click', () => selectFolder(folder.name));
@@ -2100,7 +2172,7 @@
             // Add Automations tab
             const automationsTab = document.createElement('div');
             automationsTab.className = 'folder-item';
-            automationsTab.innerHTML = `<span>⚙️ Automations</span>`;
+            automationsTab.innerHTML = `<span>Automations</span>`;
             automationsTab.addEventListener('click', (e) => showAutomationsView(e));
             sidebar.appendChild(automationsTab);
 
@@ -2370,6 +2442,12 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Format folder names: INBOX -> Inbox, SENT MAIL -> Sent Mail
+        function formatFolderName(name) {
+            if (!name) return '';
+            return name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
         }
 
         // Notification System
@@ -2977,7 +3055,7 @@ Be concise, professional, and actionable.`
 
             if (folderName && folders.includes(folderName.toLowerCase())) {
                 console.log('Move conversation', convId, 'to', folderName);
-                showNotification(`Moved to ${folderName}`, 'success');
+                showNotification(`Moved to ${formatFolderName(folderName)}`, 'success');
                 // In real implementation, call API to move conversation
             }
         }
@@ -3149,15 +3227,14 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'chatView';
             view.style.display = 'none';
+            view.className = 'tab-view';
             view.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: 600;">💬 Chat</h1>
-                        <button class="compose-btn" onclick="startNewChat()">+ New Chat</button>
-                    </div>
-                    <div id="chatConversationsList" style="display: grid; gap: 12px;">
-                        <div class="loading">Loading chat conversations...</div>
-                    </div>
+                <div class="tab-view-header">
+                    <h1 class="tab-view-title">💬 Chat</h1>
+                    <button class="compose-btn" onclick="startNewChat()">+ New Chat</button>
+                </div>
+                <div id="chatConversationsList" class="tab-view-content">
+                    <div class="loading">Loading chat conversations...</div>
                 </div>
             `;
             return view;
@@ -3472,15 +3549,14 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'automationsView';
             view.style.display = 'none';
+            view.className = 'tab-view';
             view.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: 600;">⚙️ Automations</h1>
-                        <button class="compose-btn" onclick="createAutomation()">+ New Automation</button>
-                    </div>
-                    <div id="automationsList" style="display: grid; gap: 12px;">
-                        <div class="loading">Loading automations...</div>
-                    </div>
+                <div class="tab-view-header">
+                    <h1 class="tab-view-title">⚙️ Automations</h1>
+                    <button class="compose-btn" onclick="createAutomation()">+ New Automation</button>
+                </div>
+                <div id="automationsList" class="tab-view-content">
+                    <div class="loading">Loading automations...</div>
                 </div>
             `;
             return view;
@@ -3514,21 +3590,21 @@ Be concise, professional, and actionable.`
             }
 
             container.innerHTML = automations.map(auto => `
-                <div class="conversation" style="padding: 16px; background: white; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(auto.name)}</div>
-                            <div style="color: #65676b; font-size: 14px; margin-bottom: 8px;">${escapeHtml(auto.description || '')}</div>
-                            <div style="font-size: 13px; color: #8a8d91;">
+                <div class="tab-card">
+                    <div class="tab-card-header">
+                        <div class="tab-card-body">
+                            <div class="tab-card-title">${escapeHtml(auto.name)}</div>
+                            <div class="tab-card-description">${escapeHtml(auto.description || '')}</div>
+                            <div class="tab-card-meta">
                                 <span>📅 ${escapeHtml(auto.schedule_human || auto.schedule)}</span>
                                 ${auto.last_run ? ` • Last run: ${formatDate(auto.last_run)}` : ''}
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <label style="display: flex; align-items: center; cursor: pointer;">
+                        <div class="tab-card-actions">
+                            <label class="tab-card-toggle">
                                 <input type="checkbox" ${auto.enabled ? 'checked' : ''}
                                     onchange="toggleAutomation('${auto.id}', this.checked)"
-                                    style="margin-right: 4px;">
+                                    >
                                 <span style="font-size: 13px;">${auto.enabled ? 'Enabled' : 'Disabled'}</span>
                             </label>
                             <button class="icon-btn" onclick="runAutomation('${auto.id}')" title="Run Now">▶️</button>
@@ -4034,21 +4110,19 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'remindersView';
             view.style.display = 'none';
+            view.className = 'tab-view';
             view.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: 600;">✓ Reminders</h1>
-                        <button class="compose-btn" onclick="createReminder()">+ New Reminder</button>
-                    </div>
+                <div class="tab-view-header">
+                    <h1 class="tab-view-title">✓ Reminders</h1>
+                    <button class="compose-btn" onclick="createReminder()">+ New Reminder</button>
+                </div>
                     <div style="margin-bottom: 16px; display: flex; gap: 8px;">
                         <button class="filter-btn active" data-filter="active" onclick="filterReminders('active')">Active</button>
                         <button class="filter-btn" data-filter="completed" onclick="filterReminders('completed')">Completed</button>
                         <button class="filter-btn" data-filter="all" onclick="filterReminders('all')">All</button>
                     </div>
-                    <div id="remindersList" style="display: grid; gap: 12px;">
-                        <div class="loading">Loading reminders...</div>
-                    </div>
-                </div>
+                <div id="remindersList" class="tab-view-content">
+                    <div class="loading">Loading reminders...</div>
             `;
             return view;
         }
@@ -4085,8 +4159,8 @@ Be concise, professional, and actionable.`
             container.innerHTML = reminders.map(reminder => {
                 const isOverdue = reminder.due_date && new Date(reminder.due_date) < new Date() && !reminder.completed;
                 return `
-                <div class="conversation" style="padding: 16px; background: white; border-radius: 8px; ${reminder.completed ? 'opacity: 0.6;' : ''}">
-                    <div style="display: flex; gap: 12px; align-items: start;">
+                <div class="tab-card" style="${reminder.completed ? 'opacity: 0.6;' : ''}">
+                    <div style="display: flex; gap: 12px; align-items: start; width: 100%;">
                         <input type="checkbox" ${reminder.completed ? 'checked' : ''}
                             onchange="toggleReminder('${reminder.id}', this.checked)"
                             style="margin-top: 4px; cursor: pointer;">
@@ -4238,9 +4312,10 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'settingsView';
             view.style.display = 'none';
+            view.className = 'tab-view';
             view.innerHTML = `
-                <div style="padding: 20px; max-width: 800px;">
-                    <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">⚙️ Settings</h1>
+                <div style="max-width: 800px;">
+                    <h1 class="tab-view-title" style="margin-bottom: 24px;">⚙️ Settings</h1>
 
                     <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
                         <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Email Settings</h2>
@@ -4515,19 +4590,18 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'calendarView';
             view.style.display = 'none';
+            view.className = 'tab-view';
             view.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: 600;">📅 Calendar</h1>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="compose-btn" onclick="toggleCalendarView()" id="calendarViewToggle">List View</button>
-                            <button class="compose-btn" onclick="createCalendarEvent()">+ New Event</button>
-                        </div>
+                <div class="tab-view-header">
+                    <h1 class="tab-view-title">📅 Calendar</h1>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="compose-btn" onclick="toggleCalendarView()" id="calendarViewToggle">List View</button>
+                        <button class="compose-btn" onclick="createCalendarEvent()">+ New Event</button>
                     </div>
-                    <div id="calendarWeekView" style="display: block;"></div>
-                    <div id="calendarEventsList" style="display: none; gap: 12px;">
-                        <div class="loading">Loading events...</div>
-                    </div>
+                </div>
+                <div id="calendarWeekView" style="display: block;"></div>
+                <div id="calendarEventsList" style="display: none; gap: 12px;">
+                    <div class="loading">Loading events...</div>
                 </div>
             `;
             return view;
@@ -4829,19 +4903,18 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'moneyView';
             view.style.display = 'none';
+            view.className = 'tab-view';
             view.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: 600;">💰 Money</h1>
-                        <button class="compose-btn" onclick="addMoneyAccount()">+ Add Account</button>
-                    </div>
-                    <div id="moneyTotalBalance" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <div style="font-size: 14px; color: #65676b; margin-bottom: 4px;">Total Balance</div>
-                        <div style="font-size: 32px; font-weight: 600;">$0.00</div>
-                    </div>
-                    <div id="moneyAccountsList" style="display: grid; gap: 12px;">
-                        <div class="loading">Loading accounts...</div>
-                    </div>
+                <div class="tab-view-header">
+                    <h1 class="tab-view-title">💰 Money</h1>
+                    <button class="compose-btn" onclick="addMoneyAccount()">+ Add Account</button>
+                </div>
+                <div id="moneyTotalBalance" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #65676b; margin-bottom: 4px;">Total Balance</div>
+                    <div style="font-size: 32px; font-weight: 600;">$0.00</div>
+                </div>
+                <div id="moneyAccountsList" class="tab-view-content">
+                    <div class="loading">Loading accounts...</div>
                 </div>
             `;
             return view;
@@ -4882,8 +4955,8 @@ Be concise, professional, and actionable.`
             }
 
             container.innerHTML = accounts.map(account => `
-                <div class="conversation" style="padding: 16px; background: white; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="tab-card">
+                    <div class="tab-card-header">
                         <div>
                             <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(account.account_name)}</div>
                             <div style="font-size: 13px; color: #8a8d91;">${escapeHtml(account.account_type)}</div>
@@ -5622,7 +5695,7 @@ Be concise, professional, and actionable.`
                             <h4 style="margin-top: 10px;">Emails by Folder:</h4>
                             <table style="width: 100%; border-collapse: collapse;">
                                 ${data.emails_by_folder.map(f => `
-                                    <tr><td style="padding: 8px; border: 1px solid #ddd;">${f.folder}</td><td style="padding: 8px; border: 1px solid #ddd;">${f.count}</td></tr>
+                                    <tr><td style="padding: 8px; border: 1px solid #ddd;">${formatFolderName(f.folder)}</td><td style="padding: 8px; border: 1px solid #ddd;">${f.count}</td></tr>
                                 `).join('')}
                             </table>
                         ` : '<p style="color: #999; margin-top: 10px;">No emails found in database</p>'}
@@ -5690,7 +5763,7 @@ Be concise, professional, and actionable.`
                         ${data.folders ? `
                             <p><strong>Available Folders:</strong></p>
                             <ul>
-                                ${data.folders.map(f => `<li>${f}</li>`).join('')}
+                                ${data.folders.map(f => `<li>${formatFolderName(f)}</li>`).join('')}
                             </ul>
                         ` : ''}
                         ${data.error ? `<p style="color: #c62828;"><strong>Error:</strong> ${data.error}</p>` : ''}
@@ -5729,7 +5802,7 @@ Be concise, professional, and actionable.`
                         ${data.synced_counts ? `
                             <p><strong>Synced Emails:</strong></p>
                             <ul>
-                                ${Object.entries(data.synced_counts).map(([folder, count]) => `<li>${folder}: ${count} emails</li>`).join('')}
+                                ${Object.entries(data.synced_counts).map(([folder, count]) => `<li>${formatFolderName(folder)}: ${count} emails</li>`).join('')}
                             </ul>
                         ` : ''}
                         ${data.errors && data.errors.length > 0 ? `
