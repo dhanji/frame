@@ -147,6 +147,8 @@
 
         .main-app.active {
             display: block;
+            height: 100%;
+            overflow: hidden;
         }
 
         .header {
@@ -232,6 +234,8 @@
             margin: 20px auto;
             gap: 0;
             padding: 0 20px;
+            height: 100%;
+            overflow: hidden;
         }
 
         .sidebar {
@@ -259,6 +263,16 @@
             border-radius: 8px;
         }
 
+        /** hack to target lucide icon **/
+        .folder-item svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+            position: relative;
+            top: 3px;
+            color: rgb(80,91,109);
+        }
+
         .unread-count {
             background: #0066FF;
             color: white;
@@ -272,10 +286,6 @@
 
         .main-content {
             flex: 1;
-        }
-
-        .converation-list {
-            width: 24%;
         }
 
         .conversation {
@@ -294,6 +304,8 @@
         .conversation-list {
             width: 24%;
             border-right: 1px solid rgb(229,229,229);
+            overflow-y: auto;
+            min-height: 0;
         }
 
         .automationsList .conversation {
@@ -329,6 +341,14 @@
             text-overflow: ellipsis;
         }
 
+        .subject-line svg {
+            width: 16px;
+            position: relative;
+            top: 7px;
+            margin-right: 4px;
+            color: rgb(16,23,41);
+        }
+
         .content-snippet {
             color: rgb(80,91,109);
             font-size: 13px;
@@ -339,6 +359,14 @@
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             display: -webkit-box;
+        }
+
+        .content-snippet svg {
+            width: 16px;
+            position: relative;
+            top: 6px;
+            margin-right: 2px;
+            color: rgb(16,23,41);
         }
 
         .conversation-actions-hover {
@@ -438,14 +466,13 @@
         }
 
         .slideover-footer {
-            padding: 20px;
-            border-top: 1px solid rgb(16,23,41);
+            padding: 8px 20px;
         }
 
         .reply-actions {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 32px;
         }
 
         .reply-box {
@@ -456,7 +483,6 @@
         .reply-box textarea {
             flex: 1;
             padding: 12px;
-            border: 1px solid rgb(16,23,41);
             border-radius: 0;
             resize: none;
             font-family: inherit;
@@ -468,7 +494,7 @@
         .reply-box textarea:focus {
             outline: none;
             border-color: #0066FF;
-            border-width: 2px;
+            border-width: 1px;
         }
 
         .send-btn {
@@ -507,8 +533,8 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 12px 20px;
-            border: 1px solid rgb(16,23,41);
+            padding: 8px 20px;
+            border-radius: 4px;
             background: white;
             z-index: 10000;
         }
@@ -603,15 +629,18 @@
 
         .btn-secondary {
             padding: 10px 20px;
-            border: 1px solid rgb(16,23,41);
-            background: white;
-            border-radius: 0;
+            background: rgb(244,244,245);
+            border-radius: 30px;
+            border: none;
+
             cursor: pointer;
-            font-weight: 500;
+            font-weight: normal;
+            font-size: 14px;
         }
 
         .btn-secondary:hover {
-            background: #F5F5F5;
+            background: rgb(41,101,246);
+            color:white;
         }
 
         .btn-primary {
@@ -1080,29 +1109,28 @@
         }
 
         .notification {
-            background: white;
-            border: 1px solid rgb(16,23,41);
-            padding: 16px;
+            font-size: 12px;
+            color: white;
+            padding: 4px;
             display: flex;
             align-items: start;
             gap: 12px;
-            border-left: 2px solid;
         }
 
         .notification.success {
-            border-color: #0066FF;
+            background: #0066FF;
         }
 
         .notification.error {
-            border-color: rgb(16,23,41);
+            background: red;
         }
 
         .notification.info {
-            border-color: rgb(80,91,109);
+            background: green;
         }
 
         .notification.warning {
-            border-color: rgb(16,23,41);
+            background: orange;
         }
 
         .notification-content {
@@ -1278,7 +1306,7 @@
 
         .tab-view-title {
             font-size: 20px;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .tab-view-content {
@@ -1287,15 +1315,16 @@
         }
 
         .tab-card {
-            padding: 16px;
-            background: white;
-            border-radius: 8px;
+            padding: 24px;
+            background: rgb(244,244,245);
+            border-radius: 12px;
         }
 
         .tab-card-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
+            cursor: pointer;
         }
 
         .tab-card-body {
@@ -1307,6 +1336,10 @@
             margin-bottom: 4px;
         }
 
+        .tab-card-title:hover {
+            color: #0066FF;
+        }
+
         .tab-card-description {
             color: rgb(80,91,109);
             font-size: 14px;
@@ -1315,7 +1348,15 @@
 
         .tab-card-meta {
             font-size: 13px;
-            color: #8a8d91;
+            color: rgb(80,91,109);
+        }
+
+        /** hack hack hack **/
+        .tab-card-meta svg {
+            width: 16px;
+            position: relative;
+            top: 6px;
+            margin-right: 4px;
         }
 
         .tab-card-actions {
@@ -1407,7 +1448,7 @@
                 <div class="loading">Loading conversations...</div>
             </div>
 
-            <div id="emailDetailPanel" style="flex: 1; display: flex; flex-direction: column; background: white; font-size: 14px;">
+            <div id="emailDetailPanel" style="flex: 1; display: flex; flex-direction: column; background: white; font-size: 14px; overflow-x: hidden; overflow-y: auto">
                 <div class="loading" style="padding: 40px; text-align: center; color: #65676b;">Select a conversation to view details</div>
             </div>
 
@@ -1421,7 +1462,7 @@
     <div class="container gallery-container" id="galleryContainer">
         <div class="main-content">
             <div class="gallery-header">
-                <h1 class="gallery-title">📎 Attachments</h1>
+                <h1 class="gallery-title"><i data-lucide="book-image"></i> Attachments</h1>
                 <div class="gallery-controls">
                     <div class="view-mode-switcher">
                         <button class="view-mode-btn active" data-mode="recents" onclick="switchGalleryView('recents')">Recents</button>
@@ -2127,7 +2168,7 @@
             const attachmentsTab = document.createElement('div');
             attachmentsTab.className = 'folder-item';
             attachmentsTab.innerHTML = `
-                <span>📎 Attachments</span>
+                <span><i data-lucide="book-image"></i> Attachments</span>
             `;
             attachmentsTab.addEventListener('click', (e) => showAttachmentGallery(e));
             sidebar.appendChild(attachmentsTab);
@@ -2136,35 +2177,35 @@
             // Add Chat/Goose tab
             const chatTab = document.createElement('div');
             chatTab.className = 'folder-item';
-            chatTab.innerHTML = `<span>Chat</span>`;
+            chatTab.innerHTML = `<span><i data-lucide="message-square"></i> Chat</span>`;
             chatTab.addEventListener('click', (e) => showChatView(e));
             sidebar.appendChild(chatTab);
 
             // Add Automations tab
             const automationsTab = document.createElement('div');
             automationsTab.className = 'folder-item';
-            automationsTab.innerHTML = `<span>Automations</span>`;
+            automationsTab.innerHTML = `<span><i data-lucide="refresh-ccw"></i> Automations</span>`;
             automationsTab.addEventListener('click', (e) => showAutomationsView(e));
             sidebar.appendChild(automationsTab);
 
-            // Add Reminders tab
+            // Add Tasks tab
             const remindersTab = document.createElement('div');
             remindersTab.className = 'folder-item';
-            remindersTab.innerHTML = `<span>✓ Reminders</span>`;
+            remindersTab.innerHTML = `<span><i data-lucide="square-check"></i> Tasks</span>`;
             remindersTab.addEventListener('click', (e) => showRemindersView(e));
             sidebar.appendChild(remindersTab);
 
             // Add Calendar tab
             const calendarTab = document.createElement('div');
             calendarTab.className = 'folder-item';
-            calendarTab.innerHTML = `<span>📅 Calendar</span>`;
+            calendarTab.innerHTML = `<span><i data-lucide="calendar"></i> Calendar</span>`;
             calendarTab.addEventListener('click', (e) => showCalendarView(e));
             sidebar.appendChild(calendarTab);
 
             // Add Money tab
             const moneyTab = document.createElement('div');
             moneyTab.className = 'folder-item';
-            moneyTab.innerHTML = `<span>💰 Money</span>`;
+            moneyTab.innerHTML = `<span><i data-lucide="circle-dollar-sign"></i> Money</span>`;
             moneyTab.addEventListener('click', (e) => showMoneyView(e));
             sidebar.appendChild(moneyTab);
 
@@ -2172,9 +2213,10 @@
             const settingsTab = document.createElement('div');
             settingsTab.className = 'folder-item';
             settingsTab.id = 'settingsTabItem';
-            settingsTab.innerHTML = `<span>⚙️ Settings</span>`;
+            settingsTab.innerHTML = `<span><i data-lucide="cog"></i> Settings</span>`;
             settingsTab.addEventListener('click', (e) => showSettingsView(e));
             sidebar.appendChild(settingsTab);
+            lucide.createIcons();
         }
 
         function toggleNonStandardFolders() {
@@ -2438,9 +2480,9 @@
             };
 
             notification.innerHTML = `
-                <div style="font-size: 20px;">${icons[type] || icons.info}</div>
+                <div style="font-size: 14px;">${icons[type] || icons.info}</div>
                 <div class="notification-content">${escapeHtml(message)}</div>
-                <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #65676b;">×</button>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #65676b;">×</button>
             `;
 
             container.appendChild(notification);
@@ -2453,7 +2495,7 @@
                         notification.remove();
                     }
                 }, 300);
-            }, 3000);
+            }, 5000);
         }
 
         // Handle API errors gracefully
@@ -2827,10 +2869,10 @@ Be concise, professional, and actionable.`
                 </div>
                 <div class="slideover-footer">
                     <div class="reply-actions">
-                        <button class="btn-secondary" onclick="replyTo()">Reply</button>
-                        <button class="btn-secondary" onclick="replyAll()">Reply All</button>
-                        <button class="btn-secondary" onclick="forward()">Forward</button>
-                        <button class="btn-primary" onclick="analyzeEmail()">Analyze</button>
+                        <button class="btn-secondary" onclick="replyTo()"><i data-lucide="reply"></i> Reply</button>
+                        <button class="btn-secondary" onclick="replyAll()"><i data-lucide="reply-all"></i> Reply All</button>
+                        <button class="btn-secondary" onclick="forward()"><i data-lucide="forward"></i> Forward</button>
+                        <button class="btn-secondary" onclick="analyzeEmail()"><i data-lucide="bot"></i> Automate</button>
                     </div>
                     <div class="reply-box">
                         <textarea id="quickReplyText" placeholder="Write a reply..."></textarea>
@@ -2904,10 +2946,10 @@ Be concise, professional, and actionable.`
                     // Render email message
                     const msgEl = document.createElement('div');
                     msgEl.className = 'email-message';
-                    msgEl.style.cssText = 'padding: 16px; border-bottom: 1px solid #e4e6eb; background: white;';
+                    msgEl.style.cssText = 'padding: 16px; background: white;';
                     msgEl.innerHTML = `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <div style="font-weight: 600; color: #050505;">${escapeHtml(msg.from_address)}</div>
+                            <div style="font-weight: 500; color: #050505;">${escapeHtml(msg.from_address)}</div>
                             <div style="color: #65676b; font-size: 13px;">${formatDate(msg.date)}</div>
                         </div>
                         <div style="color: #050505; line-height: 1.5;">${msg.body_html || escapeHtml(msg.body_text || '')}</div>
@@ -3256,18 +3298,18 @@ Be concise, professional, and actionable.`
                     <div class="conversation-line">
                         <div class="conversation-info">
                             <div class="subject-line">
-                                ${conv.automation_id ? '<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 8px;">⚡ AUTO</span>' : ''}
-                                💬 ${escapeHtml(conv.title || 'New Chat')}
+                                <i data-lucide="message-square"></i> ${escapeHtml(conv.title || 'New Chat')}
                             </div>
-                            <div class="content-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</div>
+                            <div class="content-snippet">${escapeHtml(conv.last_message || 'No messages yet')} ${conv.automation_id ? '<span style="background: rgb(229,229,229); color: rgb(16,23,41); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-right: 8px;"><i data-lucide="bot"></i> AUTO</span>' : ''}</div>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <div class="timestamp">${formatDate(conv.updated_at)}</div>
-                            <button class="icon-btn" onclick="event.stopPropagation(); deleteChatConversationFromList('${conv.id}')" title="Delete" style="font-size: 14px;">🗑️</button>
+                            <button class="icon-btn" onclick="event.stopPropagation(); deleteChatConversationFromList('${conv.id}')" title="Delete" style="font-size: 14px;" data-lucide="trash-2"> </button>
                         </div>
                     </div>
                 </div>
             `).join('');
+            lucide.createIcons();
         }
 
         async function startNewChat() {
@@ -3306,14 +3348,15 @@ Be concise, professional, and actionable.`
             const view = document.createElement('div');
             view.id = 'chatInterface';
             view.style.display = 'none';
+            view.style.fontSize = "14px";
             view.innerHTML = `
                 <div style="display: flex; flex-direction: column; height: calc(100vh - 60px); background: white; border-radius: 8px; margin: 20px;">
                     <div style="padding: 16px; border-bottom: 1px solid #e4e6eb; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <button onclick="showChatView()" style="background: none; border: none; cursor: pointer; font-size: 20px;">←</button>
-                            <span style="font-weight: 600; margin-left: 12px;">💬 Chat</span>
+                            <span style="font-weight: 600; margin-left: 12px;"><i data-lucide="square-chat"></i> Chat</span>
                         </div>
-                        <button onclick="deleteChatConversation()" class="icon-btn" title="Delete Conversation">🗑️</button>
+                        <button onclick="deleteChatConversation()" class="icon-btn" title="Delete Conversation" data-lucide="trash-2"> </button>
                     </div>
                     <div id="chatMessagesContainer" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
                         <div class="loading">Loading messages...</div>
@@ -3329,6 +3372,7 @@ Be concise, professional, and actionable.`
                     </div>
                 </div>
             `;
+            lucide.createIcons();
             return view;
         }
 
@@ -3364,7 +3408,7 @@ Be concise, professional, and actionable.`
                 const timestamp = new Date(msg.created_at).toLocaleTimeString();
                 return `
                     <div style="display: flex; ${isUser ? 'justify-content: flex-end' : 'justify-content: flex-start'}; ${!isUser ? 'animation: fadeIn 0.5s ease-in;' : ''}">
-                        <div style="max-width: 70%; padding: 12px 16px; border-radius: 12px; ${isUser ? 'background: #7C9CBF; color: white;' : 'background: #f0f2f5; color: #1c1e21;'}">
+                        <div style="max-width: 70%; padding: 12px 16px; border-radius: 12px; ${isUser ? 'background: rgb(244,244,245); color: rgb(16,23,41);' : 'background: none; color: rgb(80,91,109);'}">
                             <div style="white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(msg.content)}</div>
                             <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">${timestamp}</div>
                         </div>
@@ -3576,10 +3620,10 @@ Be concise, professional, and actionable.`
                 <div class="tab-card">
                     <div class="tab-card-header">
                         <div class="tab-card-body">
-                            <div class="tab-card-title">${escapeHtml(auto.name)}</div>
+                            <div class="tab-card-title" onclick="viewAutomationDetail('${auto.id}')">${escapeHtml(auto.name)}</div>
                             <div class="tab-card-description">${escapeHtml(auto.description || '')}</div>
                             <div class="tab-card-meta">
-                                <span>📅 ${escapeHtml(auto.schedule_human || auto.schedule)}</span>
+                                <span><i data-lucide="calendar-sync"></i> ${escapeHtml(auto.schedule_human || auto.schedule)}</span>
                                 ${auto.last_run ? ` • Last run: ${formatDate(auto.last_run)}` : ''}
                             </div>
                         </div>
@@ -3592,8 +3636,7 @@ Be concise, professional, and actionable.`
                             </label>
                             <button class="icon-btn" onclick="runAutomation('${auto.id}')" title="Run Now" data-lucide="circle-play"> </button>
                             <button class="icon-btn" onclick="editAutomation('${auto.id}')" title="Edit" data-lucide="file-pen-line"> </button>
-                            <button class="icon-btn" onclick="deleteAutomation('${auto.id}')" title="Delete">🗑️</button>
-                            <button class="icon-btn" onclick="viewAutomationDetail('${auto.id}')" title="View Details & Runs">📊</button>
+                            <button class="icon-btn" onclick="deleteAutomation('${auto.id}')" title="Delete" data-lucide="trash-2"> </button>
                         </div>
                     </div>
                 </div>
@@ -4097,8 +4140,8 @@ Be concise, professional, and actionable.`
             view.className = 'tab-view';
             view.innerHTML = `
                 <div class="tab-view-header">
-                    <h1 class="tab-view-title">✓ Reminders</h1>
-                    <button class="compose-btn" onclick="createReminder()">+ New Reminder</button>
+                    <h1 class="tab-view-title">✓ Tasks</h1>
+                    <button class="compose-btn" onclick="createReminder()">+ New Task</button>
                 </div>
                     <div style="margin-bottom: 16px; display: flex; gap: 8px;">
                         <button class="filter-btn active" data-filter="active" onclick="filterReminders('active')">Active</button>
@@ -4126,20 +4169,21 @@ Be concise, professional, and actionable.`
                     const reminders = await response.json();
                     renderReminders(reminders);
                 } else {
-                    container.innerHTML = '<div class="empty-state"><h3>No reminders yet</h3><p>Create a reminder to track your tasks</p></div>';
+                    container.innerHTML = '<div class="empty-state"><h3>No tasks yet</h3><p>Create a task to track your work</p></div>';
                 }
             } catch (error) {
-                container.innerHTML = '<div class="empty-state"><h3>No reminders yet</h3><p>Create a reminder to track your tasks</p></div>';
+                container.innerHTML = '<div class="empty-state"><h3>No tasks yet</h3><p>Create a task to track your work</p></div>';
             }
         }
 
         function renderReminders(reminders) {
             const container = document.getElementById('remindersList');
             if (reminders.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No reminders found</h3></div>';
+                container.innerHTML = '<div class="empty-state"><h3>No tasks found</h3></div>';
                 return;
             }
 
+            container.style.fontSize = "14px";
             container.innerHTML = reminders.map(reminder => {
                 const isOverdue = reminder.due_date && new Date(reminder.due_date) < new Date() && !reminder.completed;
                 return `
@@ -4149,24 +4193,25 @@ Be concise, professional, and actionable.`
                             onchange="toggleReminder('${reminder.id}', this.checked)"
                             style="margin-top: 4px; cursor: pointer;">
                         <div style="flex: 1;">
-                            <div style="font-weight: 600; margin-bottom: 4px; ${reminder.completed ? 'text-decoration: line-through;' : ''}">
+                            <div style="font-weight: 500; margin-bottom: 4px; ${reminder.completed ? 'text-decoration: line-through;' : ''}">
                                 ${escapeHtml(reminder.title)}
                             </div>
                             ${reminder.notes ? `<div style="color: #65676b; font-size: 14px; margin-bottom: 8px;">${escapeHtml(reminder.notes)}</div>` : ''}
                             ${reminder.due_date ? `
                                 <div style="font-size: 13px; color: ${isOverdue ? '#c62828' : '#8a8d91'};">
-                                    📅 Due: ${formatDate(reminder.due_date)} ${isOverdue ? '(Overdue)' : ''}
+                                    <i data-lucide="calendar-days"></i> Due: ${formatDate(reminder.due_date)} ${isOverdue ? '(Overdue)' : ''}
                                 </div>
                             ` : ''}
                         </div>
                         <div style="display: flex; gap: 4px;">
-                            <button class="icon-btn" onclick="editReminder('${reminder.id}')" title="Edit">✏️</button>
-                            <button class="icon-btn" onclick="deleteReminder('${reminder.id}')" title="Delete">🗑️</button>
+                            <button class="icon-btn" onclick="editReminder('${reminder.id}')" title="Edit" data-lucide="file-pen-line"> </button>
+                            <button class="icon-btn" onclick="deleteReminder('${reminder.id}')" title="Delete" data-lucide="trash-2"> </button>
                         </div>
                     </div>
                 </div>
             `;
             }).join('');
+            lucide.createIcons();
         }
 
         function filterReminders(filter) {
@@ -4183,7 +4228,7 @@ Be concise, professional, and actionable.`
             modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
             modal.innerHTML = `
                 <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%;">
-                    <h2 style="margin: 0 0 20px 0; font-size: 20px;">Create Reminder</h2>
+                    <h2 style="margin: 0 0 20px 0; font-size: 20px;">Create Task</h2>
                     <div class="form-group">
                         <label>Title</label>
                         <input type="text" id="reminderTitle" placeholder="Complete project report" style="width: 100%; padding: 8px; border: 1px solid #dadde1; border-radius: 4px;">
@@ -4235,14 +4280,14 @@ Be concise, professional, and actionable.`
                 });
 
                 if (response.ok) {
-                    showNotification('Reminder created', 'success');
+                    showNotification('Task created', 'success');
                     closeReminderModal();
                     loadReminders();
                 } else {
-                    showNotification('Failed to create reminder', 'error');
+                    showNotification('Failed to create task', 'error');
                 }
             } catch (error) {
-                showNotification('Failed to create reminder', 'error');
+                showNotification('Failed to create task', 'error');
             }
         }
 
@@ -4258,25 +4303,25 @@ Be concise, professional, and actionable.`
                 });
                 loadReminders();
             } catch (error) {
-                showNotification('Failed to update reminder', 'error');
+                showNotification('Failed to update task', 'error');
             }
         }
 
         function editReminder(id) {
-            showNotification('Reminder editing coming soon!', 'info');
+            showNotification('Task editing coming soon!', 'info');
         }
 
         async function deleteReminder(id) {
-            if (!confirm('Delete this reminder?')) return;
+            if (!confirm('Delete this task?')) return;
             try {
                 await fetch(`/api/reminders/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                showNotification('Reminder deleted', 'success');
+                showNotification('Task deleted', 'success');
                 loadReminders();
             } catch (error) {
-                showNotification('Failed to delete reminder', 'error');
+                showNotification('Failed to delete task', 'error');
             }
         }
 
